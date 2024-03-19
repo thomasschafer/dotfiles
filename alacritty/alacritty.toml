@@ -1,11 +1,49 @@
-import = [
-  "~/.config/alacritty/catppuccin-macchiato.toml"
-]
+import = ["~/.config/alacritty/catppuccin-macchiato.toml"]
+
+[shell]
+program = "/bin/zsh"
+args = ["-l", "-c", "tmux attach -t 'λ' || tmux new -s 'λ'"]
 
 [window]
-padding = { x = 18, y = 18 }
+dimensions = { columns = 200, lines = 60 }
+dynamic_title = true
+resize_increments = true
 decorations = "None"
+padding = { x = 15, y = 15 }
 
+[keyboard]
+bindings = [
+  { key = "Left", mods = "Command|Option", chars = "\u001B[1;5D" },  # cmd+option+left  -> ctrl+left
+  { key = "Right", mods = "Command|Option", chars = "\u001B[1;5C" }, # cmd+option+right -> ctrl+right
+  { key = "Left", mods = "Command|Shift", chars = "\u001B[1;6D" },   # cmd+shift+left   -> ctrl+shift+left
+  { key = "Right", mods = "Command|Shift", chars = "\u001B[1;6C" },  # cmd+shift+right  -> ctrl+shift+right
+  { key = "Up", mods = "Command|Shift", chars = "\u0001K" },         # cmd+shift+up     -> ctrl+a K
+  { key = "Down", mods = "Command|Shift", chars = "\u0001k" },       # cmd+shift+down   -> ctrl+a k 
+  { key = "T", mods = "Command", chars = "\u0001c" },                # cmd+t            -> ctrl+a c
+  { key = "W", mods = "Command", chars = "\u0001x" },                # cmd+w            -> ctrl+a x
+  { key = "D", mods = "Command", chars = "\u0001|" },                # cmd+d            -> ctrl+a |
+  { key = "D", mods = "Command|Shift", chars = "\u0001-" },          # cmd+shift+d      -> ctrl+a -
+  { key = "F", mods = "Command", chars = "\u0001\\" },               # cmd+f            -> ctrl+a \
+  { key = "K", mods = "Command", chars = "\u000b" },                 # cmd+k            -> ctrl+k
+  { key = 36, mods = "Command", action = "ToggleFullscreen" },       # cmd+enter        -> toggle fullscreen
+  { key = "Return", mods = "Command|Shift", chars = "\u0001z" },     # cmd+shift+enter  -> ctrl+a z
+]
 
 [font]
-offset = { x = 0, y = 5 }
+size = 12
+
+[font.normal]
+family = "RobotoMono Nerd Font Mono"
+style = "Regular"
+
+[font.bold]
+family = "RobotoMono Nerd Font Mono"
+style = "Bold"
+
+[font.italic]
+family = "RobotoMono Nerd Font Mono"
+style = "Italic"
+
+[font.bold_italic]
+family = "RobotoMono Nerd Font Mono"
+style = "Bold Italic"

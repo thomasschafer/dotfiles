@@ -24,6 +24,7 @@ shopify.ruby-extensions-pack
 shopify.ruby-lsp
 sorbet.sorbet-vscode-extension
 streetsidesoftware.code-spell-checker
+tamasfe.even-better-toml
 usernamehw.errorlens
 vscodevim.vim
 )
