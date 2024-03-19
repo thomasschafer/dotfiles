@@ -1,0 +1,11 @@
+import = [
+  "~/.config/alacritty/catppuccin-macchiato.toml"
+]
+
+[window]
+padding = { x = 18, y = 18 }
+decorations = "None"
+
+
+[font]
+offset = { x = 0, y = 5 }
