@@ -1,0 +1,32 @@
+[
+  {
+    "key": "alt+j",
+    "command": "workbench.action.terminal.focus"
+  },
+  {
+    "key": "alt+k",
+    "command": "workbench.action.focusActiveEditorGroup"
+  },
+  {
+    "key": "cmd+k cmd+o",
+    "command": "workbench.files.action.collapseExplorerFolders"
+  },
+  {
+    "key": "shift+cmd+i",
+    "command": "editor.action.peekTypeDefinition"
+  },
+  {
+    "key": "ctrl+alt+v",
+    "command": "toggleVim"
+  },
+  {
+    "key": "a",
+    "command": "explorer.newFile",
+    "when": "filesExplorerFocus && foldersViewVisible && !inputFocus"
+  },
+  {
+    "key": "alt+f4",
+    "command": "git.revertSelectedRanges",
+    "when": "!operationInProgress"
+  }
+]
