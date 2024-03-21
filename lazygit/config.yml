@@ -1,5 +1,3 @@
-# ~/Library/Application\ Support/lazygit/config.yml
-
 gui:
   scrollHeight: 10 # how many lines you scroll by
   showFileTree: false # for rendering changes files in a tree format
