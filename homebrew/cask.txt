@@ -1,1 +1,4 @@
 alacritty
+iterm2
+rectangle
+visual-studio-code

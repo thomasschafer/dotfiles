@@ -3,6 +3,14 @@
 set -e
 set -o pipefail
 
+cd homebrew
+./install.sh
+cd ..
+
+# Install nerd font
+mkdir -p ~/.local/share/fonts
+curl -fL https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/RobotoMono/Medium/RobotoMonoNerdFontMono-Medium.ttf -o ~/.local/share/fonts/RobotoMonoNerdFontMono-Medium.ttf
+
 setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 
 for script in $setup_scripts; do

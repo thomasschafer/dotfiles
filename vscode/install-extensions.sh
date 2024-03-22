@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -o pipefail
+
 pkglist=(
 catppuccin.catppuccin-vsc
 eamodio.gitlens
