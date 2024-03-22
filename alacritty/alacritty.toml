@@ -1,4 +1,7 @@
-import = ["~/.config/alacritty/catppuccin-macchiato.toml"]
+import = [
+  "~/.config/alacritty/catppuccin-macchiato.toml",
+  "~/.config/alacritty/private.toml",
+]
 
 [shell]
 program = "/bin/zsh"
@@ -35,23 +38,22 @@ bindings = [
 ]
 
 [[hints.enabled]]
+binding = { key = "u", mods = "Control|Shift" }
 command = "open"
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
 hyperlinks = true
 post_processing = true
 persist = false
 mouse.enabled = true
-binding = { key = "u", mods = "Control|Shift" }
-regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
 
 [[hints.enabled]]
+binding = { key = "i", mods = "Control|Shift" }
 command = { program = "sh", args = ["-c", "printf ${0#./} | pbcopy"] }
+regex = "\\./[^\\s:]+:\\d+"
 hyperlinks = false
 post_processing = false
 persist = false
 mouse.enabled = true
-binding = { key = "i", mods = "Control|Shift" }
-regex = "\\./[^\\s:]+:\\d+"
-
 
 [font]
 size = 12

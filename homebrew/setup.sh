@@ -5,3 +5,4 @@
 xargs brew install < leaves.txt
 xargs brew install --cask < cask.txt
 
+echo "Homebrew configured successfully"

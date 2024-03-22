@@ -7,6 +7,7 @@
   "editor.lineNumbers": "relative",
   "editor.inlayHints.enabled": "off",
   "editor.smoothScrolling": true,
+  "workbench.editor.empty.hint": "hidden",
 
   // Vim
   "vim.leader": "<space>",
@@ -227,5 +228,5 @@
   },
 
   // Codeium config
-  "codeium.enableCodeLens": false
+  "codeium.enableCodeLens": false,
 }
