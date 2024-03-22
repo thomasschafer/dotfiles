@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# TODO: add Catpuccin theme
-
 ln -sfn $(pwd)/.tmux.conf $HOME/.tmux.conf
 
-echo "Tmux configuration symlinked"
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
+echo "Tmux configuration symlinked"
