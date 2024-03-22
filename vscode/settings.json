@@ -224,5 +224,8 @@
         }
       }
     ]
-  }
+  },
+
+  // Codeium config
+  "codeium.enableCodeLens": false
 }
