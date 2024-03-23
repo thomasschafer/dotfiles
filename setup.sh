@@ -8,21 +8,20 @@ cd homebrew
 cd ..
 
 # Install nerd font
-mkdir -p ~/.local/share/fonts
-curl -fL https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/RobotoMono/Medium/RobotoMonoNerdFontMono-Medium.ttf -o ~/.local/share/fonts/RobotoMonoNerdFontMono-Medium.ttf
+curl -fL https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DejaVuSansMono/Regular/DejaVuSansMNerdFontMono-Regular.ttf -o ~/Library/Fonts/DejaVuSansMNerdFontMono-Regular.ttf
 
 setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 
 for script in $setup_scripts; do
-    echo "Executing ${script/#$HOME/~}..."
+	echo "Executing ${script/#$HOME/~}..."
 
-    script_dir=$(dirname "$script")
-    # Change to the directory where the script is located
-    pushd "$script_dir" > /dev/null
-    # Execute the script
-    bash "$(basename "$script")" || exit $?
-    # Return to the previous directory
-    popd > /dev/null
+	script_dir=$(dirname "$script")
+	# Change to the directory where the script is located
+	pushd "$script_dir" >/dev/null
+	# Execute the script
+	bash "$(basename "$script")" || exit $?
+	# Return to the previous directory
+	popd >/dev/null
 done
 
 echo "Setup complete"
