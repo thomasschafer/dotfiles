@@ -1,3 +1,4 @@
+# Config not checked in to repo
 if [[ -f ~/.zshrc.private ]]; then
     source ~/.zshrc.private
 fi
@@ -15,14 +16,14 @@ export VISUAL="$EDITOR"
 alias vi="nvim"
 alias nv="nvim ."
 
-# git autocompletion
+# Git autocompletion
 autoload -Uz compinit && compinit
 
-# LazyGit
+# Aliases
 alias lg=lazygit
 alias ldr=lazydocker
 
-# ZSh history
+# Zsh history
 export HISTSIZE=100000
 export SAVEHIST=100000
 export HISTFILE=~/.zhistory
@@ -30,4 +31,5 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
-[ -f "/Users/tschafer/.ghcup/env" ] && . "/Users/tschafer/.ghcup/env" # ghcup-env
+# Haskell config
+[ -f "~/.ghcup/env" ] && . "~/.ghcup/env"

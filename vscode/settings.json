@@ -1,14 +1,4 @@
 {
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.unusedImports": "explicit"
-  },
-  "editor.lineNumbers": "relative",
-  "editor.inlayHints.enabled": "off",
-  "editor.smoothScrolling": true,
-  "workbench.editor.empty.hint": "hidden",
-
   // Vim
   "vim.leader": "<space>",
   "vim.normalModeKeyBindingsNonRecursive": [
@@ -229,4 +219,16 @@
 
   // Codeium config
   "codeium.enableCodeLens": false,
+
+  // Misc config
+  "editor.formatOnSave": true,
+  "git.openRepositoryInParentFolders": "never",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.unusedImports": "explicit"
+  },
+  "editor.lineNumbers": "relative",
+  "editor.inlayHints.enabled": "off",
+  "editor.smoothScrolling": true,
+  "workbench.editor.empty.hint": "hidden",
 }
