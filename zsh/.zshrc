@@ -1,3 +1,7 @@
+if [[ -f ~/.zshrc.private ]]; then
+    source ~/.zshrc.private
+fi
+
 # Prompt
 autoload -Uz vcs_info
 precmd() { vcs_info }
@@ -25,3 +29,5 @@ export HISTFILE=~/.zhistory
 setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
+
+[ -f "/Users/tschafer/.ghcup/env" ] && . "/Users/tschafer/.ghcup/env" # ghcup-env
