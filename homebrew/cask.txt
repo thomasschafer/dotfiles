@@ -1,5 +1,4 @@
 alacritty
-iterm2
 hammerspoon
 rectangle
 visual-studio-code
