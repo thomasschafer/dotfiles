@@ -35,7 +35,7 @@ setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
 # Haskell
-[ -f "~/.ghcup/env" ] && . "~/.ghcup/env"
+[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 
 # Pyenv
 export PYENV_ROOT="$HOME/.pyenv"
