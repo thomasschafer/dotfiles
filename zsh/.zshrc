@@ -3,6 +3,9 @@ if [[ -f ~/.zshrc.private ]]; then
     source ~/.zshrc.private
 fi
 
+# Treat / as a word delimiter
+WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
+
 # Prompt
 autoload -Uz vcs_info
 precmd() { vcs_info }
