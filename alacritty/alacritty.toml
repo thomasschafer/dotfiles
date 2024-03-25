@@ -57,7 +57,8 @@ persist = false
 mouse.enabled = true
 
 [font]
-size = 13
+size = 12
+offset = { x = 0, y = 6 }
 bold = { family = "DejaVuSansM Nerd Font Mono" }
 italic = { family = "DejaVuSansM Nerd Font Mono" }
 normal = { family = "DejaVuSansM Nerd Font Mono" }
