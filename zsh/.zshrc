@@ -1,4 +1,4 @@
-# Config not checked in to repo
+# Work-specific config
 if [[ -f ~/.zshrc.private ]]; then
     source ~/.zshrc.private
 fi
@@ -31,5 +31,10 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
-# Haskell config
+# Haskell
 [ -f "~/.ghcup/env" ] && . "~/.ghcup/env"
+
+# Pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"

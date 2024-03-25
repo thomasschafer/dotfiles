@@ -80,7 +80,8 @@
   // Python
   "python.analysis.fixAll": ["source.unusedImports"],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.tabSize": 2,
   },
   "python.analysis.typeCheckingMode": "strict",
 
