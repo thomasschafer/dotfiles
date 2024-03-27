@@ -2,23 +2,18 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
--- Normal mode mappings
-vim.api.nvim_set_keymap("n", "d", '"_d', { noremap = true })
-vim.api.nvim_set_keymap("n", "D", '"_D', { noremap = true })
-vim.api.nvim_set_keymap("n", "c", '"_c', { noremap = true })
-vim.api.nvim_set_keymap("n", "C", '"_C', { noremap = true })
-vim.api.nvim_set_keymap("n", "x", '"_x', { noremap = true })
-vim.api.nvim_set_keymap("n", "S", '"_S', { noremap = true })
-vim.api.nvim_set_keymap("n", "<F4>", ":cnext<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F16>", ":cprev<CR>", { noremap = true, silent = true }) -- <S-F4>
-vim.api.nvim_set_keymap("n", "<F10>", "<cmd>qa<cr>", { desc = "Quit All" })
-vim.api.nvim_set_keymap("n", "<F3>", "<cmd>Telescope resume<cr>", { desc = "Resume" })
+-- Don't save deleted lines to clipboard
+vim.keymap.set({ "n", "v" }, "d", '"_d', { noremap = true })
+vim.keymap.set({ "n", "v" }, "D", '"_D', { noremap = true })
+vim.keymap.set({ "n", "v" }, "c", '"_c', { noremap = true })
+vim.keymap.set({ "n", "v" }, "C", '"_C', { noremap = true })
+vim.keymap.set({ "n", "v" }, "S", '"_S', { noremap = true })
+vim.keymap.set("n", "x", '"_x', { noremap = true })
+vim.keymap.set("v", "D", '"_D', { noremap = true })
+vim.keymap.set("v", "p", '"_dP', { noremap = true })
+vim.keymap.set("v", "P", '"_dP', { noremap = true })
 
--- Visual mode mappings
-vim.api.nvim_set_keymap("v", "d", '"_d', { noremap = true })
-vim.api.nvim_set_keymap("v", "D", '"_D', { noremap = true })
-vim.api.nvim_set_keymap("v", "c", '"_c', { noremap = true })
-vim.api.nvim_set_keymap("v", "C", '"_C', { noremap = true })
-vim.api.nvim_set_keymap("v", "p", '"_dP', { noremap = true })
-vim.api.nvim_set_keymap("v", "P", '"_dP', { noremap = true })
-vim.api.nvim_set_keymap("v", "S", '"_S', { noremap = true })
+vim.keymap.set({ "n", "i" }, "<F4>", ":cnext<CR>", { noremap = true, silent = true })
+vim.keymap.set({ "n", "i" }, "<F16>", ":cprev<CR>", { noremap = true, silent = true }) -- <S-F4>
+vim.keymap.set({ "n", "i" }, "<F3>", "<cmd>Telescope resume<cr>", { desc = "Resume" })
+vim.keymap.set({ "n", "i" }, "<F10>", "<cmd>qa<cr>", { desc = "Quit All" })
