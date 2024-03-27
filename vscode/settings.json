@@ -81,12 +81,15 @@
   "python.analysis.fixAll": ["source.unusedImports"],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.tabSize": 2,
+    "editor.tabSize": 4
   },
   "python.analysis.typeCheckingMode": "strict",
 
   // Json
   "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
@@ -220,6 +223,10 @@
 
   // Codeium config
   "codeium.enableCodeLens": false,
+  "codeium.enableConfig": {
+    "*": true,
+    "haskell": false
+  },
 
   // Misc config
   "editor.formatOnSave": true,
@@ -232,4 +239,5 @@
   "editor.inlayHints.enabled": "off",
   "editor.smoothScrolling": true,
   "workbench.editor.empty.hint": "hidden",
+  "go.toolsManagement.autoUpdate": true
 }

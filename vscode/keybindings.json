@@ -26,7 +26,20 @@
   },
   {
     "key": "alt+f4",
-    "command": "git.revertSelectedRanges",
+    "command": "extension.multiCommand.execute",
+    "args": {
+      "sequence": [
+        {
+          "command": "cursorMove",
+          "args": {
+            "to": "down",
+            "by": "line",
+            "select": true
+          }
+        },
+        { "command": "git.revertSelectedRanges" }
+      ]
+    },
     "when": "!operationInProgress"
   }
 ]

@@ -21,6 +21,7 @@ ms-python.python
 ms-python.vscode-pylance
 ms-vscode-remote.remote-containers
 ms-vscode.makefile-tools
+ryuta46.multi-command
 redhat.vscode-yaml
 rubocop.vscode-rubocop
 shopify.ruby-extensions-pack
