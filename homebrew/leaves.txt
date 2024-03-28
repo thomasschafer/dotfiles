@@ -1,6 +1,7 @@
 bash-completion
 deno
 derailed/k9s/k9s
+fd
 git-filter-repo
 gnu-sed
 gnupg
