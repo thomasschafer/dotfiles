@@ -18,3 +18,6 @@ vim.api.nvim_set_hl(0, "Visual", { background = 0x707070 })
 -- Update line number colours
 vim.api.nvim_set_hl(0, "LineNr", { fg = "#a6adc8" })
 vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#e2e8f8" })
+
+-- vim-visual-multi colour theme
+vim.g.VM_theme = "iceblue"

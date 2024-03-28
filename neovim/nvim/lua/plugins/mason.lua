@@ -8,6 +8,8 @@ return {
         "prettierd",
         "pyright",
         "haskell-language-server",
+        "rubocop",
+        "sorbet",
         "stylua",
         "shellcheck",
         "shfmt",
