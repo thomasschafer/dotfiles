@@ -23,25 +23,12 @@ return {
           mappings = {
             i = {
               ["<C-q>"] = actions.send_to_qflist,
-              -- ["<C-a>"] = actions.to_fuzzy_refine,
             },
             n = {
               ["<C-q>"] = actions.send_to_qflist,
-              -- ["<C-a>"] = actions.to_fuzzy_refine,
             },
           },
         },
-        -- extensions = {
-        --   live_grep_args = {
-        --     auto_quoting = true, -- enable/disable auto-quoting
-        --     mappings = {
-        --       i = {
-        --         ["<C-u>"] = lga_actions.quote_prompt(),
-        --         -- ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-        --       },
-        --     },
-        --   },
-        -- },
       })
     end,
   },

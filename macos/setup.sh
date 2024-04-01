@@ -1,5 +1,5 @@
 # Update dock icon size
-defaults write com.apple.dock tilesize -int 55
+defaults write com.apple.dock tilesize -int 50
 # Minimise applications into icon in dock
 defaults write com.apple.dock minimize-to-application -bool true
 # Disable separate section for suggested and recent applications in dock
