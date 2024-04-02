@@ -1,7 +1,9 @@
 -- Colour theme
 require("catppuccin").setup({
-  flavour = "mocha",
+  flavour = "macchiato",
+  transparent_background = false,
 })
+vim.cmd.colorscheme("catppuccin")
 
 -- Set the background to be transparent to work with Tmux config
 vim.api.nvim_create_autocmd("VimEnter", {
