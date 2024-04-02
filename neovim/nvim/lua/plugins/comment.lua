@@ -4,9 +4,9 @@ return {
     opts = {
       mappings = {
         -- Toggle comment on current line
-        comment_line = "<C-v>",
+        comment_line = "<leader>.",
         -- Toggle comment on visual selection
-        comment_visual = "<C-v>",
+        comment_visual = "<leader>.",
       },
     },
   },
