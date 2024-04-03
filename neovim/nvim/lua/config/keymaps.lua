@@ -37,3 +37,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "<F2>", vim.lsp.buf.rename, opts)
   end,
 })
+
+-- Move buffers left and right using Option + left/right
+vim.keymap.set("n", "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
+vim.keymap.set("n", "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
