@@ -41,3 +41,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- Move buffers left and right using Option + left/right
 vim.keymap.set("n", "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
 vim.keymap.set("n", "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
+
+-- Create cursors with vim-visual-multi without triggering macOS shortcuts
+vim.api.nvim_set_keymap(
+  "n",
+  "<F7>",
+  ":call vm#commands#add_cursor_down(0, v:count1)<CR>",
+  { noremap = true, silent = true }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<F8>",
+  ":call vm#commands#add_cursor_up(0, v:count1)<CR>",
+  { noremap = true, silent = true }
+)
