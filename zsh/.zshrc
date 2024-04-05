@@ -16,8 +16,7 @@ PROMPT='> %F{green}%1~%f ${vcs_info_msg_0_}$ '
 # Neovim
 export EDITOR=nvim
 export VISUAL="$EDITOR"
-alias vi="nvim"
-alias nv="nvim ."
+alias nv="nvim"
 
 # Git autocompletion
 autoload -Uz compinit && compinit
