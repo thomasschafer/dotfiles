@@ -55,3 +55,8 @@ vim.api.nvim_set_keymap(
   ":call vm#commands#add_cursor_up(0, v:count1)<CR>",
   { noremap = true, silent = true }
 )
+
+-- Comment line
+vim.keymap.set("n", "<leader>.", function()
+  return MiniComment.operator() .. "_"
+end, { desc = "Comment line", expr = true })
