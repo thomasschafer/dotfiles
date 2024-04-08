@@ -5,6 +5,10 @@ defaults write com.apple.dock minimize-to-application -bool true
 # Disable separate section for suggested and recent applications in dock
 defaults write com.apple.dock show-recents -bool false
 
+# Require password immediately after sleep or screen saver
+sudo defaults write com.apple.screensaver askForPassword -int 1
+sudo defaults write com.apple.screensaver askForPasswordDelay -int 0
+
 # Update default location to save screenshots
 mkdir -p ~/Documents/Screenshots
 defaults write com.apple.screencapture location ~/Documents/Screenshots
