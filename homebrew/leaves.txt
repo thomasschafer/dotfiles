@@ -15,6 +15,7 @@ node
 nvm
 poetry
 pre-commit
+qmk/qmk/qmk
 pyenv
 rbenv
 ripgrep

@@ -57,6 +57,6 @@ vim.api.nvim_set_keymap(
 )
 
 -- Comment line
-vim.keymap.set("n", "<leader>.", function()
+vim.keymap.set({ "n", "x" }, "<leader>.", function()
   return MiniComment.operator() .. "_"
 end, { desc = "Comment line", expr = true })
