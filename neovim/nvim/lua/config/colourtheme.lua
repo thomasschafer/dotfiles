@@ -15,7 +15,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 -- Update colour of visual selection
-vim.api.nvim_set_hl(0, "Visual", { background = "#525252" })
+vim.api.nvim_set_hl(0, "Visual", { background = "#506b70" })
 
 -- Update line number colours
 vim.api.nvim_set_hl(0, "LineNr", { fg = "#a6adc8" })
