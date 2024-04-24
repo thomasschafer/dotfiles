@@ -8,8 +8,13 @@
 // from the command palette or from `Zed` application menu.
 {
   "base_keymap": "VSCode",
-  "theme": "Andromeda",
+  "theme": "Catppuccin Macchiato - No Italics",
   "vim_mode": true,
+  "relative_line_numbers": true,
   "ui_font_size": 16,
-  "buffer_font_size": 14
+  "buffer_font_size": 13,
+  "buffer_font_features": {
+    // Disable ligatures:
+    "calt": false
+  }
 }

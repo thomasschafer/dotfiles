@@ -2,6 +2,7 @@ local appShortcuts = {
 	A = "Alacritty",
 	S = "Slack",
 	D = "YouTube Music",
+	F = "Zed",
 	Z = "Zoom",
 	X = "Terminal",
 	C = "Chrome",
