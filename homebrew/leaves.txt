@@ -11,6 +11,7 @@ hadolint
 helix
 jq
 lazygit
+llvm
 neovim
 node
 nvm
@@ -20,6 +21,7 @@ qmk/qmk/qmk
 pyenv
 rbenv
 ripgrep
+ruff
 shared-mime-info
 shellcheck
 sqlfluff

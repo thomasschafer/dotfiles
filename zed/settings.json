@@ -16,5 +16,15 @@
   "buffer_font_features": {
     // Disable ligatures:
     "calt": false
+  },
+  "language_overrides": {
+    "Python": {
+      "format_on_save": {
+        "external": {
+          "command": "ruff",
+          "arguments": ["format", "-"]
+        }
+      }
+    }
   }
 }

@@ -41,3 +41,6 @@ setopt EXTENDED_HISTORY
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
+
+# LLVM
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
