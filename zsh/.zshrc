@@ -18,6 +18,8 @@ export EDITOR=nvim
 export VISUAL="$EDITOR"
 alias vi="nvim"
 alias nv="nvim"
+alias c="code"
+alias z="zed"
 
 # Git autocompletion
 autoload -Uz compinit && compinit
