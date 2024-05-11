@@ -1,9 +1,17 @@
-theme = "catppuccin_macchiato"
+theme = "catppuccin_macchiato_transparent"
 
 [editor]
 line-number = "relative"
+auto-format = true
+bufferline = "always"
 
 [editor.cursor-shape]
 insert = "bar"
 normal = "block"
 select = "underline"
+
+[keys.normal]
+C-s = ":w"
+C-x = ":buffer-close"
+S-h = "goto_previous_buffer"
+S-l = "goto_next_buffer"
