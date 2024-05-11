@@ -60,3 +60,5 @@ vim.api.nvim_set_keymap(
 vim.keymap.set({ "n", "x" }, "<leader>.", function()
   return MiniComment.operator() .. "_"
 end, { desc = "Comment line", expr = true })
+
+vim.keymap.set({ "n", "x" }, "<leader>a", LazyVim.telescope("files"), { desc = "Find Files (Root Dir)" })
