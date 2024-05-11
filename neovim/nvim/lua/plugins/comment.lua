@@ -1,5 +1,3 @@
 return {
-  {
-    "echasnovski/mini.comment",
-  },
+  "echasnovski/mini.comment",
 }

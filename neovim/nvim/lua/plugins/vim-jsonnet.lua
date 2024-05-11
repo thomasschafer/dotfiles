@@ -1,6 +1,4 @@
 return {
-  {
-    "google/vim-jsonnet",
-    ft = { "jsonnet", "libsonnet" },
-  },
+  "google/vim-jsonnet",
+  ft = { "jsonnet", "libsonnet" },
 }
