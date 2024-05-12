@@ -20,6 +20,7 @@ alias vi="nvim"
 alias nv="nvim"
 alias c="code"
 alias z="zed"
+alias y="yazi"
 
 # Git autocompletion
 autoload -Uz compinit && compinit
