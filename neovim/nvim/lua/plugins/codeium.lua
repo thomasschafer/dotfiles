@@ -1,6 +1,6 @@
 return {
   "Exafunction/codeium.nvim",
-  enabled = true,
+  enabled = false,
   cmd = "Codeium",
   build = ":Codeium Auth",
   opts = {},

@@ -38,9 +38,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
 })
 
--- Move buffers left and right using Option + left/right
-vim.keymap.set("n", "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
-vim.keymap.set("n", "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
+-- Move buffers left and right using option + left/right
+vim.keymap.set("n", "<M-Left>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
+vim.keymap.set("n", "<M-Right>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
+
+-- Move to left or right buffer with option + h/l
+vim.keymap.del("n", "<S-h>")
+vim.keymap.del("n", "<S-l>")
+vim.keymap.set("n", "<M-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev Buffer" })
+vim.keymap.set("n", "<M-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next Buffer" })
 
 -- Create cursors with vim-visual-multi without triggering macOS shortcuts
 vim.api.nvim_set_keymap(
@@ -62,3 +68,9 @@ vim.keymap.set({ "n", "x" }, "<leader>.", function()
 end, { desc = "Comment line", expr = true })
 
 vim.keymap.set({ "n", "x" }, "<leader>a", LazyVim.telescope("files"), { desc = "Find Files (Root Dir)" })
+
+-- Resize windows
+vim.keymap.set("n", "<M-,>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
+vim.keymap.set("n", "<M-m>", "<cmd>resize -2<cr>", { desc = "Decrease Window Height" })
+vim.keymap.set("n", "<M-n>", "<cmd>vertical resize -10<cr>", { desc = "Decrease Window Width" })
+vim.keymap.set("n", "<M-.>", "<cmd>vertical resize +10<cr>", { desc = "Increase Window Width" })

@@ -151,6 +151,7 @@ return {
         "python",
         "query",
         "regex",
+        "taplo",
         "tsx",
         "typescript",
         "vim",

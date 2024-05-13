@@ -13,5 +13,5 @@ select = "underline"
 [keys.normal]
 C-s = ":w"
 C-x = ":buffer-close"
-S-h = "goto_previous_buffer"
-S-l = "goto_next_buffer"
+A-h = "goto_previous_buffer"
+A-l = "goto_next_buffer"

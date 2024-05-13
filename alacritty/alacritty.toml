@@ -13,6 +13,7 @@ dynamic_title = true
 resize_increments = true
 decorations = "Buttonless"
 padding = { x = 15, y = 10 }
+option_as_alt = "Both"
 
 [keyboard]
 bindings = [
@@ -36,6 +37,7 @@ bindings = [
   { key = "Left", mods = "Command", chars = "\u001b[H" },            # cmd+left         -> jump to start of line
   { key = "Right", mods = "Command", chars = "\u001b[F" },           # cmd+right        -> jump to end of line
   { key = "Back", mods = "Command", chars = "\u0015" },              # cmd+backspace    -> delete to start of line
+  { key = "3", mods = "Option", chars = "#" },                       # This would be overriden otherwise by option_as_alt
 ]
 
 [[hints.enabled]]
