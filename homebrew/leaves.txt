@@ -28,6 +28,7 @@ rbenv
 ripgrep
 ripgrep
 ruff
+sd
 shared-mime-info
 shellcheck
 sqlfluff
