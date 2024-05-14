@@ -70,7 +70,7 @@ end, { desc = "Comment line", expr = true })
 vim.keymap.set({ "n", "x" }, "<leader>a", LazyVim.telescope("files"), { desc = "Find Files (Root Dir)" })
 
 -- Resize windows
-vim.keymap.set("n", "<M-,>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
-vim.keymap.set("n", "<M-m>", "<cmd>resize -2<cr>", { desc = "Decrease Window Height" })
-vim.keymap.set("n", "<M-n>", "<cmd>vertical resize -10<cr>", { desc = "Decrease Window Width" })
-vim.keymap.set("n", "<M-.>", "<cmd>vertical resize +10<cr>", { desc = "Increase Window Width" })
+vim.keymap.set("n", "<M-,>", "<cmd>resize +10<cr>", { desc = "Increase Window Height" })
+vim.keymap.set("n", "<M-m>", "<cmd>resize -10<cr>", { desc = "Decrease Window Height" })
+vim.keymap.set("n", "<M-n>", "<cmd>vertical resize -20<cr>", { desc = "Decrease Window Width" })
+vim.keymap.set("n", "<M-.>", "<cmd>vertical resize +20<cr>", { desc = "Increase Window Width" })
