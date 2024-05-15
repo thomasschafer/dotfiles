@@ -10,8 +10,18 @@ insert = "bar"
 normal = "block"
 select = "underline"
 
+[keys.insert]
+"C-c" = "normal_mode"
+
 [keys.normal]
 C-s = ":w"
 C-x = ":buffer-close"
+"backspace" = { x = ":buffer-close!" }
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
+
+[editor.lsp]
+display-messages = true
+
+[editor.indent-guides]
+render = true

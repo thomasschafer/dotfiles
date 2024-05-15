@@ -6,6 +6,7 @@ fd
 ffmpegthumbnailer
 fzf
 fzf
+git
 git-filter-repo
 gnu-sed
 gnupg
