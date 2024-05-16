@@ -19,6 +19,10 @@ C-x = ":buffer-close"
 "backspace" = { x = ":buffer-close!" }
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
+F2 = "rename_symbol"
+F10 = ":q"
+F12 = "goto_definition"
+S-F12 = "goto_reference"
 
 [editor.lsp]
 display-messages = true

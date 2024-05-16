@@ -39,6 +39,7 @@ setopt EXTENDED_HISTORY
 
 # Haskell
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
+export PATH="/Users/tschafer/.local/bin:$PATH"
 
 # Pyenv
 export PYENV_ROOT="$HOME/.pyenv"
