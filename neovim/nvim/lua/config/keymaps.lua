@@ -43,8 +43,6 @@ vim.keymap.set("n", "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffe
 vim.keymap.set("n", "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
 
 -- Move to left or right buffer with option + h/l
-vim.keymap.del("n", "<S-h>")
-vim.keymap.del("n", "<S-l>")
 vim.keymap.set("n", "<M-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev Buffer" })
 vim.keymap.set("n", "<M-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next Buffer" })
 
@@ -62,11 +60,15 @@ vim.api.nvim_set_keymap(
   { noremap = true, silent = true }
 )
 
--- Comment line
+-- Commenting
 vim.keymap.set({ "n", "x" }, "<leader>.", function()
-  return MiniComment.operator() .. "_"
-end, { desc = "Comment line", expr = true })
+  return require("vim._comment").operator()
+end, { expr = true, desc = "Toggle comment" })
+vim.keymap.set("n", "<leader>.", function()
+  return require("vim._comment").operator() .. "_"
+end, { expr = true, desc = "Toggle comment line" })
 
+-- File picker
 vim.keymap.set({ "n", "x" }, "<leader>a", LazyVim.telescope("files"), { desc = "Find Files (Root Dir)" })
 
 -- Resize windows
