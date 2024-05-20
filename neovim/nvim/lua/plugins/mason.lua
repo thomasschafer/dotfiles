@@ -8,8 +8,6 @@ return {
       "prettierd",
       "rubocop",
       "ruby-lsp",
-      "ruff",
-      "ruff-lsp",
       "shellcheck",
       "shfmt",
       "sorbet",
