@@ -33,6 +33,7 @@ sd
 shared-mime-info
 shellcheck
 sqlfluff
+taplo
 terraform-docs
 tmux
 tree

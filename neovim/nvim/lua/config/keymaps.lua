@@ -39,12 +39,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
 })
 
 -- Move buffers left and right using option + left/right
-vim.keymap.set("n", "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
-vim.keymap.set("n", "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
+vim.keymap.set({ "n", "v" }, "<M-B>", "<cmd>BufferLineMovePrev<cr>", { desc = "Move buffer left" })
+vim.keymap.set({ "n", "v" }, "<M-F>", "<cmd>BufferLineMoveNext<cr>", { desc = "Move buffer right" })
 
 -- Move to left or right buffer with option + h/l
-vim.keymap.set("n", "<M-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev Buffer" })
-vim.keymap.set("n", "<M-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next Buffer" })
+vim.keymap.set({ "n", "v" }, "<M-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev Buffer" })
+vim.keymap.set({ "n", "v" }, "<M-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next Buffer" })
 
 -- Create cursors with vim-visual-multi without triggering macOS shortcuts
 vim.api.nvim_set_keymap(

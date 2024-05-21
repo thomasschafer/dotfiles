@@ -1,3 +1,20 @@
 [[language]]
 name = "haskell"
 auto-format = true
+
+[language-server.sorbet]
+command = "srb"
+args = ["tc", "--lsp"]
+
+[language-server.rubocop]
+command = "rubocop"
+args = ["--lsp"]
+
+[[language]]
+name = "ruby"
+language-servers = ["solargraph", "sorbet", "rubocop"]
+auto-format = true
+
+[[language]]
+name = "toml"
+auto-format = true
