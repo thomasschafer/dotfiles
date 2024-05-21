@@ -48,3 +48,6 @@ eval "$(pyenv init -)"
 
 # LLVM
 export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+
+# Helix
+unset TMUX # Temporary solution until https://github.com/helix-editor/helix/issues/8715 is fixed

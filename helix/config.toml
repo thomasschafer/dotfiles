@@ -13,6 +13,10 @@ select = "underline"
 [keys.insert]
 "C-c" = "normal_mode"
 
+[keys.select]
+X = "select_line_above"
+A-x = "extend_to_line_bounds"
+
 [keys.normal]
 C-s = ":w"
 C-x = ":buffer-close"
@@ -23,9 +27,14 @@ F2 = "rename_symbol"
 F10 = ":q"
 F12 = "goto_definition"
 S-F12 = "goto_reference"
+X = "select_line_above"
+A-x = "extend_to_line_bounds"
 
 [editor.lsp]
 display-messages = true
 
 [editor.indent-guides]
 render = true
+
+[editor.file-picker]
+hidden = false
