@@ -14,6 +14,7 @@ return {
       "stylua",
       "terraform-ls",
       "typescript-language-server",
+      "zls",
     },
   },
 }

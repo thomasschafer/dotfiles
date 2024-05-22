@@ -43,4 +43,6 @@ watchman
 yamllint
 yarn
 yazi
+zig
+zls
 zoxide
