@@ -72,7 +72,12 @@ end, { expr = true, desc = "Toggle comment line" })
 vim.keymap.set({ "n", "x" }, "<leader>a", LazyVim.telescope("files"), { desc = "Find Files (Root Dir)" })
 
 -- Resize windows
-vim.keymap.set("n", "<M-,>", "<cmd>resize +10<cr>", { desc = "Increase Window Height" })
-vim.keymap.set("n", "<M-m>", "<cmd>resize -10<cr>", { desc = "Decrease Window Height" })
-vim.keymap.set("n", "<M-n>", "<cmd>vertical resize -20<cr>", { desc = "Decrease Window Width" })
-vim.keymap.set("n", "<M-.>", "<cmd>vertical resize +20<cr>", { desc = "Increase Window Width" })
+vim.keymap.set("n", "<M-,>", "<cmd>resize +10<cr>", { desc = "Increase window height" })
+vim.keymap.set("n", "<M-m>", "<cmd>resize -10<cr>", { desc = "Decrease window height" })
+vim.keymap.set("n", "<M-n>", "<cmd>vertical resize -20<cr>", { desc = "Decrease window width" })
+vim.keymap.set("n", "<M-.>", "<cmd>vertical resize +20<cr>", { desc = "Increase window width" })
+
+-- Remove trailing spaces
+vim.keymap.set("n", "<leader>cz", function()
+  MiniTrailspace.trim()
+end, { desc = "Remove trailing spaces" })
