@@ -16,6 +16,10 @@ select = "underline"
 [keys.select]
 X = "select_line_above"
 A-x = "extend_to_line_bounds"
+p = "paste_clipboard_after"
+P = "paste_clipboard_before"
+y = "yank_to_clipboard"
+R = "replace_selections_with_clipboard"
 
 [keys.normal]
 C-s = ":w"
@@ -29,6 +33,16 @@ F12 = "goto_definition"
 S-F12 = "goto_reference"
 X = "select_line_above"
 A-x = "extend_to_line_bounds"
+p = "paste_clipboard_after"
+P = "paste_clipboard_before"
+y = "yank_to_clipboard"
+R = "replace_selections_with_clipboard"
+
+[keys.normal.space]
+p = "paste_after"
+P = "paste_before"
+y = "yank"
+R = "replace_with_yanked"
 
 [editor.lsp]
 display-messages = true
