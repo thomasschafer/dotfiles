@@ -10,8 +10,14 @@ insert = "bar"
 normal = "block"
 select = "underline"
 
-[keys.insert]
-"C-c" = "normal_mode"
+[editor.lsp]
+display-messages = true
+
+[editor.indent-guides]
+render = true
+
+[editor.file-picker]
+hidden = false
 
 [keys.select]
 X = "select_line_above"
@@ -24,7 +30,6 @@ R = "replace_selections_with_clipboard"
 [keys.normal]
 C-s = ":w"
 C-x = ":buffer-close"
-"backspace" = { x = ":buffer-close!" }
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
 F2 = "rename_symbol"
@@ -38,17 +43,20 @@ P = "paste_clipboard_before"
 y = "yank_to_clipboard"
 R = "replace_selections_with_clipboard"
 
+[keys.normal.backspace]
+x = ":buffer-close!"
+g = ":reset-diff-change"
+## Not possible yet until macro keymaps are possible, or if forked
+# y = [
+#   "select_register",
+#   "%",
+#   "paste_before",
+#   "yank_to_clipboard",
+#   "delete_selection",
+# ]
+
 [keys.normal.space]
 p = "paste_after"
 P = "paste_before"
 y = "yank"
 R = "replace_with_yanked"
-
-[editor.lsp]
-display-messages = true
-
-[editor.indent-guides]
-render = true
-
-[editor.file-picker]
-hidden = false
