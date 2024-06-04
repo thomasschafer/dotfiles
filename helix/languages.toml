@@ -1,7 +1,10 @@
+# ----- Haskell -----
 [[language]]
 name = "haskell"
 auto-format = true
 
+
+# ----- Ruby -----
 [language-server.sorbet]
 command = "srb"
 args = ["tc", "--lsp"]
@@ -15,9 +18,163 @@ name = "ruby"
 language-servers = ["solargraph", "sorbet", "rubocop"]
 auto-format = true
 
+
+# ----- Toml -----
 [[language]]
 name = "toml"
 auto-format = true
 
+
+# ----- Rust -----
 [language-server.rust-analyzer.config]
 check.command = "clippy"
+
+
+# ----- Python -----
+[[language]]
+name = "python"
+language-servers = ["pyright", "ruff"]
+auto-format = true
+
+[language-server.pyright.config.python.analysis]
+typeCheckingMode = "basic"
+
+[language-server.ruff]
+command = "ruff-lsp"
+
+[language-server.ruff.config.settings]
+args = ["--ignore", "E501"]
+
+[language.formatter]
+command = "black"
+args = ["--line-length", "88", "--quiet", "-"]
+
+
+# ----- TypeScript + JavaScript -----
+[language-server.biome]
+command = "biome"
+args = ["lsp-proxy"]
+
+[[language]]
+name = "javascript"
+language-servers = [
+  { name = "typescript-language-server", except-features = [
+    "format",
+  ] },
+  "biome",
+]
+auto-format = true
+
+[[language]]
+name = "typescript"
+language-servers = [
+  { name = "typescript-language-server", except-features = [
+    "format",
+  ] },
+  "biome",
+]
+auto-format = true
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.ts",
+] }
+
+[[language]]
+name = "tsx"
+auto-format = true
+language-servers = [
+  { name = "typescript-language-server", except-features = [
+    "format",
+  ] },
+  "biome",
+]
+
+[[language]]
+name = "jsx"
+auto-format = true
+language-servers = [
+  { name = "typescript-language-server", except-features = [
+    "format",
+  ] },
+  "biome",
+]
+[[language]]
+name = "javascript"
+language-servers = [
+  { name = 'biome' },
+  { name = 'typescript-language-server', except-features = [
+    'format',
+  ] },
+]
+auto-format = true
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.js",
+] }
+
+
+[[language]]
+name = "typescript"
+language-servers = [
+  { name = 'biome' },
+  { name = 'typescript-language-server', except-features = [
+    'format',
+  ] },
+]
+auto-format = true
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.ts",
+] }
+
+
+[[language]]
+name = "jsx"
+language-servers = [
+  { name = 'biome' },
+  { name = 'emmet-ls' },
+  { name = 'typescript-language-server', except-features = [
+    'format',
+  ] },
+]
+auto-format = true
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.jsx",
+] }
+
+[[language]]
+name = "tsx"
+language-servers = [
+  { name = 'biome' },
+  { name = 'emmet-ls' },
+  { name = 'typescript-language-server', except-features = [
+    'format',
+  ] },
+]
+auto-format = true
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.tsx",
+] }
+
+
+# ----- Json -----
+[[language]]
+name = "json"
+language-servers = [
+  { name = "vscode-json-language-server", except-features = [
+    "format",
+  ] },
+  "biome",
+]
+formatter = { command = "biome", args = [
+  "format",
+  "--stdin-file-path",
+  "a.json",
+] }

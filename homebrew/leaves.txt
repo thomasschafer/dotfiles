@@ -1,5 +1,7 @@
 bash-completion
 bat
+biome
+black
 delve
 deno
 derailed/k9s/k9s
@@ -27,11 +29,13 @@ poetry
 poppler
 pre-commit
 pyenv
+pyright
 qmk/qmk/qmk
 rbenv
 ripgrep
 ripgrep
 ruff
+ruff-lsp
 sd
 shared-mime-info
 shellcheck
@@ -40,6 +44,7 @@ taplo
 terraform-docs
 tmux
 tree
+typescript-language-server
 unar
 virtualenv
 watchman
