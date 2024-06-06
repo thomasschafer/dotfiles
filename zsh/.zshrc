@@ -41,11 +41,6 @@ setopt EXTENDED_HISTORY
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 export PATH="/Users/tschafer/.local/bin:$PATH"
 
-# Pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
 # LLVM
 export PATH="$(brew --prefix)/opt/llvm/bin:$PATH"
 
