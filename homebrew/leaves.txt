@@ -36,6 +36,7 @@ ripgrep
 ripgrep
 ruff
 ruff-lsp
+rust-analyzer
 sd
 shared-mime-info
 shellcheck
