@@ -17,7 +17,6 @@ gnupg
 go
 gopls
 hadolint
-helix
 jq
 jq
 lazygit
