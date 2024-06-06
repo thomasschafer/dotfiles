@@ -13,8 +13,8 @@ setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{cyan}%b%f) '
 PROMPT='> %F{green}%1~%f ${vcs_info_msg_0_}$ '
 
-# Neovim
-export EDITOR=nvim
+# Editor aliases
+export EDITOR=hx
 export VISUAL="$EDITOR"
 alias vi="nvim"
 alias nv="nvim"
