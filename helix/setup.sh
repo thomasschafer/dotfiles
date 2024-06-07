@@ -12,14 +12,27 @@ ln -sfn $PWD/ignore $HOME/.config/helix/ignore
 HELIX_REPO_DIR="helix"
 
 if [ -d "$HELIX_REPO_DIR" ]; then
-  cd "$HELIX_REPO_DIR"
-  git pull origin master
+	cd "$HELIX_REPO_DIR"
+
+	current_branch=$(git branch --show-current)
+	if [ "$current_branch" != "master" ]; then
+		echo "Error: expected branch master, found '$current_branch'."
+		exit 1
+	fi
+
+	git pull origin master
 else
-  git clone "git@github.com:thomasschafer/helix.git"
-  cd "$HELIX_REPO_DIR"
+	git clone "git@github.com:thomasschafer/helix.git"
+	cd "$HELIX_REPO_DIR"
 fi
 
-# cargo install --path helix-term --locked
+## Install rustup + cargo if required
+if ! command -v cargo &>/dev/null; then
+	curl https://sh.rustup.rs -sSf | sh
+	. "$HOME/.cargo/env"
+fi
+cargo install --path helix-term --locked
+
 ln -sfn $PWD/runtime ~/.config/helix/runtime
 cd ..
 
@@ -27,11 +40,18 @@ cd ..
 HX_UTILS_DIR="hx-utils"
 
 if [ -d "$HX_UTILS_DIR" ]; then
-  cd "$HX_UTILS_DIR"
-  git pull origin main
+	cd "$HX_UTILS_DIR"
+
+	current_branch=$(git branch --show-current)
+	if [ "$current_branch" != "main" ]; then
+		echo "Error: expected branch main, found '$current_branch'."
+		exit 1
+	fi
+
+	git pull origin main
 else
-  git clone "git@github.com:thomasschafer/hx-utils.git"
-  cd "$HX_UTILS_DIR"
+	git clone "git@github.com:thomasschafer/hx-utils.git"
+	cd "$HX_UTILS_DIR"
 fi
 
 stack install hx-utils

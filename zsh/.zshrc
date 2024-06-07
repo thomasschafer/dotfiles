@@ -39,7 +39,7 @@ setopt EXTENDED_HISTORY
 
 # Haskell
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-export PATH="/Users/tschafer/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # LLVM
 export PATH="$(brew --prefix)/opt/llvm/bin:$PATH"
