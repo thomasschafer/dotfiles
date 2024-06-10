@@ -10,8 +10,8 @@ WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 autoload -Uz vcs_info
 precmd() { vcs_info }
 setopt prompt_subst
-zstyle ':vcs_info:git:*' formats '(%F{cyan}%b%f) '
-PROMPT='> %F{green}%1~%f ${vcs_info_msg_0_}$ '
+zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
+PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
 
 # Editor aliases
 export EDITOR=hx
