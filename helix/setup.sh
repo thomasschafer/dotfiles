@@ -36,6 +36,8 @@ cargo install --path helix-term --locked
 ln -sfn $PWD/runtime ~/.config/helix/runtime
 cd ..
 
+# NOTE: may need to run `rustup component add rust-analyzer` if the homebrew installation of rust-analyzer causes issues
+
 # Install utils
 HX_UTILS_DIR="hx-utils"
 

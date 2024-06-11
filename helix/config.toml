@@ -33,7 +33,6 @@ C-x = ":buffer-close"
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
 F2 = "rename_symbol"
-F10 = ":q"
 F12 = "goto_definition"
 S-F12 = "goto_reference"
 X = "select_line_above"
@@ -46,7 +45,8 @@ R = "replace_selections_with_clipboard"
 [keys.normal.backspace]
 x = ":buffer-close!"
 g = ":reset-diff-change"
-a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w80% -h80% -E lazygit"
+a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E lazygit"
+s = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E yazi"
 ## Not possible yet until macro keymaps are possible, or if forked
 # y = [
 #   "select_register",
