@@ -46,6 +46,7 @@ R = "replace_selections_with_clipboard"
 [keys.normal.backspace]
 x = ":buffer-close!"
 g = ":reset-diff-change"
+a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w80% -h80% -E lazygit"
 ## Not possible yet until macro keymaps are possible, or if forked
 # y = [
 #   "select_register",

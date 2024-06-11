@@ -239,5 +239,8 @@
   "editor.inlayHints.enabled": "off",
   "editor.smoothScrolling": true,
   "workbench.editor.empty.hint": "hidden",
-  "go.toolsManagement.autoUpdate": true
+  "go.toolsManagement.autoUpdate": true,
+  "[sql]": {
+    "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
+  }
 }
