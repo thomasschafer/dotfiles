@@ -5,11 +5,6 @@ line-number = "relative"
 auto-format = true
 bufferline = "always"
 
-[editor.cursor-shape]
-insert = "bar"
-normal = "block"
-select = "underline"
-
 [editor.lsp]
 display-messages = true
 
@@ -20,7 +15,7 @@ render = true
 hidden = false
 
 [keys.select]
-X = "select_line_above"
+X = "extend_line_above"
 A-x = "extend_to_line_bounds"
 p = "paste_clipboard_after"
 P = "paste_clipboard_before"
@@ -35,7 +30,7 @@ A-l = "goto_next_buffer"
 F2 = "rename_symbol"
 F12 = "goto_definition"
 S-F12 = "goto_reference"
-X = "select_line_above"
+X = "extend_line_above"
 A-x = "extend_to_line_bounds"
 p = "paste_clipboard_after"
 P = "paste_clipboard_before"
