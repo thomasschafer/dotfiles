@@ -9,6 +9,9 @@ defaults write com.apple.dock show-recents -bool false
 defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
+# Remove slow animations
+defaults write com.apple.universalaccess reduceMotion -bool true
+
 # Update default location to save screenshots
 mkdir -p ~/Documents/Screenshots
 defaults write com.apple.screencapture location ~/Documents/Screenshots
