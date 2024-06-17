@@ -1,3 +1,8 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
 # Update dock icon size
 defaults write com.apple.dock tilesize -int 50
 # Minimise applications into icon in dock
@@ -10,7 +15,7 @@ defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 # Remove slow animations
-defaults write com.apple.universalaccess reduceMotion -bool true
+sudo defaults write com.apple.universalaccess reduceMotion -bool true
 
 # Update default location to save screenshots
 mkdir -p ~/Documents/Screenshots
