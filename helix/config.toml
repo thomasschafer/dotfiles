@@ -45,14 +45,8 @@ f = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E yazi %{fi
 j = "save_selection"
 # Jump to first diagnostic on current line (fails on first line but this is rarely required)
 d = ["move_line_up", "goto_line_end", "goto_next_diag"]
-## Not possible yet until macro keymaps are possible, or if forked
-# y = [
-#   "select_register",
-#   "%",
-#   "paste_before",
-#   "yank_to_clipboard",
-#   "delete_selection",
-# ]
+y = ":sh echo \"%{relative_filename}\" | tr -d '\n' | pbcopy"
+Y = ":sh echo \"%{filename}\" | tr -d '\n' | pbcopy"
 
 [keys.normal.space]
 p = "paste_after"
