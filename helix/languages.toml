@@ -15,7 +15,7 @@ args = ["--lsp"]
 
 [[language]]
 name = "ruby"
-language-servers = ["solargraph", "sorbet", "rubocop"]
+language-servers = ["sorbet", "rubocop"]
 auto-format = true
 
 
