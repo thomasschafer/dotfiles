@@ -33,7 +33,14 @@ check.command = "clippy"
 # ----- Python -----
 [[language]]
 name = "python"
-language-servers = ["pyright", "ruff"]
+language-servers = [
+  { name = "pyright", except-features = [
+    "format",
+  ] },
+  { name = "ruff", only-features = [
+    "format",
+  ] },
+]
 auto-format = true
 
 [language-server.pyright.config.python.analysis]
