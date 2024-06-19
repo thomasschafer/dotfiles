@@ -24,6 +24,7 @@ llvm
 neovim
 node
 nvm
+pgformatter
 poetry
 poppler
 pre-commit

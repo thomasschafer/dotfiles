@@ -178,3 +178,9 @@ formatter = { command = "biome", args = [
   "--stdin-file-path",
   "a.json",
 ] }
+
+# ----- SQL -----
+[[language]]
+name = "sql"
+formatter = { command = "pg_format", args = ["-i"] }
+auto-format = true
