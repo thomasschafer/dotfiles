@@ -40,6 +40,10 @@ C-h = "jump_view_left"
 C-j = "jump_view_down"
 C-k = "jump_view_up"
 C-l = "jump_view_right"
+F7 = "goto_next_change"
+A-F7 = "goto_prev_change"
+F8 = "goto_next_diag"
+A-F8 = "goto_prev_diag"
 
 [keys.normal.backspace]
 x = ":buffer-close!"

@@ -10,8 +10,8 @@ command = "srb"
 args = ["tc", "--lsp"]
 
 [language-server.rubocop]
-command = "rubocop"
-args = ["--lsp"]
+command = "bundle"
+args = ["exec", "rubocop", "--lsp"]
 
 [[language]]
 name = "ruby"
