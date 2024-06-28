@@ -14,13 +14,34 @@ render = true
 [editor.file-picker]
 hidden = false
 
-[keys.select]
+[keys.select] # TODO: this is all duplicated from [keys.normal] - deduplicate
 X = "extend_line_above"
 A-x = "extend_to_line_bounds"
 p = "paste_clipboard_after"
 P = "paste_clipboard_before"
 y = "yank_to_clipboard"
 R = "replace_selections_with_clipboard"
+A-up = [ # shift selections up one line
+  "ensure_selections_forward",
+  "extend_to_line_bounds",
+  "extend_char_right",
+  "extend_char_left",
+  "delete_selection",
+  "move_line_up",
+  "add_newline_above",
+  "move_line_up",
+  "replace_with_yanked",
+]
+A-down = [ # shift selections down one line
+  "ensure_selections_forward",
+  "extend_to_line_bounds",
+  "extend_char_right",
+  "extend_char_left",
+  "delete_selection",
+  "add_newline_below",
+  "move_line_down",
+  "replace_with_yanked",
+]
 
 [keys.normal]
 C-s = ":w"
@@ -44,6 +65,27 @@ F7 = "goto_next_change"
 A-F7 = "goto_prev_change"
 F8 = "goto_next_diag"
 A-F8 = "goto_prev_diag"
+A-up = [ # shift selections up one line
+  "ensure_selections_forward",
+  "extend_to_line_bounds",
+  "extend_char_right",
+  "extend_char_left",
+  "delete_selection",
+  "move_line_up",
+  "add_newline_above",
+  "move_line_up",
+  "replace_with_yanked",
+]
+A-down = [ # shift selections down one line
+  "ensure_selections_forward",
+  "extend_to_line_bounds",
+  "extend_char_right",
+  "extend_char_left",
+  "delete_selection",
+  "add_newline_below",
+  "move_line_down",
+  "replace_with_yanked",
+]
 
 [keys.normal.backspace]
 x = ":buffer-close!"
