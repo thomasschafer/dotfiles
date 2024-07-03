@@ -10,4 +10,6 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 ~/.tmux/plugins/tpm/bin/install_plugins
 
+ln -sfn "$(pwd)/tmux-sessionizer.sh" ~/.local/bin/tmux-sessionizer
+
 echo "Tmux configured successfully"
