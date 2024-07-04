@@ -5,7 +5,7 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$(find ~/Development ~/git ~/git/gocardless -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | fzf)
+    selected=$(find ~/Development ~/git ~/git/gocardless -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | fzf --layout reverse)
 fi
 
 if [[ -z $selected ]]; then
