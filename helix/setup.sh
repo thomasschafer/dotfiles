@@ -59,4 +59,6 @@ fi
 stack install hx-utils
 ln -sfn $(which hx-utils) ~/.local/bin/u
 
+ln -sfn "$(pwd)/helix" ~/Development/helix
+
 echo "Helix configured successfully"
