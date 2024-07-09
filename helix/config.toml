@@ -87,7 +87,7 @@ A-down = [ # shift selections down one line
   "replace_with_yanked",
 ]
 
-[keys.normal.backspace]
+[keys.normal.ret]
 x = ":buffer-close!"
 g = ":reset-diff-change"
 a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E lazygit"
