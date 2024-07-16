@@ -91,9 +91,9 @@ A-down = [ # shift selections down one line
 x = ":buffer-close!"
 g = ":reset-diff-change"
 a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E lazygit"
-f = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E yazi %{filename}"
+f = ":sh tmux popup -xC -yC -w90% -h90% -E yazi %{filename}"
 s = ":sh git blame %{filename} -L %{line_num},%{line_num}"
-w = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E env GIT_PAGER='less -+F' git log --follow -p -- %{filename}"
+w = ":sh tmux popup -xC -yC -w90% -h90% -E env GIT_PAGER='less -+F' git log --follow -p -- %{filename}"
 j = "save_selection"
 # Jump to first diagnostic on current line (fails on first line but this is rarely required)
 d = ["move_line_up", "goto_line_end", "goto_next_diag"]
