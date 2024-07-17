@@ -5,6 +5,10 @@ line-number = "relative"
 auto-format = true
 bufferline = "always"
 
+end-of-line-diagnostics = "hint"
+[editor.inline-diagnostics]
+cursor-line = "warning"
+
 [editor.lsp]
 display-messages = true
 
