@@ -93,7 +93,8 @@ g = ":reset-diff-change"
 a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E lazygit"
 f = ":sh tmux popup -xC -yC -w90% -h90% -E yazi %{filename}"
 s = ":sh git blame %{filename} -L %{line_num},%{line_num}"
-w = ":sh tmux popup -xC -yC -w90% -h90% -E env GIT_PAGER='less -+F' git log --follow -p -- %{filename}"
+# TODO: the below doesn't work when opening Helix like `hx file1 ...`. Might need to replace #{pane_current_path} with repo root dynamically
+w = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E env GIT_PAGER='less -+F' git log --follow -p -- %{filename}"
 j = "save_selection"
 # Jump to first diagnostic on current line (fails on first line but this is rarely required)
 d = ["move_line_up", "goto_line_end", "goto_next_diag"]
