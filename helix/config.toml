@@ -4,10 +4,7 @@ theme = "catppuccin_macchiato_transparent"
 line-number = "relative"
 auto-format = true
 bufferline = "always"
-
 end-of-line-diagnostics = "hint"
-[editor.inline-diagnostics]
-cursor-line = "warning"
 
 [editor.lsp]
 display-messages = true
@@ -103,6 +100,7 @@ j = "save_selection"
 d = ["move_line_up", "goto_line_end", "goto_next_diag"]
 y = ":sh echo \"%{relative_filename}\" | tr -d '\n' | pbcopy"
 Y = ":sh echo \"%{filename}\" | tr -d '\n' | pbcopy"
+t = ":toggle inline-diagnostics.cursor-line warning disable"
 
 [keys.normal.space]
 p = "paste_after"
