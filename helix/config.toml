@@ -47,6 +47,8 @@ A-down = [ # shift selections down one line
 [keys.normal]
 C-s = ":w"
 C-x = ":buffer-close"
+A-r = ":rla"
+A-q = ":q"
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
 F2 = "rename_symbol"
