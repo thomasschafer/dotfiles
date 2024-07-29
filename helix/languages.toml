@@ -9,6 +9,10 @@ auto-format = true
 command = "srb"
 args = ["tc", "--lsp"]
 
+[language-server.ruby-lsp]
+command = "ruby-lsp"
+args = []
+
 [language-server.rubocop]
 command = "bundle"
 args = ["exec", "rubocop", "--lsp"]
