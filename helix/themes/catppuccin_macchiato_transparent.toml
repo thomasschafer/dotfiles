@@ -5,3 +5,8 @@ inherits = "catppuccin_macchiato"
 "ui.linenr.selected" = { fg = "#e2e8f8" }
 "ui.cursor.primary.select" = { fg = "base", bg = "peach" }
 "ui.cursor.select" = { fg = "base", bg = "red" }
+
+error = { fg = "red", bg = "surface0" }
+warning = { fg = "yellow", bg = "surface0" }
+info = { fg = "sky", bg = "surface0" }
+hint = { fg = "teal", bg = "surface0" }
