@@ -13,19 +13,16 @@ setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
 PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
 
-# Editor aliases
+# Git autocompletion
+autoload -Uz compinit && compinit
+
+# Aliases and editor config
 export EDITOR=hx
 export VISUAL="$EDITOR"
-alias vi="nvim"
 alias nv="nvim"
 alias c="code"
 alias z="zed"
 alias y="yazi"
-
-# Git autocompletion
-autoload -Uz compinit && compinit
-
-# Aliases
 alias lg=lazygit
 alias ldr=lazydocker
 
