@@ -1,5 +1,6 @@
 alacritty
 hammerspoon
+karabiner-elements
 rectangle
 visual-studio-code
 zed
