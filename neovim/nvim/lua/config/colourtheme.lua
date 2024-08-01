@@ -23,3 +23,8 @@ vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#e2e8f8" })
 
 -- vim-visual-multi colour theme
 vim.g.VM_theme = "iceblue"
+
+-- Set cursor colours and default to block
+vim.opt.guicursor = "n:block,i:block-CursorInsert,v:block-CursorVisual"
+vim.cmd([[highlight CursorInsert guifg=NONE guibg=#a6da95]])
+vim.cmd([[highlight CursorVisual guifg=NONE guibg=#f5a97f]])
