@@ -1,6 +1,6 @@
 [opener]
 edit = [
-	{ run = 'tmux send-keys -t "$TMUX_PANE" ":o ${@}" Enter', block = true },
+	{ run = 'tmux send-keys -t "$TMUX_PANE" ":onc ${@}" Enter', block = true },
 ]
 
 [manager]
