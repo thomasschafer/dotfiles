@@ -3,6 +3,9 @@
 set -e
 set -o pipefail
 
+pip3 install toml
+python3 process_config.py config.template.toml config.toml
+
 ln -sfn $PWD/config.toml $HOME/.config/helix/config.toml
 ln -sfn $PWD/themes $HOME/.config/helix/themes
 ln -sfn $PWD/languages.toml $HOME/.config/helix/languages.toml
