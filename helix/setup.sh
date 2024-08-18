@@ -3,10 +3,7 @@
 set -e
 set -o pipefail
 
-source env/bin/activate
-python3 -m pip install toml
-python3 process_config.py config.template.toml config.toml
-deactivate
+./process_config.sh --install
 
 ln -sfn $PWD/config.toml $HOME/.config/helix/config.toml
 ln -sfn $PWD/themes $HOME/.config/helix/themes
