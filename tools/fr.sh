@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USAGE="Usage: $(basename "$0") [-F|--fixed-strings] [-p|--preview] <BEFORE> [AFTER]"
+USAGE="Usage: $(basename "$0") [-F|--fixed-strings] [-p|--preview] <BEFORE> [<AFTER>]"
 
 SHARED_FLAGS=""
 PREVIEW=false

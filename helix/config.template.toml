@@ -77,6 +77,7 @@ d = ["move_line_up", "goto_line_end", "goto_next_diag"]
 y = ":sh echo \"%{relative_filename}\" | tr -d '\n' | pbcopy"
 Y = ":sh echo \"%{filename}\" | tr -d '\n' | pbcopy"
 t = ":toggle inline-diagnostics.cursor-line warning disable"
+u = ":sh echo \"$(git rev-parse --short HEAD)/%{relative_filename}#L%{line_num}\" | pbcopy"
 
 [keys.normal.space]
 p = "paste_after"
