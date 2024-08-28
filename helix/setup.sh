@@ -3,6 +3,9 @@
 set -e
 set -o pipefail
 
+if [ ! -d env ]; then
+	python3 -m venv env
+fi
 ./process_config.sh --install
 
 ln -sfn $PWD/config.toml $HOME/.config/helix/config.toml
