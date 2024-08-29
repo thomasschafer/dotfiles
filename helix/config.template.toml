@@ -5,6 +5,7 @@ line-number = "relative"
 auto-format = true
 bufferline = "always"
 end-of-line-diagnostics = "hint"
+smart-tab.enable = false
 
 [editor.lsp]
 display-messages = true
