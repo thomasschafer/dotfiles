@@ -19,6 +19,7 @@ gopls
 hadolint
 jq
 jq
+kakoune
 lazygit
 llvm
 neovim

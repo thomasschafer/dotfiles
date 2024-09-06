@@ -1,0 +1,5 @@
+colorscheme catppuccin_macchiato
+
+add-highlighter global/ number-lines -relative
+
+set global startup_info_version 99999999
