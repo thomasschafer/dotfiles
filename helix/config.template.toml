@@ -65,7 +65,7 @@ A-down = [ # shift selections down one line
   "replace_with_yanked",
 ]
 
-[keys.normal.ret]
+[keys.normal-and-select.ret]
 x = ":buffer-close!"
 g = ":reset-diff-change"
 a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E env EDITOR=hx lazygit"
@@ -80,7 +80,7 @@ Y = ":sh echo \"%{filename}\" | tr -d '\n' | pbcopy"
 t = ":toggle inline-diagnostics.cursor-line warning disable"
 u = ":sh echo \"$(git rev-parse --short HEAD)/%{relative_filename}#L%{line_num}\" | pbcopy"
 
-[keys.normal.space]
+[keys.normal-and-select.space]
 p = "paste_after"
 P = "paste_before"
 y = "yank"
