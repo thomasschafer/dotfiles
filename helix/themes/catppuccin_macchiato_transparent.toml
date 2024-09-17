@@ -3,8 +3,12 @@ inherits = "catppuccin_macchiato"
 "ui.background" = { fg = "foreground" }
 "ui.linenr" = { fg = "overlay0" }
 "ui.linenr.selected" = { fg = "#e2e8f8" }
+"ui.cursor.primary.insert" = { fg = "base", bg = "rosewater" }
 "ui.cursor.primary.select" = { fg = "base", bg = "peach" }
+"ui.cursor.insert" = { fg = "base", bg = "subtext0" }
 "ui.cursor.select" = { fg = "base", bg = "red" }
+"ui.cursor.match" = { fg = "peach", bg = "surface1", modifiers = ["bold"] }
+"ui.bufferline.active" = { bg = "surface0", fg = "mauve" }
 
 error = { fg = "red", bg = "surface0" }
 warning = { fg = "yellow", bg = "surface0" }

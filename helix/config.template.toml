@@ -18,9 +18,8 @@ hidden = false
 
 [keys.normal-and-select]
 C-s = ":w"
-C-x = ":buffer-close"
 A-r = ":rla"
-A-q = ":q"
+C-x = ":buffer-close"
 A-h = "goto_previous_buffer"
 A-l = "goto_next_buffer"
 A-S-h = ":buffer-move-left"
@@ -43,6 +42,8 @@ F7 = "goto_next_change"
 A-F7 = "goto_prev_change"
 F8 = "goto_next_diag"
 A-F8 = "goto_prev_diag"
+A-j = "page_down"
+A-k = "page_up"
 A-up = [ # shift selections up one line
   "ensure_selections_forward",
   "extend_to_line_bounds",
