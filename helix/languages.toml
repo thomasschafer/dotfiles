@@ -37,24 +37,14 @@ check.command = "clippy"
 # ----- Python -----
 [[language]]
 name = "python"
-language-servers = [
-  { name = "pyright", except-features = [
-    "format",
-  ] },
-  { name = "ruff", only-features = [
-    "format",
-  ] },
-]
+language-servers = ["pylsp"]
 auto-format = true
 
-[language-server.pyright.config.python.analysis]
-typeCheckingMode = "basic"
-
-[language-server.ruff]
-command = "ruff-lsp"
-
-[language-server.ruff.config.settings]
-args = ["--ignore", "E501"]
+[language-server.pylsp.config.pylsp]
+plugins.pyls_mypy.enabled = true
+plugins.pyls_mypy.live_mode = true
+plugins.flake8.maxLineLength = 88
+plugins.pycodestyle.maxLineLength = 88
 
 [language.formatter]
 command = "black"
