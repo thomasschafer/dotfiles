@@ -26,6 +26,7 @@ neovim
 node
 nvm
 pgformatter
+pipx
 poetry
 poppler
 pre-commit
