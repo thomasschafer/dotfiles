@@ -69,7 +69,7 @@ ln -sfn $(which hx-utils) ~/.local/bin/u
 
 # Install Python LSPs
 pipx install "python-lsp-server[all]"
-pipx install pylsp-mypy --include-deps
+pipx inject python-lsp-server pylsp-mypy
 
 
 echo "Helix configured successfully"
