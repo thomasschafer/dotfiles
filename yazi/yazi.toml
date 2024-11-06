@@ -2,6 +2,9 @@
 edit = [
 	{ run = 'tmux send-keys -t "$TMUX_PANE" ":onc ${@}" Enter', block = true },
 ]
+open = [
+	{ run = 'tmux send-keys -t "$TMUX_PANE" ":onc ${@}" Enter', block = true },
+]
 
 [manager]
 show_hidden = true
