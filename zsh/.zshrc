@@ -19,10 +19,11 @@ autoload -Uz compinit && compinit
 # Aliases and editor config
 export EDITOR=hx
 export VISUAL="$EDITOR"
-alias nv="nvim"
-alias c="code"
-alias z="zed"
-alias y="yazi"
+alias nv=nvim
+alias c=code
+alias z=zed
+alias y=yazi
+alias s=scooter
 alias lg=lazygit
 alias ldr=lazydocker
 
