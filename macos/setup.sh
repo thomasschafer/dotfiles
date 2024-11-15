@@ -18,8 +18,8 @@ defaults write com.apple.screensaver askForPasswordDelay -int 0
 sudo defaults write com.apple.universalaccess reduceMotion -bool true
 
 # Update default location to save screenshots
-mkdir -p ~/Documents/Screenshots
-defaults write com.apple.screencapture location ~/Documents/Screenshots
+mkdir -p $HOME/Documents/Screenshots
+defaults write com.apple.screencapture location $HOME/Documents/Screenshots
 
 killall Dock
 killall SystemUIServer

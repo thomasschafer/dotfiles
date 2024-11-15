@@ -3,5 +3,6 @@
 set -e
 set -o pipefail
 
-ln -sfn $(pwd)/karabiner.json ~/.config/karabiner/karabiner.json
+mkdir -p $HOME/.config/karabiner
+ln -sfn $(pwd)/karabiner.json $HOME/.config/karabiner/karabiner.json
 

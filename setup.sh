@@ -8,7 +8,7 @@ cd homebrew
 cd ..
 
 # Install nerd font
-curl -fL https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DejaVuSansMono/Regular/DejaVuSansMNerdFontMono-Regular.ttf -o ~/Library/Fonts/DejaVuSansMNerdFontMono-Regular.ttf
+curl -fL https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DejaVuSansMono/Regular/DejaVuSansMNerdFontMono-Regular.ttf -o $HOME/Library/Fonts/DejaVuSansMNerdFontMono-Regular.ttf
 
 setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 

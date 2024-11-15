@@ -3,11 +3,12 @@
 set -e
 set -o pipefail
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-touch ~/.zprofile
-(echo; echo 'eval "$(/usr/local/bin/brew shellenv)"') >> ~/.zprofile
-eval "$(/usr/local/bin/brew shellenv)"
+touch $HOME/.zprofile
+echo >> $HOME/.zprofile
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 xargs brew install < leaves.txt
 xargs brew install --cask < cask.txt

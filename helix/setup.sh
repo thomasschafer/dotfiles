@@ -8,6 +8,7 @@ if [ ! -d env ]; then
 fi
 ./process_config.sh --install
 
+mkdir -p $HOME/.config/helix
 ln -sfn $PWD/config.toml $HOME/.config/helix/config.toml
 ln -sfn $PWD/themes $HOME/.config/helix/themes
 ln -sfn $PWD/languages.toml $HOME/.config/helix/languages.toml
@@ -38,9 +39,9 @@ if ! command -v cargo &>/dev/null; then
 fi
 cargo install --path helix-term --locked
 
-ln -sfn $PWD/runtime ~/.config/helix/runtime
+ln -sfn $PWD/runtime $HOME/.config/helix/runtime
 cd ..
-ln -sfn "$(pwd)/helix" ~/Development/helix
+ln -sfn "$(pwd)/helix" $HOME/Development/helix
 
 # NOTE: may need to run `rustup component add rust-analyzer` if the homebrew installation of rust-analyzer causes issues
 
@@ -64,7 +65,7 @@ else
 fi
 
 stack install hx-utils
-ln -sfn $(which hx-utils) ~/.local/bin/u
+ln -sfn $(which hx-utils) $HOME/.local/bin/u
 
 
 # Install Python LSPs

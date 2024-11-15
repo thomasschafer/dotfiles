@@ -1,6 +1,6 @@
 # Work-specific config
-if [[ -f ~/.zshrc.private ]]; then
-    source ~/.zshrc.private
+if [[ -f $HOME/.zshrc.private ]]; then
+    source $HOME/.zshrc.private
 fi
 
 # Treat / as a word delimiter
@@ -30,7 +30,7 @@ alias ldr=lazydocker
 # Zsh history
 export HISTSIZE=100000
 export SAVEHIST=100000
-export HISTFILE=~/.zhistory
+export HISTFILE=$HOME/.zhistory
 setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
