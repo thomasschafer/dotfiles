@@ -26,4 +26,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 ghcup install hls
 
 
+# Install other tools
+cargo install scooter
+
+
 echo "Tools configured successfully"

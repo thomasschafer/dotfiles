@@ -73,7 +73,6 @@ a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90% -h90% -E env EDITO
 f = ":sh tmux popup -xC -yC -w90% -h90% -E yazi %{filename}"
 w = ":sh git blame %{filename} -L %{line_num},%{line_num}"
 s = ":sh tmux popup -d \"%{working_dir}\" -xC -yC -w90% -h90% -E env GIT_PAGER='less -+F' git log --follow -p -- %{filename}"
-# TODO: install scooter in dotfiles initialisation
 e = ":sh tmux popup -d \"%{working_dir}\" -xC -yC -w90% -h90% -E scooter"
 j = "save_selection"
 # Jump to first diagnostic on current line (fails on first line but this is rarely required)
