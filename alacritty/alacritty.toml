@@ -1,9 +1,10 @@
+[general]
 import = [
   "~/.config/alacritty/catppuccin-macchiato.toml",
   "~/.config/alacritty/private.toml",
 ]
 
-[shell]
+[terminal.shell]
 program = "/bin/zsh"
 args = ["-l", "-c", "tmux attach -t 'λ' || tmux new -s 'λ'"]
 
