@@ -87,3 +87,4 @@ p = "paste_after"
 P = "paste_before"
 y = "yank"
 R = "replace_with_yanked"
+x = ["yank_to_clipboard", "delete_selection"]
