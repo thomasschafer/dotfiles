@@ -15,13 +15,20 @@ fi
 selected_name=$(basename "$selected" | tr . _)
 tmux_running=$(pgrep tmux)
 
+create_session() {
+    tmux new-session -ds $1 -c $2
+    tmux split-window -h -t $1 -c $2
+    tmux send-keys -t $1:0.1 'hx' Enter
+}
+
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-    tmux new-session -s $selected_name -c $selected
+    create_session $selected_name $selected
+    tmux attach-session -t $selected_name
     exit 0
 fi
 
 if ! tmux has-session -t=$selected_name 2> /dev/null; then
-    tmux new-session -ds $selected_name -c $selected
+    create_session $selected_name $selected
 fi
 
 tmux switch-client -t $selected_name
