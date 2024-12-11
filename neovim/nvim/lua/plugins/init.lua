@@ -17,7 +17,6 @@ require("lazy").setup({
     "akinsho/toggleterm.nvim",
     version = "*",
     opts = {
-      -- Default toggleterm config (optional)
       size = 20,
       open_mapping = [[<c-\>]],
       hide_numbers = true,

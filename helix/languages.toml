@@ -185,3 +185,9 @@ formatter = { command = "biome", args = [
 name = "sql"
 formatter = { command = "pg_format", args = ["-i"] }
 auto-format = true
+
+
+# ----- Go -----
+[[language]]
+name = "go"
+auto-format = true
