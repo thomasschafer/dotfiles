@@ -1,4 +1,7 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
-require("plugins")
+vim.wo.number = true
+vim.wo.relativenumber = true
+
+require("config.lazy")
