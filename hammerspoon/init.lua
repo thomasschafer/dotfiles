@@ -1,5 +1,5 @@
 local appShortcuts = {
-	A = "Alacritty",
+	A = "Ghostty",
 	S = "Slack",
 	D = "YouTube Music",
 	F = "Zed",
