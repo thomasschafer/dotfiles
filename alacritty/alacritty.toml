@@ -13,7 +13,7 @@ dimensions = { columns = 200, lines = 60 }
 dynamic_title = true
 resize_increments = true
 decorations = "Buttonless"
-padding = { x = 15, y = 10 }
+padding = { x = 12, y = 12 }
 option_as_alt = "Both"
 
 [keyboard]
@@ -64,7 +64,7 @@ mouse.enabled = true
 
 [font]
 size = 12
-offset = { x = 0, y = 6 }
+offset = { x = 1, y = 4 }
 bold = { family = "DejaVuSansM Nerd Font Mono" }
 italic = { family = "DejaVuSansM Nerd Font Mono" }
 normal = { family = "DejaVuSansM Nerd Font Mono" }
