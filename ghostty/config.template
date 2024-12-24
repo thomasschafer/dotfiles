@@ -17,6 +17,8 @@ confirm-close-surface = false
 
 font-feature = -calt
 
+mouse-hide-while-typing = true
+
 
 ###  Keybindings  ###
 
