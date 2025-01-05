@@ -1,4 +1,5 @@
 alacritty
+font-jetbrains-mono-nerd-font
 hammerspoon
 karabiner-elements
 rectangle
