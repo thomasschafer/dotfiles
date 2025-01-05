@@ -44,6 +44,9 @@ bindings = [
   { key = "3", mods = "Option", chars = "#" },                       # This would be overriden otherwise by option_as_alt
 ]
 
+[mouse]
+hide_when_typing = true
+
 [[hints.enabled]]
 binding = { key = "u", mods = "Control|Shift" }
 command = "open"
