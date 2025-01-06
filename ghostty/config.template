@@ -26,23 +26,23 @@ macos-option-as-alt = true
 
 keybind = alt+3=text:#
 keybind = cmd+r=reload_config
-keybind = cmd+alt+left=text:\x1b[1;5D     ## cmd+option+left  -> ctrl+left
-keybind = cmd+alt+right=text:\x1b[1;5C    ## cmd+option+right -> ctrl+right
-keybind = cmd+shift+left=text:\x1b[1;6D   ## cmd+shift+left   -> ctrl+shift+left
-keybind = cmd+shift+right=text:\x1b[1;6C  ## cmd+shift+right  -> ctrl+shift+right
-keybind = cmd+shift+up=text:\x01K         ## cmd+shift+up     -> ctrl+a K
-keybind = cmd+shift+down=text:\x01k       ## cmd+shift+down   -> ctrl+a k 
-keybind = cmd+t=text:\x01c 				  ## cmd+t            -> ctrl+a c
-keybind = cmd+d=text:\x01|  			  ## cmd+d            -> ctrl+a |
-keybind = cmd+shift+d=text:\x01-		  ## cmd+shift+d      -> ctrl+a -
-keybind = cmd+w=text:\x01x				  ## cmd+w            -> ctrl+a x
-keybind = cmd+l=text:\x01;				  ## cmd+l            -> ctrl+a ;
-keybind = cmd+comma=text:\x01L			  ## cmd+,            -> ctrl+a L  (jump to last session)
-keybind = cmd+shift+enter=text:\x01z	  ## cmd+shift+enter  -> ctrl+a z
-keybind = cmd+s=text:\x01s				  ## cmd+s            -> ctrl+a s  (view tmux sessions)
-keybind = cmd+p=text:\x01F				  ## cmd+p            -> ctrla F  (open tmux-sessionizer)
-keybind = alt+right=text:\x1bF 			  ## alt+right        -> jump right by a word
-keybind = alt+left=text:\x1bB 			  ## alt+left         -> jump left by a word
-keybind = cmd+left=text:\x1b[H 			  ## cmd+left         -> jump to start of line
-keybind = cmd+right=text:\x1b[F 	 	  ## cmd+right        -> jump to end of line
-keybind = cmd+backspace=text:\x15 	 	  ## cmd+backspace    -> delete to start of line
+keybind = cmd+alt+left=text:\x1b[1;5D      ## cmd+option+left   -> ctrl+left
+keybind = cmd+alt+right=text:\x1b[1;5C     ## cmd+option+right  -> ctrl+right
+keybind = cmd+shift+left=text:\x1b[1;6D    ## cmd+shift+left    -> ctrl+shift+left
+keybind = cmd+shift+right=text:\x1b[1;6C   ## cmd+shift+right   -> ctrl+shift+right
+keybind = cmd+shift+up=text:\x01K          ## cmd+shift+up      -> ctrl+a K
+keybind = cmd+shift+down=text:\x01k        ## cmd+shift+down    -> ctrl+a k
+keybind = cmd+t=text:\x01c                 ## cmd+t             -> ctrl+a c
+keybind = cmd+d=text:\x01|                 ## cmd+d             -> ctrl+a |
+keybind = cmd+shift+d=text:\x01-           ## cmd+shift+d       -> ctrl+a -
+keybind = cmd+w=text:\x01x                 ## cmd+w             -> ctrl+a x
+keybind = cmd+l=text:\x01;                 ## cmd+l             -> ctrl+a ;
+keybind = cmd+comma=text:\x01L             ## cmd+,             -> ctrl+a L  (jump to last session)
+keybind = cmd+shift+enter=text:\x01z       ## cmd+shift+enter   -> ctrl+a z
+keybind = cmd+s=text:\x01s                 ## cmd+s             -> ctrl+a s  (view tmux sessions)
+keybind = cmd+p=text:\x01F                 ## cmd+p             -> ctrl+a F  (open tmux-sessionizer)
+keybind = alt+right=text:\x1bF             ## alt+right         -> jump right by a word
+keybind = alt+left=text:\x1bB              ## alt+left          -> jump left by a word
+keybind = cmd+left=text:\x1b[H             ## cmd+left          -> jump to start of line
+keybind = cmd+right=text:\x1b[F            ## cmd+right         -> jump to end of line
+keybind = cmd+backspace=text:\x15          ## cmd+backspace     -> delete to start of line

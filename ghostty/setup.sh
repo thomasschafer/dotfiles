@@ -3,8 +3,6 @@
 set -e
 set -o pipefail
 
-# TODO: download Ghostty here - maybe just use brew when public
-
 mkdir -p $HOME/.config/ghostty
 
 # Strip end-of-line comments starting with ##
