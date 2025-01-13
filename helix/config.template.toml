@@ -6,6 +6,7 @@ auto-format = true
 bufferline = "always"
 end-of-line-diagnostics = "hint"
 smart-tab.enable = false
+undercurl = true
 
 [editor.lsp]
 display-messages = true
