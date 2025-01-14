@@ -19,6 +19,8 @@ font-feature = -calt
 
 mouse-hide-while-typing = true
 
+cursor-invert-fg-bg = true
+
 
 ###  Keybindings  ###
 
