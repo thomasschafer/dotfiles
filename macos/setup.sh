@@ -21,5 +21,8 @@ sudo defaults write com.apple.universalaccess reduceMotion -bool true
 mkdir -p $HOME/Documents/Screenshots
 defaults write com.apple.screencapture location $HOME/Documents/Screenshots
 
+# Ensure tap-hold repeats key
+defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+
 killall Dock
 killall SystemUIServer
