@@ -19,11 +19,12 @@ ms-python.black-formatter
 ms-python.debugpy
 ms-python.python
 ms-python.vscode-pylance
+ms-toolsai.jupyter
 ms-vscode-remote.remote-containers
 ms-vscode.makefile-tools
-ryuta46.multi-command
 redhat.vscode-yaml
 rubocop.vscode-rubocop
+ryuta46.multi-command
 shopify.ruby-extensions-pack
 shopify.ruby-lsp
 sorbet.sorbet-vscode-extension
