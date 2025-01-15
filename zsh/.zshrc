@@ -13,6 +13,13 @@ setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
 PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
 
+# Vi mode
+ZVM_INSERT_MODE_CURSOR=$icur'\e\e]12;#f4dbd6\a'
+ZVM_NORMAL_MODE_CURSOR=$ncur'\e\e]12;#b7bdf8\a'
+ZVM_VI_HIGHLIGHT_BACKGROUND='#5b6078'
+ZVM_READKEY_ENGINE=$ZVM_READKEY_ENGINE_NEX
+source $(brew --prefix)/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+
 # Git autocompletion
 autoload -Uz compinit && compinit
 

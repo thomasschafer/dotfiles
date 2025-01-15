@@ -60,3 +60,4 @@ yazi
 zig
 zls
 zoxide
+zsh-vi-mode
