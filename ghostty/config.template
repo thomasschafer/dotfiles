@@ -10,6 +10,7 @@ font-thicken = true
 
 cursor-style = block
 cursor-style-blink = false
+cursor-text = black
 
 initial-command = /bin/zsh -l -c "tmux attach -t 'λ' || tmux new -s 'λ'"
 
@@ -19,13 +20,9 @@ font-feature = -calt
 
 mouse-hide-while-typing = true
 
-cursor-invert-fg-bg = true
-
-
-###  Keybindings  ###
-
 macos-option-as-alt = true
 
+###  Keybindings  ###
 keybind = alt+3=text:#
 keybind = cmd+r=reload_config
 keybind = cmd+alt+left=text:\x1b[1;5D      ## cmd+option+left   -> ctrl+left
