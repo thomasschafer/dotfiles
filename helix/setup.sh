@@ -15,7 +15,7 @@ ln -sfn $PWD/languages.toml $HOME/.config/helix/languages.toml
 ln -sfn $PWD/ignore $HOME/.config/helix/ignore
 
 # Install fork
-HELIX_REPO_DIR="helix"
+HELIX_REPO_DIR="$HOME/Development/helix"
 
 if [ -d "$HELIX_REPO_DIR" ]; then
 	cd "$HELIX_REPO_DIR"
@@ -28,7 +28,7 @@ if [ -d "$HELIX_REPO_DIR" ]; then
 
 	git pull origin master
 else
-	git clone "git@github.com:thomasschafer/helix.git"
+	git clone "git@github.com:thomasschafer/helix.git" "$HELIX_REPO_DIR"
 	cd "$HELIX_REPO_DIR"
 fi
 
@@ -41,13 +41,12 @@ cargo install --path helix-term --locked
 
 ln -sfn $PWD/runtime $HOME/.config/helix/runtime
 cd ..
-ln -sfn "$(pwd)/helix" $HOME/Development/helix
 
 # NOTE: may need to run `rustup component add rust-analyzer` if the homebrew installation of rust-analyzer causes issues
 
 
 # Install utils
-HX_UTILS_DIR="hx-utils"
+HX_UTILS_DIR="$HOME/Development/hx-utils"
 
 if [ -d "$HX_UTILS_DIR" ]; then
 	cd "$HX_UTILS_DIR"
@@ -60,7 +59,7 @@ if [ -d "$HX_UTILS_DIR" ]; then
 
 	git pull origin main
 else
-	git clone "git@github.com:thomasschafer/hx-utils.git"
+	git clone "git@github.com:thomasschafer/hx-utils.git" "$HX_UTILS_DIR"
 	cd "$HX_UTILS_DIR"
 fi
 
