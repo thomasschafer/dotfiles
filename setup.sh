@@ -7,6 +7,8 @@ cd homebrew
 ./install.sh
 cd ..
 
+mkdir -p "$HOME/Development"
+
 setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 
 for script in $setup_scripts; do
