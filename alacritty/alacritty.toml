@@ -18,30 +18,36 @@ option_as_alt = "Both"
 
 [keyboard]
 bindings = [
-  { key = "h", mods = "Command|Option", chars = "\u001B[1;5D" }, # cmd+option+left  -> ctrl+left
-  { key = "l", mods = "Command|Option", chars = "\u001B[1;5C" }, # cmd+option+right -> ctrl+right
-  { key = "h", mods = "Command|Shift", chars = "\u001B[1;6D" },  # cmd+shift+left   -> ctrl+shift+left
-  { key = "l", mods = "Command|Shift", chars = "\u001B[1;6C" },  # cmd+shift+right  -> ctrl+shift+right
-  { key = "k", mods = "Command|Shift", chars = "\u0001K" },      # cmd+shift+up     -> ctrl+a K
-  { key = "j", mods = "Command|Shift", chars = "\u0001k" },      # cmd+shift+down   -> ctrl+a k 
-  { key = "T", mods = "Command", chars = "\u0001c" },            # cmd+t            -> ctrl+a c
-  { key = "W", mods = "Command", chars = "\u0001x" },            # cmd+w            -> ctrl+a x
-  { key = "D", mods = "Command", chars = "\u0001|" },            # cmd+d            -> ctrl+a |
-  { key = "D", mods = "Command|Shift", chars = "\u0001-" },      # cmd+shift+d      -> ctrl+a -
-  { key = "F", mods = "Command", chars = "\u0001\\" },           # cmd+f            -> ctrl+a \
-  { key = "K", mods = "Command", chars = "\u000b" },             # cmd+k            -> ctrl+k
-  { key = "L", mods = "Command", chars = "\u0001;" },            # cmd+l            -> ctrl+a ;
-  { key = ",", mods = "Command", chars = "\u0001L" },            # cmd+,            -> ctrl+a L  (jump to last session)
-  { key = 36, mods = "Command", action = "ToggleFullscreen" },   # cmd+enter        -> toggle fullscreen
-  { key = "Return", mods = "Command|Shift", chars = "\u0001z" }, # cmd+shift+enter  -> ctrl+a z
-  { key = "s", mods = "Command", chars = "\u0001s" },            # cmd+s            -> ctrl+a s  (view tmux sessions)
-  { key = "p", mods = "Command", chars = "\u0001F" },            # cmd+p            -> ctrl+a F  (open tmux-sessionizer)
-  { key = "Right", mods = "Alt", chars = "\u001BF" },            # alt+right        -> jump right by a word
-  { key = "Left", mods = "Alt", chars = "\u001BB" },             # alt+left         -> jump left by a word
-  { key = "Left", mods = "Command", chars = "\u001b[H" },        # cmd+left         -> jump to start of line
-  { key = "Right", mods = "Command", chars = "\u001b[F" },       # cmd+right        -> jump to end of line
-  { key = "Back", mods = "Command", chars = "\u0015" },          # cmd+backspace    -> delete to start of line
-  { key = "3", mods = "Option", chars = "#" },                   # This would be overriden otherwise by option_as_alt
+  { key = "Left", mods = "Command|Option", chars = "\u001B[1;5D" },  # ctrl+left
+  { key = "Right", mods = "Command|Option", chars = "\u001B[1;5C" }, # ctrl+right
+  { key = "Left", mods = "Command|Shift", chars = "\u001B[1;6D" },   # ctrl+shift+left
+  { key = "Right", mods = "Command|Shift", chars = "\u001B[1;6C" },  # ctrl+shift+right
+  { key = "Up", mods = "Command|Shift", chars = "\u0001K" },         # ctrl+a K
+  { key = "Down", mods = "Command|Shift", chars = "\u0001k" },       # ctrl+a k
+  { key = "h", mods = "Command|Option", chars = "\u001B[1;5D" },     # ctrl+left
+  { key = "l", mods = "Command|Option", chars = "\u001B[1;5C" },     # ctrl+right
+  { key = "h", mods = "Command|Shift", chars = "\u001B[1;6D" },      # ctrl+shift+left
+  { key = "l", mods = "Command|Shift", chars = "\u001B[1;6C" },      # ctrl+shift+right
+  { key = "k", mods = "Command|Shift", chars = "\u0001K" },          # ctrl+a K
+  { key = "j", mods = "Command|Shift", chars = "\u0001k" },          # ctrl+a k
+  { key = "T", mods = "Command", chars = "\u0001c" },                # ctrl+a c
+  { key = "W", mods = "Command", chars = "\u0001x" },                # ctrl+a x
+  { key = "D", mods = "Command", chars = "\u0001|" },                # ctrl+a |
+  { key = "D", mods = "Command|Shift", chars = "\u0001-" },          # ctrl+a -
+  { key = "F", mods = "Command", chars = "\u0001\\" },               # ctrl+a \
+  { key = "K", mods = "Command", chars = "\u000b" },                 # ctrl+k
+  { key = "L", mods = "Command", chars = "\u0001;" },                # ctrl+a ;
+  { key = ",", mods = "Command", chars = "\u0001L" },                # ctrl+a L  (jump to last session)
+  { key = 36, mods = "Command", action = "ToggleFullscreen" },       # toggle fullscreen
+  { key = "Return", mods = "Command|Shift", chars = "\u0001z" },     # ctrl+a z
+  { key = "s", mods = "Command", chars = "\u0001s" },                # ctrl+a s  (view tmux sessions)
+  { key = "p", mods = "Command", chars = "\u0001F" },                # ctrl+a F  (open tmux-sessionizer)
+  { key = "Right", mods = "Alt", chars = "\u001BF" },                # jump right by a word
+  { key = "Left", mods = "Alt", chars = "\u001BB" },                 # jump left by a word
+  { key = "Left", mods = "Command", chars = "\u001b[H" },            # jump to start of line
+  { key = "Right", mods = "Command", chars = "\u001b[F" },           # jump to end of line
+  { key = "Back", mods = "Command", chars = "\u0015" },              # delete to start of line
+  { key = "3", mods = "Option", chars = "#" },                       # This would be overriden otherwise by option_as_alt
 ]
 
 [mouse]
