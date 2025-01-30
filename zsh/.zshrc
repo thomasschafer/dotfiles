@@ -11,7 +11,7 @@ autoload -Uz vcs_info
 precmd() { vcs_info }
 setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
-PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
+PROMPT='%F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
 
 # Helix keymap
 source $HOME/Development/zshelix/zshelix.plugin.zsh
