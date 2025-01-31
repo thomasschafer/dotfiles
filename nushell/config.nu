@@ -15,10 +15,20 @@ def create_left_prompt [] {
 
     $"($dir_segment)($git_segment)"
 }
-
 $env.PROMPT_COMMAND = { create_left_prompt }
-$env.PROMPT_INDICATOR_VI_INSERT = $"(ansi white) >(ansi reset) "
-$env.PROMPT_INDICATOR_VI_NORMAL = $"(ansi white) $(ansi reset) "
+
+def prompt_indicator [] {
+    $"(ansi white) $(ansi reset) "
+}
+$env.PROMPT_INDICATOR_VI_INSERT = { prompt_indicator }
+$env.PROMPT_INDICATOR_VI_NORMAL = { prompt_indicator }
+
 $env.PROMPT_COMMAND_RIGHT = ""
+
+$env.config.cursor_shape = {
+        emacs: line # block, underscore, line (line is the default)
+        vi_insert: line # block, underscore, line (block is the default)
+        vi_normal: block # block, underscore, line  (underscore is the default)
+    }
 
 $env.config.show_banner = false
