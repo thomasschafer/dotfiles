@@ -1,4 +1,7 @@
 {
+	"global": {
+		"show_in_menu_bar": false
+	},
 	"profiles": [
 		{
 			"complex_modifications": {
@@ -19,6 +22,28 @@
 									{ "key_code": "vk_none" }
 								],
 								"type": "basic"
+							}
+						]
+					},
+					{
+						"description": "Map right command on hold to Meh",
+						"manipulators": [
+							{
+								"type": "basic",
+								"from": {
+									"key_code": "right_command"
+								},
+								"to": [
+									{
+										"key_code": "left_option",
+										"modifiers": ["control", "shift"]
+									}
+								],
+								"to_if_alone": [
+									{
+										"key_code": "right_option"
+									}
+								]
 							}
 						]
 					}
