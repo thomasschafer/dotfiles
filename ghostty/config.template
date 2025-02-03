@@ -46,8 +46,6 @@ keybind = cmd+comma=text:\x01L            ## ctrl+a L  (jump to last session)
 keybind = cmd+shift+enter=text:\x01z      ## ctrl+a z
 keybind = cmd+s=text:\x01s                ## ctrl+a s  (view tmux sessions)
 keybind = cmd+p=text:\x01F                ## ctrl+a F  (open tmux-sessionizer)
-keybind = alt+right=text:\x1bF            ## jump right by a word
-keybind = alt+left=text:\x1bB             ## jump left by a word
 keybind = cmd+left=text:\x1b[H            ## jump to start of line
 keybind = cmd+right=text:\x1b[F           ## jump to end of line
 keybind = cmd+backspace=text:\x15         ## delete to start of line
