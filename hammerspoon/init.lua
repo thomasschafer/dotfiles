@@ -4,7 +4,7 @@ local appShortcuts = {
 	D = "YouTube Music",
 	F = "Zed",
 	Z = "Zoom",
-	X = "Terminal",
+	X = "Alacritty",
 	C = "Chrome",
 	V = "Visual Studio Code",
 }

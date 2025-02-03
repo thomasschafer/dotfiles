@@ -39,13 +39,6 @@ install_helix() {
     ln -sfn "$PWD/runtime" "$HELIX_CONFIG_DIR/runtime"
 }
 
-install_rust() {
-    if ! command -v cargo &>/dev/null; then
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        . "$HOME/.cargo/env"
-    fi
-}
-
 install_hx_utils() {
     if [ -d "$HX_UTILS_DIR" ]; then
         cd "$HX_UTILS_DIR"
@@ -67,11 +60,11 @@ install_hx_utils() {
     ln -sfn "$(which hx-utils)" "$HOME/.local/bin/u"
 }
 
-install_rust
 install_helix
 install_hx_utils
 
 pipx install "python-lsp-server[all]"
 pipx inject python-lsp-server pylsp-mypy
+pipx ensurepath
 
 echo "Helix configured successfully"

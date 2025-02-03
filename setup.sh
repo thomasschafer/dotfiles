@@ -9,8 +9,15 @@ cd ..
 
 mkdir -p "$HOME/Development"
 
-setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
+install_rust() {
+    if ! command -v cargo &>/dev/null; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        . "$HOME/.cargo/env"
+    fi
+}
+install_rust
 
+setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 for script in $setup_scripts; do
 	echo "Executing ${script/#$HOME/~}..."
 

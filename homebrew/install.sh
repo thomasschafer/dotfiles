@@ -10,8 +10,6 @@ echo >> $HOME/.zprofile
 echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-brew tap homebrew/cask-fonts
-
 xargs brew install < leaves.txt
 xargs brew install --cask < cask.txt
 
