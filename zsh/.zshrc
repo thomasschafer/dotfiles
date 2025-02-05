@@ -14,6 +14,9 @@ zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
 PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
 
 # Helix keymap
+ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
+ZHM_CURSOR_INSERT=$'\e[2 q\e]12;#f4dbd6\a'
+ZHM_CURSOR_SELECT=$'\e[2 q\e]12;#f5a97f\a'
 source $HOME/Development/zshelix/zshelix.plugin.zsh
 
 # Git autocompletion
