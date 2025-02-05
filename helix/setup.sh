@@ -56,7 +56,8 @@ install_hx_utils() {
         cd "$HX_UTILS_DIR"
     fi
 
-    stack install hx-utils
+    cargo install --path .
+
     ln -sfn "$(which hx-utils)" "$HOME/.local/bin/u"
 }
 
