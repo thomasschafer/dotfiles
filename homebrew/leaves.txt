@@ -6,9 +6,7 @@ delve
 deno
 derailed/k9s/k9s
 fd
-fd
 ffmpegthumbnailer
-fzf
 fzf
 git
 git-filter-repo
@@ -20,12 +18,12 @@ golangci-lint-langserver
 gopls
 hadolint
 jq
-jq
 kakoune
 lazygit
 llvm
 neovim
 node
+nushell
 nvm
 pgformatter
 pipx
@@ -36,7 +34,6 @@ pyenv
 pyright
 qmk/qmk/qmk
 rbenv
-ripgrep
 ripgrep
 ruff
 ruff-lsp
