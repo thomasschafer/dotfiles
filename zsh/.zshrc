@@ -47,6 +47,3 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # LLVM
 export PATH="$(brew --prefix)/opt/llvm/bin:$PATH"
-
-# Helix
-unset TMUX # Temporary solution until https://github.com/helix-editor/helix/issues/8715 is fixed
