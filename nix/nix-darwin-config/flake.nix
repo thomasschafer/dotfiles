@@ -10,19 +10,11 @@
   outputs = inputs@{ self, nix-darwin, nixpkgs }:
   let
     configuration = { pkgs, ... }: {
+      # Necessary because we are using the Determinate Systems installer
       nix.enable = false;
-
-      # List packages installed in system profile. To search by name, run:
-      # $ nix-env -qaP | grep wget
-      environment.systemPackages =
-        [ pkgs.vim
-        ];
 
       # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
-
-      # Enable alternative shell support in nix-darwin.
-      # programs.fish.enable = true;
 
       # Set Git commit hash for darwin-version.
       system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -36,6 +28,47 @@
 
       # sudo via touch ID
       security.pam.enableSudoTouchIdAuth = true;
+
+      system.defaults = {
+        dock = {
+          tilesize = 50;
+          minimize-to-application = true;
+          show-recents = false;
+        };
+
+        screensaver = {
+          askForPassword = true;
+          askForPasswordDelay = 0;
+        };
+
+        screencapture.location = "~/Documents/Screenshots";
+
+        NSGlobalDomain = {
+          ApplePressAndHoldEnabled = false;
+          InitialKeyRepeat = 15;
+          KeyRepeat = 2;
+          AppleInterfaceStyleSwitchesAutomatically = true;
+        };
+
+        menuExtraClock = {
+          ShowDayOfMonth = true;
+          Show24Hour = true;
+        };
+
+        ".GlobalPreferences"."com.apple.mouse.scaling" = 3.0;
+      };
+
+      system.activationScripts.postActivation.text = ''
+        mkdir -p "$HOME/Documents/Screenshots"
+
+        defaults write com.apple.keyboard.lighting KeyboardBrightness -int 0
+
+        defaults write com.apple.systemuiserver menuExtras -array \
+          "/System/Library/CoreServices/Menu Extras/Battery.menu" \
+          "/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \
+          "/System/Library/CoreServices/Menu Extras/Clock.menu" \
+          "/System/Library/CoreServices/Menu Extras/Volume.menu"
+      '';
     };
   in
   {
