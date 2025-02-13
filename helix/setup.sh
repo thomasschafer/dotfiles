@@ -61,11 +61,14 @@ install_hx_utils() {
     ln -sfn "$(which hx-utils)" "$HOME/.local/bin/u"
 }
 
+install_language_servers() {
+    pipx install "python-lsp-server[all]"
+    pipx inject python-lsp-server pylsp-mypy
+    pipx ensurepath
+}
+
 install_helix
 install_hx_utils
-
-pipx install "python-lsp-server[all]"
-pipx inject python-lsp-server pylsp-mypy
-pipx ensurepath
+install_language_servers
 
 echo "Helix configured successfully"

@@ -191,3 +191,8 @@ auto-format = true
 [[language]]
 name = "go"
 auto-format = true
+
+# ----- Nix -----
+[[language]]
+name = "nix"
+auto-format = true
