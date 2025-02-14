@@ -1,5 +1,3 @@
-$env.config.edit_mode = 'vi'
-
 def create_left_prompt [] {
     let dir_segment = $"(ansi '#a6da95')(pwd | path basename)(ansi reset)"
 
@@ -13,22 +11,30 @@ def create_left_prompt [] {
         $" \(($"(ansi '#91d7e3')($git_current_ref)(ansi reset)")\)"
     }
 
-    $"($dir_segment)($git_segment)"
+    $"> ($dir_segment)($git_segment)"
 }
 $env.PROMPT_COMMAND = { create_left_prompt }
 
 def prompt_indicator [] {
-    $"(ansi white) $(ansi reset) "
+    $"(ansi reset) $ "
 }
 $env.PROMPT_INDICATOR_VI_INSERT = { prompt_indicator }
 $env.PROMPT_INDICATOR_VI_NORMAL = { prompt_indicator }
 
 $env.PROMPT_COMMAND_RIGHT = ""
 
-$env.config.cursor_shape = {
+$env.config = {
+    color_config: {
+        shape_garbage: { fg: "red" attr: b}
+    }
+
+    cursor_shape: {
         emacs: line # block, underscore, line (line is the default)
         vi_insert: line # block, underscore, line (block is the default)
         vi_normal: block # block, underscore, line  (underscore is the default)
     }
 
-$env.config.show_banner = false
+    edit_mode: 'vi'
+
+    show_banner: false
+}
