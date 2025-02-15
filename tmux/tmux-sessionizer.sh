@@ -9,7 +9,7 @@ else
     for d in "$HOME/Development" "$HOME/Development/Snyk"; do
         [ -d "$d" ] && dirs+=("$d")
     done
-    selected=$(fd -d 1 --type d --type l . "${dirs[@]}" | sed 's:/*$::' | fzf --layout reverse)
+    selected=$(find "${dirs[@]}" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | fzf --layout reverse)
 fi
 
 if [[ -z $selected ]]; then
