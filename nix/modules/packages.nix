@@ -9,7 +9,8 @@
     nushell
     ripgrep
     sd
-    yazi
+    # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed
+    # yazi
     zig
     zls
 
