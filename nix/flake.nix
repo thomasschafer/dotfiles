@@ -9,11 +9,17 @@
     };
   };
 
-  outputs = { self, nix-darwin, nixpkgs }: {
-    # Build flake using `darwin-rebuild build --flake .#simple`
-    darwinConfigurations."simple" = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit self; };
-      modules = [ ./modules/configuration.nix ];
+  outputs =
+    {
+      self,
+      nix-darwin,
+      nixpkgs,
+    }:
+    {
+      # Build flake using `darwin-rebuild build --flake .#simple`
+      darwinConfigurations."simple" = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit self; };
+        modules = [ ./modules/configuration.nix ];
+      };
     };
-  };
 }
