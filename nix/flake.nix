@@ -16,10 +16,25 @@
       nixpkgs,
     }:
     {
-      # Build flake using `darwin-rebuild build --flake .#simple`
-      darwinConfigurations."simple" = nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit self; };
-        modules = [ ./modules/configuration.nix ];
+      # Build flake using either of:
+      #  `darwin-rebuild switch --flake .#personal`
+      #  `darwin-rebuild switch --flake .#work`
+      darwinConfigurations = {
+        personal = nix-darwin.lib.darwinSystem {
+          specialArgs = {
+            inherit self;
+            hostConfig = (import ./modules/hosts).personal;
+          };
+          modules = [ ./modules/configuration.nix ];
+        };
+
+        work = nix-darwin.lib.darwinSystem {
+          specialArgs = {
+            inherit self;
+            hostConfig = (import ./modules/hosts).work;
+          };
+          modules = [ ./modules/configuration.nix ];
+        };
       };
     };
 }

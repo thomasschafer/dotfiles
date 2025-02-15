@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, hostConfig, ... }:
 {
   imports = [
     ./system.nix

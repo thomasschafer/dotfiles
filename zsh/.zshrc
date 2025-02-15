@@ -32,7 +32,7 @@ alias y=yazi
 alias s=scooter
 alias lg=lazygit
 alias ldr=lazydocker
-alias dr="cd $HOME/Development/dotfiles/nix/ && darwin-rebuild switch --flake .#simple && cd -"
+alias dr="cd $HOME/Development/dotfiles/nix/ && darwin-rebuild build --flake .#personal && cd -"
 
 # Zsh history
 export HISTSIZE=100000

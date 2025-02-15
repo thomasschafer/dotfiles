@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, hostConfig, ... }:
 {
   environment.systemPackages = with pkgs; [
     # CLI tools
@@ -22,7 +22,7 @@
     enable = true;
     onActivation = {
       autoUpdate = true;
-      cleanup = "zap";
+      cleanup = hostConfig.homebrew.cleanup;
     };
 
     casks = [
