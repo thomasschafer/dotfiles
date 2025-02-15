@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-cd homebrew
+cd nix
 ./install.sh
 cd ..
 
@@ -22,11 +22,8 @@ for script in $setup_scripts; do
 	echo "Executing ${script/#$HOME/~}..."
 
 	script_dir=$(dirname "$script")
-	# Change to the directory where the script is located
 	pushd "$script_dir" >/dev/null
-	# Execute the script
 	bash "$(basename "$script")" || exit $?
-	# Return to the previous directory
 	popd >/dev/null
 done
 
