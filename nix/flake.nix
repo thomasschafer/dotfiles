@@ -23,7 +23,7 @@
         personal = nix-darwin.lib.darwinSystem {
           specialArgs = {
             inherit self;
-            hostConfig = (import ./modules/hosts).personal;
+            hostConfig = import ./modules/hosts/personal.nix;
           };
           modules = [ ./modules/configuration.nix ];
         };
@@ -31,7 +31,7 @@
         work = nix-darwin.lib.darwinSystem {
           specialArgs = {
             inherit self;
-            hostConfig = (import ./modules/hosts).work;
+            hostConfig = import ./modules/hosts/work.nix;
           };
           modules = [ ./modules/configuration.nix ];
         };
