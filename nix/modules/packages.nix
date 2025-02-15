@@ -14,6 +14,13 @@
     zig
     zls
 
+    # Haskell tooling
+    ghc
+    cabal-install
+    stack
+    haskell-language-server
+    haskellPackages.hoogle
+
     # Applications
   ];
 
