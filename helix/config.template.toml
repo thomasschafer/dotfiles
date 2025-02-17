@@ -8,7 +8,7 @@ end-of-line-diagnostics = "hint"
 smart-tab.enable = false
 undercurl = true
 clipboard-provider = "pasteboard"
-color-modes = true
+true-color = true
 
 [editor.lsp]
 display-messages = true
