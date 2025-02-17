@@ -7,6 +7,7 @@
     fzf
     nixfmt-rfc-style
     nushell
+    p7zip
     ripgrep
     sd
     # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed
