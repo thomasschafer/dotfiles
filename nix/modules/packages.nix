@@ -21,9 +21,6 @@
     stack
     haskell-language-server
     haskellPackages.hoogle
-
-    # Applications
-    aerospace
   ];
 
   # TODO: use Nixpkgs instead
@@ -39,6 +36,7 @@
       "font-jetbrains-mono-nerd-font"
       "ghostty"
       "karabiner-elements"
+      "nikitabobko/tap/aerospace"
       "visual-studio-code"
       "zed"
     ];
