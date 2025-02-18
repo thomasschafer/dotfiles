@@ -6,6 +6,7 @@
       tilesize = 50;
       minimize-to-application = true;
       show-recents = false;
+      static-only = true;
     };
 
     screensaver = {
