@@ -15,6 +15,11 @@ resize_increments = true
 decorations = "Buttonless"
 padding = { x = 12, y = 12 }
 option_as_alt = "Both"
+opacity = 0.9
+blur = true
+
+[colors]
+transparent_background_colors = true
 
 [keyboard]
 bindings = [

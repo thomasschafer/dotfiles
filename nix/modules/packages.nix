@@ -38,9 +38,7 @@
       "alacritty"
       "font-jetbrains-mono-nerd-font"
       "ghostty"
-      "hammerspoon"
       "karabiner-elements"
-      "rectangle"
       "visual-studio-code"
       "zed"
     ];
