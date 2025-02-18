@@ -38,6 +38,10 @@
       ".config/alacritty/alacritty.toml" = {
         source = ../../alacritty/alacritty.toml;
       };
+
+      ".config/aerospace/aerospace.toml" = {
+        source = ../../aerospace/aerospace.toml;
+      };
     };
 
     activation = {

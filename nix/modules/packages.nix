@@ -23,6 +23,7 @@
     haskellPackages.hoogle
 
     # Applications
+    aerospace
   ];
 
   # TODO: use Nixpkgs instead
