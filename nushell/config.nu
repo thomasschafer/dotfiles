@@ -29,9 +29,8 @@ $env.config = {
     }
 
     cursor_shape: {
-        emacs: line # block, underscore, line (line is the default)
-        vi_insert: line # block, underscore, line (block is the default)
-        vi_normal: block # block, underscore, line  (underscore is the default)
+        vi_insert: line
+        vi_normal: block
     }
 
     edit_mode: 'vi'
