@@ -51,6 +51,10 @@
         source = ../../neovim/nvim;
       };
 
+      ".zshrc" = {
+        source = ../../zsh/.zshrc;
+      };
+
       "Library/Application Support/Code/User/keybindings.json" = {
         source = ../../vscode/keybindings.json;
       };
@@ -83,68 +87,6 @@
 
   programs = {
     home-manager.enable = true;
-
-    zsh = {
-      enable = true;
-
-      history = {
-        size = 100000;
-        save = 100000;
-        path = "${config.home.homeDirectory}/.zhistory";
-        extended = true;
-        ignoreDups = true;
-        share = true; # This enables INC_APPEND_HISTORY
-      };
-
-      initExtra = ''
-        # Work-specific config
-        if [[ -f $HOME/.zshrc.private ]]; then
-            source $HOME/.zshrc.private
-        fi
-
-        # Treat / as a word delimiter
-        WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
-
-        # Prompt
-        autoload -Uz vcs_info
-        precmd() { vcs_info }
-        setopt prompt_subst
-        zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
-        PROMPT='> %F{#a6da95}%1~%f ''${vcs_info_msg_0_}$ '
-
-        # Helix keymap
-        ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
-        ZHM_CURSOR_INSERT=$'\e[2 q\e]12;#f4dbd6\a'
-        ZHM_CURSOR_SELECT=$'\e[2 q\e]12;#f5a97f\a'
-        source ${config.home.homeDirectory}/Development/zshelix/zshelix.plugin.zsh
-      '';
-
-      shellAliases = {
-        nv = "nvim";
-        c = "code";
-        z = "zed";
-        y = "yazi";
-        s = "scooter";
-        lg = "lazygit";
-        ldr = "lazydocker";
-        dr = "cd ${config.home.homeDirectory}/Development/dotfiles/nix/ && darwin-rebuild switch --flake .#personal && cd -";
-      };
-
-      sessionVariables = {
-        EDITOR = "hx";
-        VISUAL = "hx";
-        PATH = lib.concatStrings [
-          "${config.home.homeDirectory}/.local/bin:"
-          "$PATH"
-        ];
-      };
-
-      enableCompletion = true;
-
-      envExtra = ''
-        export PATH="/etc/profiles/per-user/${config.home.username}/bin:$PATH"
-      '';
-    };
 
     bat = {
       enable = true;
