@@ -139,7 +139,6 @@
         ];
       };
 
-      autosuggestion.enable = true;
       enableCompletion = true;
 
       envExtra = ''

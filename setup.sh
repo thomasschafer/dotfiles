@@ -9,6 +9,7 @@ cd ..
 
 mkdir -p "$HOME/Development"
 
+# TODO: move to Nix
 install_rust() {
     if ! command -v cargo &>/dev/null; then
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
