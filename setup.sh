@@ -1,22 +1,18 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
+
+mkdir -p "$HOME/Development"
 
 cd nix
 ./install.sh
 cd ..
 
-mkdir -p "$HOME/Development"
-
-# TODO: move to Nix
-install_rust() {
-    if ! command -v cargo &>/dev/null; then
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        . "$HOME/.cargo/env"
-    fi
-}
-install_rust
+# Install Rust toolchain
+if ! command -v cargo &>/dev/null; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    . "$HOME/.cargo/env"
+fi
 
 setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
 for script in $setup_scripts; do
