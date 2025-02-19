@@ -135,13 +135,16 @@
         VISUAL = "hx";
         PATH = lib.concatStrings [
           "${config.home.homeDirectory}/.local/bin:"
-          "$(brew --prefix)/opt/llvm/bin:"
           "$PATH"
         ];
       };
 
       autosuggestion.enable = true;
       enableCompletion = true;
+
+      envExtra = ''
+        export PATH="/etc/profiles/per-user/${config.home.username}/bin:$PATH"
+      '';
     };
 
     bat = {

@@ -36,10 +36,12 @@
             {
               users.users.${hostConfig.username}.home = /Users/${hostConfig.username};
 
-              home-manager.backupFileExtension = "bak";
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${hostConfig.username} = import ./modules/home.nix;
+              home-manager = {
+                backupFileExtension = "bak";
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                users.${hostConfig.username} = import ./modules/home.nix;
+              };
             }
           ];
         };

@@ -3,7 +3,6 @@
   # NOTE: some packages are also managed in `home.nix`
   environment.systemPackages = with pkgs; [
     # CLI tools
-    bat # TODO: we have this enabled in `home.nix` so we should be able to remove it here
     fd
     fzf
     nixfmt-rfc-style
