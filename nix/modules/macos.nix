@@ -1,8 +1,10 @@
+{ hostConfig, ... }:
 {
   security.pam.enableSudoTouchIdAuth = true;
 
   system.defaults = {
     dock = {
+      autohide = hostConfig.autohideDock;
       tilesize = 50;
       minimize-to-application = true;
       show-recents = false;
