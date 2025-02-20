@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 pkglist=(
 catppuccin.catppuccin-vsc

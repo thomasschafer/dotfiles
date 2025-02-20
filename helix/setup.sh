@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 HELIX_CONFIG_DIR="$HOME/.config/helix"
 HELIX_REPO_DIR="$HOME/Development/helix"

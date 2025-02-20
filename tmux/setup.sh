@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 ln -sfn $(pwd)/.tmux.conf $HOME/.tmux.conf
 

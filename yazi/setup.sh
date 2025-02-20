@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed
 git clone https://github.com/sxyazi/yazi.git

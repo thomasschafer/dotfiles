@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 # Install all .sh files as executables in path, e.g. `fr.sh` can be run as `fr`
 LINK_DIR="$HOME/.local/bin"
