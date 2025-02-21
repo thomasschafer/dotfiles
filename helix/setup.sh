@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: move to Nix
+
 set -euo pipefail
 
 HELIX_CONFIG_DIR="$HOME/.config/helix"

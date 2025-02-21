@@ -29,9 +29,17 @@ fi
 
 mkdir -p "$HOME/Development"
 
+
+# Nix
 cd nix
-./install.sh $mode
-cd ..
+
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+  sh -s -- install
+
+NIX_EXEC=/nix/var/nix/profiles/default/bin/nix
+$NIX_EXEC run nix-darwin -- switch --flake .#"$mode"
+
+cd -
 
 
 # Install Rust toolchain
@@ -39,19 +47,6 @@ if ! command -v cargo &>/dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
     . "$HOME/.cargo/env"
 fi
-
-
-# Run other setup scripts
-# TODO: delete when fully migrated to Nix
-setup_scripts=$(find $(pwd) -mindepth 2 -type f -name 'setup.sh')
-for script in $setup_scripts; do
-	echo "Executing ${script/#$HOME/~}..."
-
-	script_dir=$(dirname "$script")
-	pushd "$script_dir" >/dev/null
-	bash "$(basename "$script")" || exit $?
-	popd >/dev/null
-done
 
 
 echo "Setup complete"
