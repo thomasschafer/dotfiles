@@ -197,3 +197,9 @@ auto-format = true
 name = "nix"
 auto-format = true
 formatter = { command = "nixfmt" }
+
+# ----- Terraform -----
+[[language]]
+name = "hcl"
+auto-format = true
+formatter = { command = "terraform", args = ["fmt", "-"] }
