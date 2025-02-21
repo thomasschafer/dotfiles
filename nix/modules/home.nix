@@ -52,6 +52,7 @@
 
     packages = with pkgs; [
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
+      (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
     ];
 
     # TODO: replace these scripts with something more idiomatic
