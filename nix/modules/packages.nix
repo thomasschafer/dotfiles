@@ -81,7 +81,6 @@
       "sqlfluff"
       "taplo"
       "terraform-docs"
-      "tmux"
       "tree"
       "typescript-language-server"
       "unar"

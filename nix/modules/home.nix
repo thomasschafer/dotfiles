@@ -50,6 +50,10 @@
       "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
     };
 
+    packages = with pkgs; [
+      (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
+    ];
+
     # TODO: replace these scripts with something more idiomatic
     activation = {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -98,6 +102,19 @@
           sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
         };
       };
+    };
+
+    tmux = {
+      enable = true;
+      plugins = with pkgs.tmuxPlugins; [
+        sensible
+        resurrect
+      ];
+      extraConfig = ''
+        ${builtins.readFile ../../tmux/.tmux.conf}
+        set -gu default-command
+        set -g default-shell "$SHELL"
+      '';
     };
 
     vscode = {
