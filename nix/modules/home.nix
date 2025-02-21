@@ -5,6 +5,23 @@
   ...
 }:
 
+let
+  ghosttyConfig = pkgs.runCommand "ghostty-config" { } ''
+    ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../../ghostty/config.template} > $out
+  '';
+
+  yaziOld = pkgs.rustPlatform.buildRustPackage rec {
+    pname = "yazi";
+    version = "0.4.2";
+    src = pkgs.fetchFromGitHub {
+      owner = "sxyazi";
+      repo = "yazi";
+      rev = "v${version}";
+      hash = "sha256-2fBajVFpmgNHb90NbK59yUeaYLWR7rhQxpce9Tq1uQU=";
+    };
+    cargoHash = "sha256-fOq8fM7S2caxI/lLWFGidJ7ZlDD5WSR3z3w/g4zRQp4=";
+  };
+in
 {
   home = {
     stateVersion = "23.05";
@@ -17,40 +34,62 @@
           enable: true
       '';
 
-      "Library/Application Support/nushell/config.nu".source = ../../nushell/config.nu;
+      # Aerospace
+      ".config/aerospace/aerospace.toml".source = ../../aerospace/aerospace.toml;
 
-      "Library/Application Support/lazygit/config.yml".source = ../../lazygit/config.yml;
-
-      ".config/zed/settings.json".source = ../../zed/settings.json;
-
+      # Alacritty
       ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/alacritty/main/catppuccin-macchiato.toml";
         sha256 = "sha256-/Qb5kfR5N6mTMcL6l6qUdsG32wpkpESHu5qjX3GIUHw=";
       };
-
       ".config/alacritty/alacritty.toml".source = ../../alacritty/alacritty.toml;
 
-      ".config/aerospace/aerospace.toml".source = ../../aerospace/aerospace.toml;
+      # Ghostty
+      ".config/ghostty/config".source = ghosttyConfig;
 
-      ".config/karabiner/karabiner.json".source = ../../karabiner-elements/karabiner.json;
+      # k9s
+      "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
 
-      ".config/nvim".source = ../../neovim/nvim;
-
-      ".zshrc".source = ../../zsh/.zshrc;
-
-      "Library/Application Support/Code/User/keybindings.json".source = ../../vscode/keybindings.json;
-
-      "Library/Application Support/Code/User/settings.json".source = ../../vscode/settings.json;
-
+      # Kakoune
       ".config/kak/colors/catppuccin_macchiato.kak".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/kakoune/main/colors/catppuccin_macchiato.kak";
         sha256 = "sha256-VqcYzb0U5RAS1pJVO/k/V04wMm5EFAh5r4SMKega5M8=";
       };
 
-      "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
+      # Karabiner Elements
+      ".config/karabiner/karabiner.json".source = ../../karabiner-elements/karabiner.json;
+
+      # Lazygit
+      "Library/Application Support/lazygit/config.yml".source = ../../lazygit/config.yml;
+
+      # Neovim
+      ".config/nvim".source = ../../neovim/nvim;
+
+      # Nushell
+      "Library/Application Support/nushell/config.nu".source = ../../nushell/config.nu;
+
+      # VSCode
+      "Library/Application Support/Code/User/keybindings.json".source = ../../vscode/keybindings.json;
+      "Library/Application Support/Code/User/settings.json".source = ../../vscode/settings.json;
+
+      # Yazi
+      ".config/yazi/yazi.toml".source = ../../yazi/yazi.toml;
+      ".config/yazi/keymap.toml".source = ../../yazi/keymap.toml;
+      ".config/yazi/theme.toml".source = pkgs.fetchurl {
+        url = "https://raw.githubusercontent.com/catppuccin/yazi/refs/heads/main/themes/macchiato/catppuccin-macchiato-blue.toml";
+        sha256 = "sha256-nR48k8uaAO3oQ8GiD8mCLZU3FPc5KSL+DAvt2z5YUmY=";
+      };
+
+      # Zed
+      ".config/zed/settings.json".source = ../../zed/settings.json;
+
+      # Zshrc
+      ".zshrc".source = ../../zsh/.zshrc;
     };
 
     packages = with pkgs; [
+      yaziOld
+
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
       (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
     ];

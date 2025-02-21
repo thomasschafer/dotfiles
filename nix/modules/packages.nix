@@ -12,7 +12,7 @@
     ripgrep
     scooter
     sd
-    # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed
+    # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziOld in `home.nix` instead
     # yazi
     zig
     zls
