@@ -24,7 +24,7 @@
       ".config/zed/settings.json".source = ../../zed/settings.json;
 
       ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
-        url = "https://raw.githubusercontent.com/catppuccin/alacritty/f6cb5a5c2b404cdaceaff193b9c52317f62c62f7/catppuccin-macchiato.toml";
+        url = "https://raw.githubusercontent.com/catppuccin/alacritty/main/catppuccin-macchiato.toml";
         sha256 = "sha256-/Qb5kfR5N6mTMcL6l6qUdsG32wpkpESHu5qjX3GIUHw=";
       };
 
@@ -48,14 +48,9 @@
       };
 
       "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
-
-      "Library/Application Support/k9s/skins/catppuccin.yml".source = pkgs.fetchurl {
-        url = "https://raw.githubusercontent.com/catppuccin/k9s/refs/heads/main/dist/catppuccin-macchiato-transparent.yaml";
-        sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
-
-      };
     };
 
+    # TODO: replace these scripts with something more idiomatic
     activation = {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns
@@ -68,12 +63,6 @@
             "${config.home.homeDirectory}/Development/zshelix"
         fi
       '';
-
-      # NOTE: commenting out as this makes rebuilding slow
-      #  installVSCodeExtensions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      #    PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin:$PATH"
-      #    $DRY_RUN_CMD ${../../vscode/install-extensions.sh}
-      #  '';
     };
   };
 
@@ -100,6 +89,43 @@
       extraConfig = builtins.readFile ../../kakoune/kakrc;
     };
 
-    k9s.enable = true;
+    k9s = {
+      enable = true;
+
+      skins = {
+        catppuccin.source = pkgs.fetchurl {
+          url = "https://raw.githubusercontent.com/catppuccin/k9s/refs/heads/main/dist/catppuccin-macchiato-transparent.yaml";
+          sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
+        };
+      };
+    };
+
+    vscode = {
+      enable = true;
+
+      extensions = with pkgs.vscode-extensions; [
+        catppuccin.catppuccin-vsc
+        eamodio.gitlens
+        enkia.tokyo-night
+        esbenp.prettier-vscode
+        golang.go
+        hashicorp.terraform
+        haskell.haskell
+        justusadam.language-haskell
+        matangover.mypy
+        ms-python.black-formatter
+        ms-python.debugpy
+        ms-python.python
+        ms-python.vscode-pylance
+        ms-toolsai.jupyter
+        ms-vscode-remote.remote-containers
+        ms-vscode.makefile-tools
+        redhat.vscode-yaml
+        streetsidesoftware.code-spell-checker
+        tamasfe.even-better-toml
+        usernamehw.errorlens
+        vscodevim.vim
+      ];
+    };
   };
 }

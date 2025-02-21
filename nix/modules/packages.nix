@@ -5,6 +5,7 @@
     # CLI tools
     fd
     fzf
+    mypy
     nixfmt-rfc-style
     nushell
     p7zip

@@ -23,6 +23,8 @@
     "/nix/var/nix/profiles/per-user/root/channels"
   ];
 
-  # The platform the configuration will be used on.
-  nixpkgs.hostPlatform = "aarch64-darwin";
+  nixpkgs = {
+    hostPlatform = "aarch64-darwin";
+    config.allowUnfree = true;
+  };
 }
