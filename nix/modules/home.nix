@@ -120,9 +120,37 @@ in
     };
 
     packages = with pkgs; [
+      # CLI tools
+      deno
+      fd
+      fzf
+      git
+      neovim
+      nixfmt-rfc-style
+      nushell
+      p7zip
+      jq
+      lazygit
+      ripgrep
+      scooter
+      sd
+      taplo
+      tree
+      # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziOld
+      # yazi
+      zig
+      zls
+
       # Building from source
       hxUtils
       yaziOld
+
+      # Haskell tooling
+      ghc
+      cabal-install
+      stack
+      haskell-language-server
+      haskellPackages.hoogle
 
       # LSPs
       (python3.withPackages (
@@ -132,6 +160,7 @@ in
         ]
       ))
 
+      # Scripts/tools
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
       (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
     ];
