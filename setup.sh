@@ -49,4 +49,8 @@ if ! command -v cargo &>/dev/null; then
 fi
 
 
+# Install Helix fork
+./helix/setup.sh
+
+
 echo "Setup complete"

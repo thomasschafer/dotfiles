@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# TODO: move to Nix
-
 set -euo pipefail
 
 install_helix() {
@@ -24,40 +22,10 @@ install_helix() {
     fi
 
     cargo install --path helix-term --locked
-}
 
-install_hx_utils() {
-    HX_UTILS_DIR="$HOME/Development/hx-utils"
-
-    if [ -d "$HX_UTILS_DIR" ]; then
-        cd "$HX_UTILS_DIR"
-        
-        local current_branch
-        current_branch=$(git branch --show-current)
-        if [ "$current_branch" != "main" ]; then
-            echo "Error: expected branch main, found '$current_branch'."
-            exit 1
-        fi
-        
-        git pull origin main
-    else
-        git clone "git@github.com:thomasschafer/hx-utils.git" "$HX_UTILS_DIR"
-        cd "$HX_UTILS_DIR"
-    fi
-
-    cargo install --path .
-
-    ln -sfn "$(which hx-utils)" "$HOME/.local/bin/u"
-}
-
-install_language_servers() {
-    pipx install "python-lsp-server[all]"
-    pipx inject python-lsp-server pylsp-mypy
-    pipx ensurepath
+    cd -
 }
 
 install_helix
-install_hx_utils
-install_language_servers
 
 echo "Helix configured successfully"

@@ -20,6 +20,22 @@ let
         python3 process_config.py ${../../helix/config.template.toml} > $out
       '';
 
+  hxUtils = pkgs.rustPlatform.buildRustPackage {
+    pname = "hx-utils";
+    version = "main";
+    src = pkgs.fetchFromGitHub {
+      owner = "thomasschafer";
+      repo = "hx-utils";
+      rev = "main";
+      hash = "sha256-KpU9Mxn1Fs3VXlAMTLR1mCQizNuQKrjmePatSjth+/s=";
+    };
+    cargoHash = "sha256-btchC+ex3gn+gZiSJ3rggbisUea/oaSIKG0rv798wEE=";
+
+    postInstall = ''
+      ln -s $out/bin/hx-utils $out/bin/u
+    '';
+  };
+
   yaziOld = pkgs.rustPlatform.buildRustPackage rec {
     pname = "yazi";
     version = "0.4.2";
@@ -104,7 +120,17 @@ in
     };
 
     packages = with pkgs; [
+      # Building from source
+      hxUtils
       yaziOld
+
+      # LSPs
+      (python3.withPackages (
+        ps: with ps; [
+          python-lsp-server
+          pylsp-mypy
+        ]
+      ))
 
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
       (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
