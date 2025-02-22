@@ -10,6 +10,16 @@ let
     ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../../ghostty/config.template} > $out
   '';
 
+  helixConfig =
+    pkgs.runCommand "helix-config"
+      {
+        nativeBuildInputs = [ pkgs.python3Packages.toml ];
+      }
+      ''
+        cp ${../../helix/process_config.py} process_config.py
+        python3 process_config.py ${../../helix/config.template.toml} > $out
+      '';
+
   yaziOld = pkgs.rustPlatform.buildRustPackage rec {
     pname = "yazi";
     version = "0.4.2";
@@ -46,6 +56,12 @@ in
 
       # Ghostty
       ".config/ghostty/config".source = ghosttyConfig;
+
+      # Helix
+      ".config/helix/config.toml".source = helixConfig;
+      ".config/helix/languages.toml".source = ../../helix/languages.toml;
+      ".config/helix/ignore".source = ../../helix/ignore;
+      ".config/helix/themes".source = ../../helix/themes;
 
       # k9s
       "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
@@ -106,6 +122,10 @@ in
           $DRY_RUN_CMD git clone git@github.com:thomasschafer/zshelix.git \
             "${config.home.homeDirectory}/Development/zshelix"
         fi
+      '';
+
+      linkHelixRuntime = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        ln -sfn "${config.home.homeDirectory}/Development/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
       '';
     };
   };

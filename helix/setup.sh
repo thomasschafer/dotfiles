@@ -4,22 +4,9 @@
 
 set -euo pipefail
 
-HELIX_CONFIG_DIR="$HOME/.config/helix"
-HELIX_REPO_DIR="$HOME/Development/helix"
-HX_UTILS_DIR="$HOME/Development/hx-utils"
-
-if [ ! -d env ]; then
-    python3 -m venv env
-fi
-./process_config.sh --install
-
-mkdir -p "$HELIX_CONFIG_DIR"
-ln -sfn "$PWD/config.toml" "$HELIX_CONFIG_DIR/config.toml"
-ln -sfn "$PWD/themes" "$HELIX_CONFIG_DIR/themes"
-ln -sfn "$PWD/languages.toml" "$HELIX_CONFIG_DIR/languages.toml"
-ln -sfn "$PWD/ignore" "$HELIX_CONFIG_DIR/ignore"
-
 install_helix() {
+    HELIX_REPO_DIR="$HOME/Development/helix"
+
     if [ -d "$HELIX_REPO_DIR" ]; then
         cd "$HELIX_REPO_DIR"
         
@@ -37,10 +24,11 @@ install_helix() {
     fi
 
     cargo install --path helix-term --locked
-    ln -sfn "$PWD/runtime" "$HELIX_CONFIG_DIR/runtime"
 }
 
 install_hx_utils() {
+    HX_UTILS_DIR="$HOME/Development/hx-utils"
+
     if [ -d "$HX_UTILS_DIR" ]; then
         cd "$HX_UTILS_DIR"
         

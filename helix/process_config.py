@@ -2,7 +2,7 @@ import argparse
 import toml
 
 
-def process_config(input_file: str, output_file: str) -> None:
+def process_config(input_file: str) -> str:
     with open(input_file, "r") as file:
         config = toml.load(file)
 
@@ -15,20 +15,14 @@ def process_config(input_file: str, output_file: str) -> None:
                 keys_config[key] = {}
             keys_config[key].update(normal_and_select)
 
-    with open(output_file, "w") as file:
-        toml.dump(config, file)
+    return toml.dumps(config)
 
 
 parser = argparse.ArgumentParser(description="Process Helix config files.")
 parser.add_argument(
     "input_file", type=str, help="Input file name of the custom TOML configuration."
 )
-parser.add_argument(
-    "output_file",
-    type=str,
-    help="Output file name for the Helix-compatible configuration.",
-)
-
 args = parser.parse_args()
 
-process_config(args.input_file, args.output_file)
+result = process_config(args.input_file)
+print(result)
