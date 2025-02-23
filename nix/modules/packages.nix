@@ -14,6 +14,7 @@
       "ghostty"
       "karabiner-elements"
       "nikitabobko/tap/aerospace"
+      "rancher"
       # TODO: we shouldn't need this - manage using home.nix
       "visual-studio-code"
       "zed"

@@ -43,8 +43,8 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
+# Path
 export PATH="$HOME/.local/bin:$PATH"
-
-# Nix - TODO is there a better way of doing this?
-export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
+export PATH="$HOME/.rd/bin:$PATH"
+export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
 
