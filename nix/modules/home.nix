@@ -36,16 +36,16 @@ let
     '';
   };
 
-  yaziOld = pkgs.rustPlatform.buildRustPackage rec {
+  yaziFork = pkgs.rustPlatform.buildRustPackage {
     pname = "yazi";
-    version = "0.4.2";
+    version = "main";
     src = pkgs.fetchFromGitHub {
-      owner = "sxyazi";
+      owner = "thomasschafer";
       repo = "yazi";
-      rev = "v${version}";
-      hash = "sha256-2fBajVFpmgNHb90NbK59yUeaYLWR7rhQxpce9Tq1uQU=";
+      rev = "main";
+      hash = "sha256-dnsrig6vBQep99ea6AN/8YEntt8dn9wM7u7Kcrc2KoE=";
     };
-    cargoHash = "sha256-fOq8fM7S2caxI/lLWFGidJ7ZlDD5WSR3z3w/g4zRQp4=";
+    cargoHash = "sha256-gbE3OQfXN+g6EBI05tqjzfpZ6OE+JSejtORirGngFUc=";
   };
 in
 {
@@ -132,18 +132,18 @@ in
       jq
       lazygit
       ripgrep
-      scooter
+      # scooter # Building from source manually
       sd
       taplo
       tree
-      # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziOld
+      # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
       # yazi
       zig
       zls
 
       # Building from source
       hxUtils
-      yaziOld
+      yaziFork
 
       # Haskell tooling
       ghc
