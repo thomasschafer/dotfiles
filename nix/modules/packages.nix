@@ -34,6 +34,7 @@
       "golangci-lint-langserver"
       "gopls"
       "hadolint"
+      "minimal-racket"
       "node"
       "nvm"
       "pgformatter"
