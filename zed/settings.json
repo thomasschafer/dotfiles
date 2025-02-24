@@ -10,6 +10,7 @@
   "base_keymap": "VSCode",
   "theme": "Catppuccin Macchiato",
   "vim_mode": true,
+  "cursor_blink": false,
   "relative_line_numbers": true,
   "ui_font_size": 16,
   "buffer_font_size": 13,

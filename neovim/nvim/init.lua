@@ -3,5 +3,3 @@ vim.g.maplocalleader = " "
 
 vim.wo.number = true
 vim.wo.relativenumber = true
-
-require("config.lazy")
