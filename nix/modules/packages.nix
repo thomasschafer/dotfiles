@@ -24,6 +24,7 @@
       "zed"
     ];
 
+    # TODO: move more of these to home.nix
     brews = [
       "bash-completion"
       "biome"
@@ -38,7 +39,7 @@
       "golangci-lint-langserver"
       "gopls"
       "hadolint"
-      "minimal-racket" # TODO: `raco pkg install --auto fmt`
+      "minimal-racket"
       "node"
       "nvm"
       "pgformatter"

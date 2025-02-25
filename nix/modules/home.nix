@@ -211,6 +211,12 @@ in
       linkHelixRuntime = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         ln -sfn "${config.home.homeDirectory}/Development/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
       '';
+
+      installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! $DRY_RUN_CMD /opt/homebrew/bin/raco fmt --help &>/dev/null; then
+          $DRY_RUN_CMD /opt/homebrew/bin/raco pkg install --auto fmt
+        fi
+      '';
     };
   };
 
