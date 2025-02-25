@@ -8,6 +8,10 @@
       cleanup = hostConfig.homebrew.cleanup;
     };
 
+    taps = [
+      "snyk/tap"
+    ];
+
     casks = [
       "alacritty"
       "font-jetbrains-mono-nerd-font"
@@ -34,7 +38,7 @@
       "golangci-lint-langserver"
       "gopls"
       "hadolint"
-      "minimal-racket"
+      "minimal-racket" # TODO: `raco pkg install --auto fmt`
       "node"
       "nvm"
       "pgformatter"
@@ -47,6 +51,7 @@
       "ruff-lsp"
       "rust-analyzer"
       "shared-mime-info"
+      "snyk"
       "shellcheck"
       "sqlfluff"
       "terraform-docs"

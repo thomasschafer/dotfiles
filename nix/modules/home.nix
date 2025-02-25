@@ -36,6 +36,34 @@ let
     '';
   };
 
+  # See https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/snyk-language-server
+  snyk-ls = pkgs.stdenv.mkDerivation rec {
+    pname = "snyk-ls";
+    protocol_version = "16";
+    version = "20241112.105448";
+
+    src = pkgs.fetchurl {
+      url = "https://static.snyk.io/snyk-ls/${protocol_version}/snyk-ls_${version}_darwin_${
+        if pkgs.stdenv.isAarch64 then "arm64" else "amd64"
+      }";
+      sha256 = "sha256-WQo1UyO2kM1+U1xeN3F5UQlam3HBsKwztMV8oo59Uso=";
+    };
+
+    dontUnpack = true;
+
+    installPhase = ''
+      mkdir -p $out/bin
+      cp $src $out/bin/snyk-ls
+      chmod +x $out/bin/snyk-ls
+    '';
+
+    meta = with lib; {
+      description = "Snyk Language Server";
+      homepage = "https://github.com/snyk/snyk-ls";
+      platforms = platforms.darwin;
+    };
+  };
+
   yaziFork = pkgs.rustPlatform.buildRustPackage {
     pname = "yazi";
     version = "main";
@@ -159,6 +187,7 @@ in
           pylsp-mypy
         ]
       ))
+      snyk-ls
 
       # Scripts/tools
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))

@@ -191,6 +191,7 @@ auto-format = true
 # ----- Go -----
 [[language]]
 name = "go"
+language-servers = ["gopls", "golangci-lint-lsp", "snyk-ls"]
 auto-format = true
 
 # ----- Nix -----
@@ -216,3 +217,14 @@ language-servers = ["steel-language-server"]
 [language-server.steel-language-server]
 command = "steel-language-server"
 args = []
+
+
+# ----- Snyk language server -----
+[language-server.snyk-ls]
+command = "snyk"
+args = ["language-server", "-l", "debug"]
+
+[language-server.snyk-ls.config]
+automaticAuthentication = "false"
+cliPath = "/opt/homebrew/bin/snyk"
+trustedFolders = ["~/Development"]
