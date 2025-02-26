@@ -1,5 +1,6 @@
 inherits = "catppuccin_macchiato"
 
+"ui.background" = {}
 "ui.linenr" = { fg = "overlay0" }
 "ui.linenr.selected" = { fg = "#e2e8f8" }
 "ui.cursor.primary.insert" = { fg = "base", bg = "rosewater" }

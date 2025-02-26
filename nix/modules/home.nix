@@ -152,20 +152,36 @@ in
       deno
       fd
       fzf
+      go
+      golangci-lint
+      golangci-lint-langserver
+      gopls
       git
+      hadolint
       neovim
       nixfmt-rfc-style
       nushell
       p7zip
       jq
       lazygit
+      (python3.withPackages (
+        ps: with ps; [
+          python-lsp-server
+          pylsp-mypy
+        ]
+      ))
       ripgrep
-      # scooter # Building from source manually
+      ruff
+      ruff-lsp
+      rust-analyzer
+      # scooter  # Building from source manually
       sd
+      snyk-ls
       taplo
+      terraform-docs
       tree
-      # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
-      # yazi
+      typescript-language-server
+      # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
       zig
       zls
 
@@ -179,15 +195,6 @@ in
       stack
       haskell-language-server
       haskellPackages.hoogle
-
-      # LSPs
-      (python3.withPackages (
-        ps: with ps; [
-          python-lsp-server
-          pylsp-mypy
-        ]
-      ))
-      snyk-ls
 
       # Scripts/tools
       (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
