@@ -9,6 +9,7 @@
     };
 
     taps = [
+      "nikitabobko/tap"
       "snyk/tap"
     ];
 
