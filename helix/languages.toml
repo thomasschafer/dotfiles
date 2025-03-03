@@ -222,7 +222,7 @@ args = []
 # ----- Snyk language server -----
 [language-server.snyk-ls]
 command = "snyk"
-args = ["language-server", "-l", "debug"]
+args = ["language-server"]
 
 [language-server.snyk-ls.config]
 automaticAuthentication = "false"
