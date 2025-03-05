@@ -43,8 +43,8 @@ bindings = [
   { key = "K", mods = "Command", chars = "\u000b" },                 # ctrl+k
   { key = "L", mods = "Command", chars = "\u0001;" },                # ctrl+a ;
   { key = ",", mods = "Command", chars = "\u0001L" },                # ctrl+a L  (jump to last session)
-  { key = 36, mods = "Command", action = "ToggleFullscreen" },       # toggle fullscreen
-  { key = "Return", mods = "Command|Shift", chars = "\u0001z" },     # ctrl+a z
+  { key = "Enter", mods = "Command", action = "ToggleFullscreen" },  # toggle fullscreen
+  { key = "Enter", mods = "Command|Shift", chars = "\u0001z" },      # ctrl+a z
   { key = "s", mods = "Command", chars = "\u0001s" },                # ctrl+a s  (view tmux sessions)
   { key = "p", mods = "Command", chars = "\u0001F" },                # ctrl+a F  (open tmux-sessionizer)
   { key = "Left", mods = "Command", chars = "\u001b[H" },            # jump to start of line
