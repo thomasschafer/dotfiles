@@ -277,7 +277,7 @@ in
     vscode = {
       enable = true;
 
-      extensions = with pkgs.vscode-extensions; [
+      profiles.default.extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
         eamodio.gitlens
         enkia.tokyo-night
