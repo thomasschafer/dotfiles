@@ -10,8 +10,8 @@ WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 autoload -Uz vcs_info
 precmd() { vcs_info }
 setopt prompt_subst
-zstyle ':vcs_info:git:*' formats '(%F{#91d7e3}%b%f) '
-PROMPT='> %F{#a6da95}%1~%f ${vcs_info_msg_0_}$ '
+zstyle ':vcs_info:git:*' formats '(%F{cyan}%b%f) '
+PROMPT='[%B%(?.%F{grey}.%F{red})%?%f%b] %F{green}%1~%f ${vcs_info_msg_0_}$ '
 
 # Helix keymap
 ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
