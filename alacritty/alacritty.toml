@@ -6,7 +6,7 @@ import = [
 
 [terminal.shell]
 program = "/bin/zsh"
-args = ["-l", "-c", "tmux attach -t 'λ' || tmux new -s 'λ'"]
+# args = ["-l", "-c", "zellij attach 'λ' || zellij -s 'λ'"]
 
 [window]
 dimensions = { columns = 200, lines = 60 }
@@ -23,34 +23,34 @@ transparent_background_colors = true
 
 [keyboard]
 bindings = [
-  { key = "Left", mods = "Command|Option", chars = "\u001B[1;5D" },  # ctrl+left
-  { key = "Right", mods = "Command|Option", chars = "\u001B[1;5C" }, # ctrl+right
-  { key = "Left", mods = "Command|Shift", chars = "\u001B[1;6D" },   # ctrl+shift+left
-  { key = "Right", mods = "Command|Shift", chars = "\u001B[1;6C" },  # ctrl+shift+right
-  { key = "Up", mods = "Command|Shift", chars = "\u0001K" },         # ctrl+a K
-  { key = "Down", mods = "Command|Shift", chars = "\u0001k" },       # ctrl+a k
-  { key = "h", mods = "Command|Option", chars = "\u001B[1;5D" },     # ctrl+left
-  { key = "l", mods = "Command|Option", chars = "\u001B[1;5C" },     # ctrl+right
-  { key = "h", mods = "Command|Shift", chars = "\u001B[1;6D" },      # ctrl+shift+left
-  { key = "l", mods = "Command|Shift", chars = "\u001B[1;6C" },      # ctrl+shift+right
-  { key = "k", mods = "Command|Shift", chars = "\u0001K" },          # ctrl+a K
-  { key = "j", mods = "Command|Shift", chars = "\u0001k" },          # ctrl+a k
-  { key = "T", mods = "Command", chars = "\u0001c" },                # ctrl+a c
-  { key = "W", mods = "Command", chars = "\u0001x" },                # ctrl+a x
-  { key = "D", mods = "Command", chars = "\u0001|" },                # ctrl+a |
-  { key = "D", mods = "Command|Shift", chars = "\u0001-" },          # ctrl+a -
-  { key = "F", mods = "Command", chars = "\u0001\\" },               # ctrl+a \
-  { key = "K", mods = "Command", chars = "\u000b" },                 # ctrl+k
-  { key = "L", mods = "Command", chars = "\u0001;" },                # ctrl+a ;
-  { key = ",", mods = "Command", chars = "\u0001L" },                # ctrl+a L  (jump to last session)
-  { key = "Enter", mods = "Command", action = "ToggleFullscreen" },  # toggle fullscreen
-  { key = "Enter", mods = "Command|Shift", chars = "\u0001z" },      # ctrl+a z
-  { key = "s", mods = "Command", chars = "\u0001s" },                # ctrl+a s  (view tmux sessions)
-  { key = "p", mods = "Command", chars = "\u0001F" },                # ctrl+a F  (open tmux-sessionizer)
-  { key = "Left", mods = "Command", chars = "\u001b[H" },            # jump to start of line
-  { key = "Right", mods = "Command", chars = "\u001b[F" },           # jump to end of line
-  { key = "Back", mods = "Command", chars = "\u0015" },              # delete to start of line
-  { key = "3", mods = "Option", chars = "#" },                       # This would be overriden otherwise by option_as_alt
+  # Navigate tabs with arrow keys
+  { key = "Left", mods = "Command|Option", chars = "\u001b{" },  # alt+{
+  { key = "Right", mods = "Command|Option", chars = "\u001b}" }, # alt+}
+  # Navigate panes with arrow keys
+  { key = "Left", mods = "Command|Shift", chars = "\u001b\u001b[D" },  # alt-left
+  { key = "Right", mods = "Command|Shift", chars = "\u001b\u001b[C" }, # alt-right
+  { key = "Up", mods = "Command|Shift", chars = "\u001b\u001b[A" },    # alt-up
+  { key = "Down", mods = "Command|Shift", chars = "\u001b\u001b[B" },  # alt-down
+  # Navigate tabs with h/l
+  { key = "h", mods = "Command|Option", chars = "\u001b{" }, # alt+{
+  { key = "l", mods = "Command|Option", chars = "\u001b}" }, # alt+}
+  # Navigate panes with h/j/k/l
+  { key = "h", mods = "Command|Shift", chars = "\u001b\u001b[D" }, # alt-left
+  { key = "l", mods = "Command|Shift", chars = "\u001b\u001b[C" }, # alt-right
+  { key = "k", mods = "Command|Shift", chars = "\u001b\u001b[A" }, # alt-up
+  { key = "j", mods = "Command|Shift", chars = "\u001b\u001b[B" }, # alt-down
+  # Open and close tabs/panes
+  { key = "T", mods = "Command", chars = "\u001bT" },        # alt-T
+  { key = "W", mods = "Command", chars = "\u001bW" },        # alt-W
+  { key = "D", mods = "Command", chars = "\u001b%" },        # alt-%
+  { key = "D", mods = "Command|Shift", chars = "\u001b\"" }, # alt-"
+  # Misc
+  # { key = "L", mods = "Command", chars = "\u0001;" },                # ctrl+a ;
+  # { key = ",", mods = "Command", chars = "\u0001L" },                # ctrl+a L  (jump to last session)
+  { key = "Enter", mods = "Command", action = "ToggleFullscreen" }, # toggle fullscreen
+  { key = "Enter", mods = "Command|Shift", chars = "\u001bF" },     # alt-F
+  # { key = "p", mods = "Command", chars = "\u0001F" },                # ctrl+a F  (open tmux-sessionizer)
+  { key = "3", mods = "Option", chars = "#" }, # This would be overriden otherwise by option_as_alt
 ]
 
 [mouse]
