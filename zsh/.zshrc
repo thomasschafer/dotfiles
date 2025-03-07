@@ -11,7 +11,7 @@ autoload -Uz vcs_info
 precmd() { vcs_info }
 setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{cyan}%b%f) '
-PROMPT='[%B%(?.%F{grey}.%F{red})%?%f%b] %F{green}%1~%f ${vcs_info_msg_0_}$ '
+PROMPT='%B%(?.%F{grey}.%F{red})%?%f%b | %F{green}%1~%f ${vcs_info_msg_0_}$ '
 
 # Helix keymap
 ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
@@ -47,4 +47,5 @@ setopt EXTENDED_HISTORY
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.rd/bin:$PATH"
 export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
+export PATH="$HOME/go/bin:$PATH"
 
