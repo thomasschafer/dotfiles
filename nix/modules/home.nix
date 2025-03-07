@@ -143,6 +143,9 @@ in
       # Zed
       ".config/zed/settings.json".source = ../../zed/settings.json;
 
+      # Zellij
+      # ".config/zellij/config.kdl" = ../../zellij/config.kdl; # TODO: uncomment
+
       # Zshrc
       ".zshrc".source = ../../zsh/.zshrc;
     };
@@ -182,6 +185,7 @@ in
       tree
       typescript-language-server
       # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
+      zellij
       zig
       zls
 
