@@ -86,6 +86,7 @@ P = "paste_before"
 y = "yank"
 R = "replace_with_yanked"
 x = ["yank_to_clipboard", "delete_selection"]
+";" = "global_search_fixed_strings"
 
 [keys.normal-and-select.backspace]
 k = "hover"
