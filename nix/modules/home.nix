@@ -139,6 +139,10 @@ in
         url = "https://raw.githubusercontent.com/catppuccin/yazi/refs/heads/main/themes/macchiato/catppuccin-macchiato-blue.toml";
         sha256 = "sha256-nR48k8uaAO3oQ8GiD8mCLZU3FPc5KSL+DAvt2z5YUmY=";
       };
+      ".config/yazi/Catppuccin-macchiato.tmTheme".source = pkgs.fetchurl {
+        url = "https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme";
+        sha256 = "sha256-zL18U4AXMO8+gBH3T/HDl8e7OYjIRqUdeeb0i4V7kVI=";
+      };
 
       # Zed
       ".config/zed/settings.json".source = ../../zed/settings.json;
