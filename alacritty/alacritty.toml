@@ -65,15 +65,6 @@ post_processing = true
 persist = false
 mouse.enabled = true
 
-[[hints.enabled]]
-binding = { key = "i", mods = "Control|Shift" }
-command = { program = "sh", args = ["-c", "printf ${0#./} | pbcopy"] }
-regex = "\\./[^\\s:]+:\\d+"
-hyperlinks = false
-post_processing = false
-persist = false
-mouse.enabled = true
-
 [font]
 size = 12
 offset = { x = 1, y = 1 }
