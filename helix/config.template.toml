@@ -9,6 +9,7 @@ smart-tab.enable = false
 undercurl = true
 clipboard-provider = "pasteboard"
 true-color = true
+color-modes = true
 
 [editor.lsp]
 display-messages = true
