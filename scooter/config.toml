@@ -1,0 +1,3 @@
+[editor_open]
+command = 'tmux send-keys -t "$TMUX_PANE" ":onc %file:%line" Enter'
+exit = true

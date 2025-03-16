@@ -128,6 +128,9 @@ in
       # Nushell
       "Library/Application Support/nushell/config.nu".source = ../../nushell/config.nu;
 
+      # Scooter
+      ".config/scooter/config.toml".source = ../../scooter/config.toml;
+
       # VSCode
       "Library/Application Support/Code/User/keybindings.json".source = ../../vscode/keybindings.json;
       "Library/Application Support/Code/User/settings.json".source = ../../vscode/settings.json;
