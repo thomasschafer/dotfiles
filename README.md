@@ -3,7 +3,7 @@
 ## Installation
 
 ```sh
-git clone git@github.com:thomasschafer/dotfiles.git && \
-  cd dotfiles && \
-  ./setup.sh
+git clone git@github.com:thomasschafer/dotfiles.git
+cd dotfiles
+./setup.sh personal
 ```
