@@ -71,9 +71,9 @@ let
       owner = "thomasschafer";
       repo = "yazi";
       rev = "main";
-      hash = "sha256-dnsrig6vBQep99ea6AN/8YEntt8dn9wM7u7Kcrc2KoE=";
+      hash = "sha256-kWMpFq155szLIzTutqtA/AM0bgx43HFz1K/idm+hto4=";
     };
-    cargoHash = "sha256-gbE3OQfXN+g6EBI05tqjzfpZ6OE+JSejtORirGngFUc=";
+    cargoHash = "sha256-HYUi0aWDLGve6C/5pM12rpplZaOLNVRc4PUKaVF8P1w=";
   };
 in
 {
