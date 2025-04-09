@@ -92,7 +92,7 @@ auto-format = true
 # ----- Go -----
 [[language]]
 name = "go"
-language-servers = ["gopls", "golangci-lint-lsp", "snyk-ls"]
+language-servers = ["gopls", "golangci-lint-lsp"]
 auto-format = true
 
 # ----- Nix -----

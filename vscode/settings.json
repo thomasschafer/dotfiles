@@ -242,5 +242,6 @@
   "go.toolsManagement.autoUpdate": true,
   "[sql]": {
     "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
-  }
+  },
+  "editor.cursorBlinking": "solid",
 }
