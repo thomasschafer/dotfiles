@@ -244,4 +244,5 @@
     "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
   },
   "editor.cursorBlinking": "solid",
+  "chat.agent.enabled": true,
 }

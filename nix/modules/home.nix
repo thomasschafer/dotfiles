@@ -308,6 +308,7 @@ in
         ms-vscode.makefile-tools
         redhat.vscode-yaml
         streetsidesoftware.code-spell-checker
+        rust-lang.rust-analyzer
         tamasfe.even-better-toml
         usernamehw.errorlens
         vscodevim.vim
