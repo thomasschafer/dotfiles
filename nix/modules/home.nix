@@ -191,6 +191,7 @@ in
       terraform-docs
       tree
       typescript-language-server
+      uv
       # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
       zellij
       zig
