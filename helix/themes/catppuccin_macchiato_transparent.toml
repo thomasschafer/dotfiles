@@ -4,12 +4,13 @@ inherits = "catppuccin_macchiato"
 "ui.linenr" = { fg = "overlay0" }
 "ui.linenr.selected" = { fg = "#e2e8f8" }
 "ui.cursor.primary.insert" = { fg = "base", bg = "rosewater" }
-"ui.statusline.insert" = { fg = "base", bg = "rosewater", modifiers = ["bold"] }
+"ui.cursor.primary.normal" = { fg = "base", bg = "subtext1" }
 "ui.cursor.primary.select" = { fg = "base", bg = "peach" }
-"ui.statusline.select" = { fg = "base", bg = "peach", modifiers = ["bold"] }
 "ui.cursor.insert" = { fg = "base", bg = "subtext0" }
 "ui.cursor.select" = { fg = "base", bg = "red" }
 "ui.cursor.match" = { fg = "peach", bg = "surface1", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "base", bg = "rosewater", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "base", bg = "peach", modifiers = ["bold"] }
 "ui.bufferline.active" = { bg = "surface0", fg = "mauve" }
 
 error = { fg = "red", bg = "surface0" }
