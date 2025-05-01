@@ -43,9 +43,14 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
+# Rancher desktop
+export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/thomasschafer/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+
 # Path
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.rd/bin:$PATH"
 export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
 export PATH="$HOME/go/bin:$PATH"
-
