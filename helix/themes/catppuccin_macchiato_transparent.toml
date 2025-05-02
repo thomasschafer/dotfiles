@@ -9,6 +9,7 @@ inherits = "catppuccin_macchiato"
 "ui.cursor.insert" = { fg = "base", bg = "subtext0" }
 "ui.cursor.select" = { fg = "base", bg = "red" }
 "ui.cursor.match" = { fg = "peach", bg = "surface1", modifiers = ["bold"] }
+"ui.statusline.normal" = { fg = "base", bg = "subtext1", modifiers = ["bold"] }
 "ui.statusline.insert" = { fg = "base", bg = "rosewater", modifiers = ["bold"] }
 "ui.statusline.select" = { fg = "base", bg = "peach", modifiers = ["bold"] }
 "ui.bufferline.active" = { bg = "surface0", fg = "mauve" }
