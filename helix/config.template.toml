@@ -75,6 +75,7 @@ f = ":sh tmux popup -xC -yC -w90%% -h90%% -E yazi $(realpath %{buffer_name} 2>/d
 w = ":sh git blame $(realpath %{buffer_name} 2>/dev/null || echo '') -L %{cursor_line},%{cursor_line}"
 s = ":sh tmux popup -xC -yC -w90%% -h90%% -E env GIT_PAGER='less -+F' git log --follow -p -- $(realpath %{buffer_name} 2>/dev/null || echo '')"
 d = ":sh tmux popup -xC -yC -w90%% -h90%% -E scooter"
+e = [":write-all", ":insert-output scooter >/dev/tty", ":redraw", ":reload-all"]
 j = "save_selection"
 y = ":sh echo \"%{buffer_name}\" | tr -d '\n' | pbcopy"
 Y = ":sh echo $(realpath %{buffer_name} 2>/dev/null || echo '') | tr -d '\n' | pbcopy"
