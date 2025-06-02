@@ -232,9 +232,9 @@ in
     # TODO: replace these scripts with something more idiomatic
     activation = {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -d /Applications/Alacritty.app/Contents/Resources/alacritty.icns ]; then
-          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns
-          $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app  # Force Finder to refresh the icon
+        if [ ! -f "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" ] || ! cmp -s "${../../alacritty/alacritty.icns}" "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" 2>/dev/null; then
+          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns || true
+          $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app || true  # Force Finder to refresh the icon
         fi
       '';
 
