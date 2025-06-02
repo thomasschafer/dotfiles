@@ -31,7 +31,7 @@ let
       rev = "main";
       hash = "sha256-KpU9Mxn1Fs3VXlAMTLR1mCQizNuQKrjmePatSjth+/s=";
     };
-    cargoHash = "sha256-btchC+ex3gn+gZiSJ3rggbisUea/oaSIKG0rv798wEE=";
+    cargoHash = "sha256-/9FLbTyHuhEA5BfAXw99pu+482O/s604ehkk1WPC+Hk=";
 
     postInstall = ''
       ln -s $out/bin/hx-utils $out/bin/u
@@ -75,7 +75,7 @@ let
       rev = "main";
       hash = "sha256-kWMpFq155szLIzTutqtA/AM0bgx43HFz1K/idm+hto4=";
     };
-    cargoHash = "sha256-HYUi0aWDLGve6C/5pM12rpplZaOLNVRc4PUKaVF8P1w=";
+    cargoHash = "sha256-933kOXcY9sVoRqEv9IPwcCbpf6KTsDkSquggxyOVSxc=";
   };
 
   catppuccinMacchiatoTheme = pkgs.fetchurl {
@@ -165,66 +165,69 @@ in
       ".zshrc".source = ../../zsh/.zshrc;
     };
 
-    packages = with pkgs; [
-      # CLI tools
-      aider-chat
-      deno
-      fd
-      fzf
-      go
-      golangci-lint
-      golangci-lint-langserver
-      gopls
-      git
-      hadolint
-      neovim
-      nixfmt-rfc-style
-      nushell
-      p7zip
-      jq
-      lazygit
-    ] ++ lib.optionals (host == "personal") [
-      (python3.withPackages (
-        ps: with ps; [
-          pip
-          pylsp-mypy
-          python-lsp-server
-        ]
-      ))
-    ] ++ [
-      ripgrep
-      ruff
-      ruff-lsp
-      rust-analyzer
-      # scooter  # Building from source manually
-      sd
-      snyk-ls
-      taplo
-      terraform-docs
-      tree
-      typescript-language-server
-      uv
-      nodePackages.vscode-langservers-extracted
-      # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
-      zellij
-      zig
-      zls
+    packages =
+      with pkgs;
+      [
+        # CLI tools
+        aider-chat
+        deno
+        fd
+        fzf
+        go
+        golangci-lint
+        golangci-lint-langserver
+        gopls
+        git
+        hadolint
+        neovim
+        nixfmt-rfc-style
+        nushell
+        p7zip
+        jq
+        lazygit
+      ]
+      ++ lib.optionals (host == "personal") [
+        (python3.withPackages (
+          ps: with ps; [
+            pip
+            pylsp-mypy
+            python-lsp-server
+          ]
+        ))
+      ]
+      ++ [
+        ripgrep
+        ruff
+        rust-analyzer
+        # scooter  # Building from source manually
+        sd
+        snyk-ls
+        taplo
+        terraform-docs
+        tree
+        typescript-language-server
+        uv
+        nodePackages.vscode-langservers-extracted
+        # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
+        zellij
+        zig
+        zls
 
-      # Building from source
-      hxUtils
-      yaziFork
+        # Building from source
+        hxUtils
+        yaziFork
 
-      # Haskell tooling
-      ghc
-      cabal-install
-      stack
-      haskell-language-server
-      haskellPackages.hoogle
+        # Haskell tooling
+        ghc
+        cabal-install
+        stack
+        haskell-language-server
+        haskellPackages.hoogle
 
-      # Scripts/tools
-      (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
-      (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
-    ];
+        # Scripts/tools
+        (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
+        (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
+      ];
 
     # TODO: replace these scripts with something more idiomatic
     activation = {
