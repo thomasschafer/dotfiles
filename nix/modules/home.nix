@@ -2,6 +2,8 @@
   config,
   pkgs,
   lib,
+  hostConfig,
+  host,
   ...
 }:
 
@@ -181,12 +183,15 @@ in
       p7zip
       jq
       lazygit
+    ] ++ lib.optionals (host == "personal") [
       (python3.withPackages (
         ps: with ps; [
-          python-lsp-server
+          pip
           pylsp-mypy
+          python-lsp-server
         ]
       ))
+    ] ++ [
       ripgrep
       ruff
       ruff-lsp

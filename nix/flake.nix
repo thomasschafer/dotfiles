@@ -29,6 +29,7 @@
         nix-darwin.lib.darwinSystem {
           specialArgs = {
             inherit self hostConfig;
+            host = host;
           };
           modules = [
             ./modules/configuration.nix
