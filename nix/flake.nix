@@ -41,6 +41,10 @@
                 backupFileExtension = "bak";
                 useGlobalPkgs = true;
                 useUserPackages = true;
+                extraSpecialArgs = {
+                  inherit hostConfig;
+                  host = host;
+                };
                 users.${hostConfig.username} = import ./modules/home.nix;
               };
             }

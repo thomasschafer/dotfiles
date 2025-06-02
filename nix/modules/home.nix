@@ -229,8 +229,10 @@ in
     # TODO: replace these scripts with something more idiomatic
     activation = {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns
-        $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app  # Force Finder to refresh the icon
+        if [ ! -d /Applications/Alacritty.app/Contents/Resources/alacritty.icns ]; then
+          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns
+          $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app  # Force Finder to refresh the icon
+        fi
       '';
 
       cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
