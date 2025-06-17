@@ -116,6 +116,8 @@ in
       ".config/helix/languages.toml".source = ../../helix/languages.toml;
       ".config/helix/ignore".source = ../../helix/ignore;
       ".config/helix/themes".source = ../../helix/themes;
+      ".config/helix/init.scm".source = ../../helix/init.scm;
+      ".config/helix/cogs/keymaps.scm".source = ../../helix/cogs/keymaps.scm;
 
       # k9s
       "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
