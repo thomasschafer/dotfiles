@@ -176,7 +176,7 @@ in
         fd
         fzf
         go
-        golangci-lint
+        # golangci-lint  # Manually installing v1 for now - see `installGolangciLint`
         golangci-lint-langserver
         gopls
         git
@@ -254,6 +254,12 @@ in
       installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if ! $DRY_RUN_CMD /opt/homebrew/bin/raco fmt --help &>/dev/null; then
           $DRY_RUN_CMD /opt/homebrew/bin/raco pkg install --auto fmt
+        fi
+      '';
+
+      installGolangciLint = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! command -v golangci-lint &>/dev/null || ! golangci-lint version 2>/dev/null | grep -q "1.64"; then
+          $DRY_RUN_CMD ${pkgs.go}/bin/go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.0
         fi
       '';
     };

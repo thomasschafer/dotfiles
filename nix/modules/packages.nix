@@ -1,4 +1,9 @@
-{ hostConfig, host, lib, ... }:
+{
+  hostConfig,
+  host,
+  lib,
+  ...
+}:
 {
   # TODO: use Nixpkgs instead
   homebrew = {
@@ -53,6 +58,6 @@
       "watchman"
       "wget"
       "yamllint"
-    ] ++ lib.optionals (host == "work") ["python"];
+    ] ++ lib.optionals (host == "work") [ "python" ];
   };
 }
