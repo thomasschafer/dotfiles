@@ -71,14 +71,14 @@ A-down = [ # shift selections down one line
 x = ":buffer-close!"
 g = ":reset-diff-change"
 a = ":sh tmux popup -d \"#{pane_current_path}\" -xC -yC -w90%% -h90%% -E env EDITOR=hx lazygit"
-f = ":sh tmux popup -xC -yC -w90%% -h90%% -E yazi $(realpath '%{buffer_name}' 2>/dev/null || echo '')"
-w = ":sh git blame $(realpath '%{buffer_name}' 2>/dev/null || echo '') -L %{cursor_line},%{cursor_line}"
-s = ":sh tmux popup -xC -yC -w90%% -h90%% -E env GIT_PAGER='less -+F' git log --follow -p -- $(realpath '%{buffer_name}' 2>/dev/null || echo '')"
+f = ":sh tmux popup -xC -yC -w90%% -h90%% -E yazi ${CURRENT_PATH}"
+w = ":sh git blame ${CURRENT_PATH} -L %{cursor_line},%{cursor_line}"
+s = ":sh tmux popup -xC -yC -w90%% -h90%% -E env GIT_PAGER='less -+F' git log --follow -p -- ${CURRENT_PATH}"
 d = ":sh tmux popup -xC -yC -w90%% -h90%% -E scooter"
 e = [":write-all", ":insert-output scooter >/dev/tty", ":redraw", ":reload-all"]
 j = "save_selection"
 y = ":sh echo \"%{buffer_name}\" | tr -d '\n' | pbcopy"
-Y = ":sh echo $(realpath '%{buffer_name}' 2>/dev/null || echo '') | tr -d '\n' | pbcopy"
+Y = ":sh echo ${CURRENT_PATH} | tr -d '\n' | pbcopy"
 t = ":toggle inline-diagnostics.cursor-line warning disable"
 u = ":sh echo \"$(git rev-parse --short HEAD)/%{buffer_name}#L%{cursor_line}\" | pbcopy"
 

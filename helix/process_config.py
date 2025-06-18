@@ -4,7 +4,15 @@ import toml
 
 def process_config(input_file: str) -> str:
     with open(input_file, "r") as file:
-        config = toml.load(file)
+        content = file.read()
+
+    variables = {
+        "CURRENT_PATH": "$(realpath '%{buffer_name}' 2>/dev/null || echo '%{buffer_name}')"
+    }
+    for var_name, var_value in variables.items():
+        content = content.replace(f"${{{var_name}}}", var_value)
+
+    config = toml.loads(content)
 
     keys_config = config.get("keys", {})
     normal_and_select = keys_config.pop("normal-and-select", {})
