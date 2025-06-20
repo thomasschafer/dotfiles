@@ -1,8 +1,8 @@
+# TODO: add Claude code
 {
   config,
   pkgs,
   lib,
-  hostConfig,
   host,
   ...
 }:
