@@ -134,6 +134,9 @@ in
       # Lazygit
       "Library/Application Support/lazygit/config.yml".source = ../../lazygit/config.yml;
 
+      # Opencode
+      ".config/opencode/config.json".source = ../../opencode/config.json;
+
       # Neovim
       ".config/nvim".source = ../../neovim/nvim;
 
