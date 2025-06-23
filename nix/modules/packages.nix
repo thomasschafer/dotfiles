@@ -16,6 +16,7 @@
     taps = [
       "nikitabobko/tap"
       "snyk/tap"
+      "sst/tap"
     ];
 
     casks = [
