@@ -1,4 +1,3 @@
-# TODO: add Claude code
 {
   config,
   pkgs,
@@ -175,6 +174,7 @@ in
       [
         # CLI tools
         aider-chat
+        claude-code
         deno
         fd
         fzf
