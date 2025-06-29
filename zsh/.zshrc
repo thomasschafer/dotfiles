@@ -17,6 +17,7 @@ PROMPT='%B%(?.%F{grey}.%F{red})%?%f%b | %F{green}%1~%f ${vcs_info_msg_0_}$ '
 ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
 ZHM_CURSOR_INSERT=$'\e[2 q\e]12;#f4dbd6\a'
 ZHM_CURSOR_SELECT=$'\e[2 q\e]12;#f5a97f\a'
+ZSH_HELIX_SYSTEM_CLIPBOARD=1
 source $HOME/Development/zshelix/zshelix.plugin.zsh
 
 # Git autocompletion
