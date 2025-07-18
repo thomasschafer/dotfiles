@@ -4,7 +4,7 @@
 
 ; Scooter
 (require "../../Development/scooter-hx/scooter.hx/scooter.scm")
-(keymap (global) (normal (space (q ":scooter"))))
+(keymap (global) (normal (enter (q ":scooter"))))
 
 ; Smooth scroll
 (require "../../Development/smooth-scroll.hx/smooth-scroll.scm")
