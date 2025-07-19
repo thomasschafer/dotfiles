@@ -7,7 +7,8 @@ def process_config(input_file: str) -> str:
         content = file.read()
 
     variables = {
-        "CURRENT_PATH": "$([ '%{buffer_name}' = '[scratch]' ] && echo $PWD || (realpath '%{buffer_name}' 2>/dev/null || echo '%{buffer_name}'))"
+        "CURRENT_PATH": "$([ '%{buffer_name}' = '[scratch]' ] && echo $PWD || (realpath '%{buffer_name}' 2>/dev/null || echo '%{buffer_name}'))",
+        "TMUX_POPUP": 'tmux popup -d \\"#{pane_current_path}\\" -xC -yC -w90%% -h90%%',
     }
     for var_name, var_value in variables.items():
         content = content.replace(f"${{{var_name}}}", var_value)
