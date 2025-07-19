@@ -97,9 +97,6 @@ in
       # Aerospace
       ".config/aerospace/aerospace.toml".source = ../../aerospace/aerospace.toml;
 
-      # Aider
-      ".aider.conf.yml".source = ../../aider/aider.conf.yml;
-
       # Alacritty
       ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/alacritty/main/catppuccin-macchiato.toml";
@@ -173,7 +170,6 @@ in
       with pkgs;
       [
         # CLI tools
-        aider-chat
         claude-code
         deno
         fd
