@@ -16,7 +16,7 @@
       askForPasswordDelay = 0;
     };
 
-    screencapture.location = "~/Documents/Screenshots";
+    screencapture.location = "~/Screenshots";
 
     NSGlobalDomain = {
       ApplePressAndHoldEnabled = false;
@@ -34,7 +34,7 @@
   };
 
   system.activationScripts.postActivation.text = ''
-    mkdir -p "$HOME/Documents/Screenshots"
+    mkdir -p "$HOME/Screenshots"
 
     defaults write com.apple.keyboard.lighting KeyboardBrightness -int 0
 
