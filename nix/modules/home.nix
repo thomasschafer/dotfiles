@@ -302,7 +302,7 @@ in
         resurrect
       ];
       extraConfig = ''
-        ${builtins.readFile ../../tmux/.tmux.conf}
+        ${builtins.readFile ../../tmux/tmux.conf}
         set -gu default-command
         set -g default-shell "$SHELL"
       '';
