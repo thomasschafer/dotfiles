@@ -32,16 +32,28 @@ vim.wo.number = true
 vim.wo.relativenumber = true
 
 
--- Scooter
+-- Scooter integration
 local Terminal = require("toggleterm.terminal").Terminal
-local scooter_term = Terminal:new({
-    cmd = "scooter",
-    direction = "float",
-    close_on_exit = true,
-})
+local scooter_term = nil
+
+local function open_scooter()
+    if not scooter_term then
+        scooter_term = Terminal:new({
+            cmd = "scooter",
+            direction = "float",
+            close_on_exit = true,
+            on_exit = function()
+                scooter_term = nil
+            end
+        })
+    end
+    scooter_term:open()
+end
 
 _G.EditLineFromScooter = function(file_path, line)
-    pcall(function() scooter_term:close() end)
+    if scooter_term and scooter_term:is_open() then
+        scooter_term:close()
+    end
 
     local current_path = vim.fn.expand("%:p")
     local target_path = vim.fn.fnamemodify(file_path, ":p")
@@ -53,21 +65,25 @@ _G.EditLineFromScooter = function(file_path, line)
     vim.api.nvim_win_set_cursor(0, { line, 0 })
 end
 
-vim.keymap.set('n', '<leader>s', function()
-    scooter_term:toggle()
-end, { desc = 'Toggle scooter' })
+_G.OpenScooterSearchText = function(search_text)
+    if scooter_term and scooter_term:is_open() then
+        scooter_term:close()
+    end
 
-
-_G.ToggleScooterSearchText = function(search_text)
-    local escaped_search_text = vim.fn.shellescape(search_text:gsub("\r?\n", " "))
-    local search_term = Terminal:new({
-        cmd = "scooter --search-text " .. escaped_search_text,
+    local escaped_text = vim.fn.shellescape(search_text:gsub("\r?\n", " "))
+    scooter_term = Terminal:new({
+        cmd = "scooter --search-text " .. escaped_text,
         direction = "float",
         close_on_exit = true,
+        on_exit = function()
+            scooter_term = nil
+        end
     })
-    search_term:open()
+    scooter_term:open()
 end
 
+vim.keymap.set('n', '<leader>s', open_scooter, { desc = 'Open scooter' })
+
 vim.keymap.set('v', '<leader>r',
-    '"ay<ESC><cmd>lua ToggleScooterSearchText(vim.fn.getreg("a"))<CR>',
+    '"ay<ESC><cmd>lua OpenScooterSearchText(vim.fn.getreg("a"))<CR>',
     { desc = 'Search selected text in scooter' })
