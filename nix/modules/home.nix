@@ -330,7 +330,6 @@ in
         ms-vscode.makefile-tools
         redhat.vscode-yaml
         rust-lang.rust-analyzer
-        saoudrizwan.claude-dev # Cline
         streetsidesoftware.code-spell-checker
         tamasfe.even-better-toml
         usernamehw.errorlens
