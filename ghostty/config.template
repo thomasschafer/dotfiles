@@ -3,7 +3,7 @@ window-padding-x = 12
 macos-titlebar-style = hidden
 resize-overlay = never
 
-theme = catppuccin-macchiato
+theme = Catppuccin Macchiato
 
 # background-opacity = 0.9
 # background-blur = true
