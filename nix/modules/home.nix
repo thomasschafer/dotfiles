@@ -258,6 +258,8 @@ in
 
       installGolangciLint = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if ! command -v golangci-lint &>/dev/null || ! golangci-lint version 2>/dev/null | grep -q "1.64"; then
+          export CC="/usr/bin/clang"
+          export CXX="/usr/bin/clang++"
           $DRY_RUN_CMD ${pkgs.go}/bin/go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.0
         fi
       '';
