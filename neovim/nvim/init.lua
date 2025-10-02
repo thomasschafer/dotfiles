@@ -14,6 +14,7 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Setup plugins
 require("lazy").setup({
+  lockfile = false,
   {
     'akinsho/toggleterm.nvim',
     version = "*",
@@ -28,18 +29,35 @@ require("lazy").setup({
     config = function()
       require('catppuccin').setup({
         flavour = 'macchiato',
-        -- integrations = {
-        --   cmp = true,
-        --   gitsigns = true,
-        --   nvimtree = true,
-        --   telescope = true,
-        --   notify = false,
-        --   mini = false,
-        -- },
+        integrations = {
+          treesitter = true,
+        },
       })
       vim.cmd.colorscheme 'catppuccin'
     end,
-  }
+  },
+  {
+    'nvim-treesitter/nvim-treesitter',
+    build = ':TSUpdate',
+    config = function()
+      require('nvim-treesitter.configs').setup({
+        ensure_installed = {
+          'bash', 'c', 'cpp', 'css', 'dockerfile', 'gitignore', 'go', 'html',
+          'javascript', 'json', 'lua', 'markdown', 'python', 'rust', 'sql',
+          'toml', 'typescript', 'vim', 'yaml', 'zig'
+        },
+        sync_install = false,
+        auto_install = true,
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+        indent = {
+          enable = true,
+        },
+      })
+    end,
+  },
 })
 
 
