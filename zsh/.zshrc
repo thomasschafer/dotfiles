@@ -55,3 +55,6 @@ export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.rd/bin:$PATH"
 export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
 export PATH="$HOME/go/bin:$PATH"
+
+# direnv
+eval "$(direnv hook zsh)"

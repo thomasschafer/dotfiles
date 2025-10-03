@@ -172,6 +172,7 @@ in
         # CLI tools
         claude-code
         deno
+        direnv
         fd
         fzf
         go
