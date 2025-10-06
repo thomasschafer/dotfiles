@@ -50,6 +50,14 @@ export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
 export PATH="/Users/thomasschafer/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
+# Nix helpers
+alias NIX_CLEAN="sudo nix-collect-garbage -d"
+alias HOME_CLEAN="home-manager expire-generations -d"
+alias NIX_ORPHANS="nix store gc && sudo nix store optimize"
+alias NIX_WIPE="sudo nix profile wipe-history"
+alias HM_CLEAN_OLD="home-manager remove-generations old"
+alias NIX_SYSTEM_CLEAN="NIX_CLEAN && HOME_CLEAN && NIX_ORPHANS && NIX_WIPE && HM_CLEAN_OLD"
+
 # Path
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.rd/bin:$PATH"
