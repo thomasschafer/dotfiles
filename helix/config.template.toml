@@ -70,7 +70,7 @@ A-down = [ # shift selections down one line
 [keys.normal-and-select.ret]
 x = ":buffer-close!"
 g = ":reset-diff-change"
-a = ":sh ${TMUX_POPUP} -E env EDITOR=hx lazygit"
+a = ":sh ${TMUX_POPUP} -E \"PATH=$PATH EDITOR=hx lazygit\""
 f = ":sh ${TMUX_POPUP} -E yazi ${CURRENT_PATH}"
 s = ":sh ${TMUX_POPUP} -E env GIT_PAGER='less -+F' git log --follow -p -- ${CURRENT_PATH}"
 d = ":sh ${TMUX_POPUP} -E scooter"
