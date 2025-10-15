@@ -9,6 +9,7 @@
       minimize-to-application = true;
       show-recents = false;
       static-only = true;
+      expose-group-apps = true;
     };
 
     screensaver = {
