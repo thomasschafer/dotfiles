@@ -5,8 +5,9 @@ resize-overlay = never
 
 theme = Catppuccin Macchiato
 
-# background-opacity = 0.9
-# background-blur = true
+background-opacity = 0.9
+background-opacity-cells = true
+background-blur = true
 
 font-size = 12
 font-thicken = true
