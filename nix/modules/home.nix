@@ -186,6 +186,7 @@ in
         gopls
         git
         hadolint
+        jless
         neovim
         nixfmt-rfc-style
         nushell
