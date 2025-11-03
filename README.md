@@ -1,4 +1,4 @@
-# thomasschafer's dotfiles
+# dotfiles
 
 ## Installation
 
