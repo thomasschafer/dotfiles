@@ -75,7 +75,12 @@ f = ":sh ${TMUX_POPUP} -E yazi ${CURRENT_PATH}"
 s = ":sh ${TMUX_POPUP} -E env GIT_PAGER='less -+F' git log --follow -p -- ${CURRENT_PATH}"
 d = ":sh ${TMUX_POPUP} -E scooter"
 w = ":sh git blame ${CURRENT_PATH} -L %{cursor_line},%{cursor_line}"
-e = [":write-all", ":insert-output scooter >/dev/tty", ":redraw", ":reload-all"]
+e = [
+  ":write-all",
+  ":insert-output scooter --no-stdin >/dev/tty",
+  ":redraw",
+  ":reload-all",
+]
 j = "save_selection"
 y = ":sh echo \"%{buffer_name}\" | tr -d '\n' | pbcopy"
 Y = ":sh echo ${CURRENT_PATH} | tr -d '\n' | pbcopy"
