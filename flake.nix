@@ -32,7 +32,7 @@
             host = host;
           };
           modules = [
-            ./modules/configuration.nix
+            ./modules/darwin.nix
             home-manager.darwinModules.home-manager
             {
               users.users.${hostConfig.username}.home = /Users/${hostConfig.username};

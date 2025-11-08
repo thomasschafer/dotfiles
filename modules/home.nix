@@ -8,7 +8,7 @@
 
 let
   ghosttyConfig = pkgs.runCommand "ghostty-config" { } ''
-    ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../../ghostty/config.template} > $out
+    ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
   '';
 
   helixConfig =
@@ -17,8 +17,8 @@ let
         nativeBuildInputs = [ pkgs.python3Packages.toml ];
       }
       ''
-        cp ${../../helix/process_config.py} process_config.py
-        python3 process_config.py ${../../helix/config.template.toml} > $out
+        cp ${../helix/process_config.py} process_config.py
+        python3 process_config.py ${../helix/config.template.toml} > $out
       '';
 
   hxUtils = pkgs.rustPlatform.buildRustPackage {
@@ -87,7 +87,7 @@ in
     stateVersion = "23.05";
 
     file = {
-      ".claude/CLAUDE.md".source = ../../claude/CLAUDE.md;
+      ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
 
       ".stack/config.yaml".text = ''
         system-ghc: true
@@ -97,28 +97,28 @@ in
       '';
 
       # Aerospace
-      ".config/aerospace/aerospace.toml".source = ../../aerospace/aerospace.toml;
+      ".config/aerospace/aerospace.toml".source = ../aerospace/aerospace.toml;
 
       # Alacritty
       ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/alacritty/main/catppuccin-macchiato.toml";
         sha256 = "sha256-/Qb5kfR5N6mTMcL6l6qUdsG32wpkpESHu5qjX3GIUHw=";
       };
-      ".config/alacritty/alacritty.toml".source = ../../alacritty/alacritty.toml;
+      ".config/alacritty/alacritty.toml".source = ../alacritty/alacritty.toml;
 
       # Ghostty
       ".config/ghostty/config".source = ghosttyConfig;
 
       # Helix
       ".config/helix/config.toml".source = helixConfig;
-      ".config/helix/languages.toml".source = ../../helix/languages.toml;
-      ".config/helix/ignore".source = ../../helix/ignore;
-      ".config/helix/themes".source = ../../helix/themes;
-      ".config/helix/init.scm".source = ../../helix/init.scm;
-      ".config/helix/cogs/keymaps.scm".source = ../../helix/cogs/keymaps.scm;
+      ".config/helix/languages.toml".source = ../helix/languages.toml;
+      ".config/helix/ignore".source = ../helix/ignore;
+      ".config/helix/themes".source = ../helix/themes;
+      ".config/helix/init.scm".source = ../helix/init.scm;
+      ".config/helix/cogs/keymaps.scm".source = ../helix/cogs/keymaps.scm;
 
       # k9s
-      "Library/Application Support/k9s/config.yaml".source = ../../k9s/config.yaml;
+      "Library/Application Support/k9s/config.yaml".source = ../k9s/config.yaml;
 
       # Kakoune
       ".config/kak/colors/catppuccin_macchiato.kak".source = pkgs.fetchurl {
@@ -127,31 +127,31 @@ in
       };
 
       # Karabiner Elements
-      ".config/karabiner/karabiner.json".source = ../../karabiner-elements/karabiner.json;
+      ".config/karabiner/karabiner.json".source = ../karabiner-elements/karabiner.json;
 
       # Lazygit
-      "Library/Application Support/lazygit/config.yml".source = ../../lazygit/config.yml;
+      "Library/Application Support/lazygit/config.yml".source = ../lazygit/config.yml;
 
       # Opencode
-      ".config/opencode/config.json".source = ../../opencode/config.json;
+      ".config/opencode/config.json".source = ../opencode/config.json;
 
       # Neovim
-      ".config/nvim".source = ../../neovim/nvim;
+      ".config/nvim".source = ../neovim/nvim;
 
       # Nushell
-      "Library/Application Support/nushell/config.nu".source = ../../nushell/config.nu;
+      "Library/Application Support/nushell/config.nu".source = ../nushell/config.nu;
 
       # Scooter
-      ".config/scooter/config.toml".source = ../../scooter/config.toml;
+      ".config/scooter/config.toml".source = ../scooter/config.toml;
       ".config/scooter/themes/Catppuccin-Macchiato.tmTheme".source = catppuccinMacchiatoTheme;
 
       # VSCode
-      "Library/Application Support/Code/User/keybindings.json".source = ../../vscode/keybindings.json;
-      "Library/Application Support/Code/User/settings.json".source = ../../vscode/settings.json;
+      "Library/Application Support/Code/User/keybindings.json".source = ../vscode/keybindings.json;
+      "Library/Application Support/Code/User/settings.json".source = ../vscode/settings.json;
 
       # Yazi
-      ".config/yazi/yazi.toml".source = ../../yazi/yazi.toml;
-      ".config/yazi/keymap.toml".source = ../../yazi/keymap.toml;
+      ".config/yazi/yazi.toml".source = ../yazi/yazi.toml;
+      ".config/yazi/keymap.toml".source = ../yazi/keymap.toml;
       ".config/yazi/theme.toml".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/yazi/refs/heads/main/themes/macchiato/catppuccin-macchiato-blue.toml";
         sha256 = "sha256-nR48k8uaAO3oQ8GiD8mCLZU3FPc5KSL+DAvt2z5YUmY=";
@@ -159,13 +159,13 @@ in
       ".config/yazi/Catppuccin-macchiato.tmTheme".source = catppuccinMacchiatoTheme;
 
       # Zed
-      ".config/zed/settings.json".source = ../../zed/settings.json;
+      ".config/zed/settings.json".source = ../zed/settings.json;
 
       # Zellij
-      # ".config/zellij/config.kdl" = ../../zellij/config.kdl; # TODO: uncomment
+      # ".config/zellij/config.kdl" = ../zellij/config.kdl; # TODO: uncomment
 
       # Zshrc
-      ".zshrc".source = ../../zsh/.zshrc;
+      ".zshrc".source = ../zsh/.zshrc;
 
       # Direnv
       ".config/direnv/direnv.toml".text = ''
@@ -235,15 +235,15 @@ in
         haskellPackages.hoogle
 
         # Scripts/tools
-        (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../../tmux/tmux-sessionizer.sh))
-        (writeShellScriptBin "fr" (builtins.readFile ../../tools/fr.sh))
+        (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../tmux/tmux-sessionizer.sh))
+        (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
       ];
 
-    # TODO: replace these scripts with something more idiomatic
+    # TODO: replace with something more idiomatic if possible
     activation = {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" ] || ! cmp -s "${../../alacritty/alacritty.icns}" "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" 2>/dev/null; then
-          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns || true
+        if [ ! -f "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" ] || ! cmp -s "${../alacritty/alacritty.icns}" "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" 2>/dev/null; then
+          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns || true
           $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app || true  # Force Finder to refresh the icon
         fi
       '';
@@ -292,7 +292,7 @@ in
 
     kakoune = {
       enable = true;
-      extraConfig = builtins.readFile ../../kakoune/kakrc;
+      extraConfig = builtins.readFile ../kakoune/kakrc;
     };
 
     k9s = {
@@ -313,7 +313,7 @@ in
         resurrect
       ];
       extraConfig = ''
-        ${builtins.readFile ../../tmux/tmux.conf}
+        ${builtins.readFile ../tmux/tmux.conf}
         set -gu default-command
         set -g default-shell "$SHELL"
       '';
