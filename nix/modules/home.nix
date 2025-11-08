@@ -87,6 +87,8 @@ in
     stateVersion = "23.05";
 
     file = {
+      ".claude/CLAUDE.md".source = ../../claude/CLAUDE.md;
+
       ".stack/config.yaml".text = ''
         system-ghc: true
         install-ghc: false
