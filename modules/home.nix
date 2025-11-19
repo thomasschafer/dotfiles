@@ -324,8 +324,7 @@ in
 
       profiles.default.extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
-        eamodio.gitlens
-        enkia.tokyo-night
+        # eamodio.gitlens  # Temporarily disabled - build failing in nixpkgs
         esbenp.prettier-vscode
         golang.go
         hashicorp.terraform
@@ -337,7 +336,6 @@ in
         ms-python.python
         ms-python.vscode-pylance
         ms-toolsai.jupyter
-        ms-vscode-remote.remote-containers
         ms-vscode.makefile-tools
         redhat.vscode-yaml
         rust-lang.rust-analyzer
