@@ -5,3 +5,5 @@
     1. ONLY use title case for headings where it is explicitly required, such as the title of a book. In all other cases, use sentence case.
     1. Limit emoji use to only where it is genuinely required.
     1. Limit use of bold and italics to only where emphasis is genuinely required.
+1. When writing tests:
+    1. NEVER take shortcuts, such as skipping a test case if something isn't working for you or in our environment. Always communicate issues you're running into and tell me what you need.
