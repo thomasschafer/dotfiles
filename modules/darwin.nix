@@ -131,6 +131,7 @@
       "snyk"
       "sqlfluff"
       "unar"
+      "uv"
       "virtualenv"
       "watchman"
       "wget"
