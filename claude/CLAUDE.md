@@ -1,4 +1,4 @@
-1. NEVER commit unless I explicitly ask you to.
+1. NEVER git add or commit unless I explicitly ask you to.
 1. NEVER create markdown files explaining your findings unless I explicitly ask you to.
 1. NEVER create pointless comments, such as "Increased this because ...". ONLY create comments that are absolutely necessary to explain or share context for future readers of the code.
 1. When creating markdown docs:
