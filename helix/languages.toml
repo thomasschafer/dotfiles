@@ -1,7 +1,11 @@
 # ----- Haskell -----
+[language-server.haskell-language-server.config.haskell.plugin]
+hlint.globalOn = false # https://github.com/haskell/haskell-language-server/issues/4674
+
 [[language]]
 name = "haskell"
 auto-format = true
+language-servers = ["haskell-language-server"]
 
 
 # ----- Ruby -----
