@@ -8,3 +8,4 @@
 1. When writing tests:
     1. NEVER take shortcuts, such as skipping a test case if something isn't working for you or in our environment. Always communicate issues you're running into and tell me what you need.
 1. Ensure that code is DRY where possible and reasonable. If we can re-use some code the default should be to do so, rather than duplicating. If we need to refactor to make re-use possible then this is fine unless I have explicitly said otherwise.
+1. Always program defensively. It is far better to fail loudly when an invariant is violated or we're unable to handle something, rather than silently ignoring the issue.
