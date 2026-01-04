@@ -88,6 +88,7 @@ in
 
     file = {
       ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
+      ".cursor/rules/coding-standards.mdc".source = ../claude/CLAUDE.md;
 
       ".stack/config.yaml".text = ''
         system-ghc: true
@@ -177,7 +178,6 @@ in
       with pkgs;
       [
         # CLI tools
-        claude-code
         deno
         direnv
         fd
@@ -269,6 +269,13 @@ in
           export CC="/usr/bin/clang"
           export CXX="/usr/bin/clang++"
           $DRY_RUN_CMD ${pkgs.go}/bin/go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.0
+        fi
+      '';
+
+      installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/claude" ]; then
+          export PATH="${pkgs.curl}/bin:${pkgs.perl}/bin:$PATH"
+          $DRY_RUN_CMD ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh | $DRY_RUN_CMD /bin/bash
         fi
       '';
     };
