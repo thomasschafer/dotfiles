@@ -27,7 +27,7 @@ autoload -Uz compinit && compinit
 export EDITOR=hx
 export VISUAL="$EDITOR"
 alias nv=nvim
-alias c=code
+alias c=claude
 alias z=zed
 alias y=yazi
 alias s=scooter
