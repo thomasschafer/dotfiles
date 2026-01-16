@@ -94,6 +94,8 @@ formatter = { command = "prettier", args = ["--parser", "javascript"] }
 [[language]]
 name = "json"
 language-servers = ["vscode-json-language-server"]
+auto-format = true
+formatter = { command = "biome", args = ["format", "--json-formatter-indent-style=space", "--stdin-file-path", "file.json"] }
 
 # ----- SQL -----
 [[language]]

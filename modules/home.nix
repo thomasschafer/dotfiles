@@ -178,6 +178,7 @@ in
       with pkgs;
       [
         # CLI tools
+        biome
         deno
         direnv
         fd

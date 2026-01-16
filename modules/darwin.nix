@@ -109,7 +109,6 @@
     # TODO: move more of these to home.nix
     brews = [
       "bash-completion"
-      "biome"
       "black"
       "delve"
       "ffmpegthumbnailer"
