@@ -85,6 +85,7 @@
     enable = true;
     onActivation = {
       autoUpdate = true;
+      upgrade = true;
       cleanup = hostConfig.homebrew.cleanup;
     };
 
@@ -118,7 +119,7 @@
       "minimal-racket"
       "node"
       "nvm"
-      "sst/tap/opencode"
+      "anomalyco/tap/opencode"
       "pgformatter"
       "poppler"
       "pre-commit"
