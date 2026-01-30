@@ -20,8 +20,8 @@ ZHM_CURSOR_SELECT=$'\e[2 q\e]12;#f5a97f\a'
 ZSH_HELIX_SYSTEM_CLIPBOARD=1
 source $HOME/Development/zshelix/zshelix.plugin.zsh
 
-# Git autocompletion
-autoload -Uz compinit && compinit
+# Note: compinit is run by Nix's /etc/zshrc. If we stop using Nix, add back:
+# autoload -Uz compinit && compinit -C
 
 # Aliases and editor config
 export EDITOR=hx
