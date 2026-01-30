@@ -65,18 +65,6 @@ let
     };
   };
 
-  yaziFork = pkgs.rustPlatform.buildRustPackage {
-    pname = "yazi";
-    version = "main";
-    src = pkgs.fetchFromGitHub {
-      owner = "thomasschafer";
-      repo = "yazi";
-      rev = "main";
-      hash = "sha256-kWMpFq155szLIzTutqtA/AM0bgx43HFz1K/idm+hto4=";
-    };
-    cargoHash = "sha256-933kOXcY9sVoRqEv9IPwcCbpf6KTsDkSquggxyOVSxc=";
-  };
-
   catppuccinMacchiatoTheme = pkgs.fetchurl {
     url = "https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme";
     sha256 = "sha256-zL18U4AXMO8+gBH3T/HDl8e7OYjIRqUdeeb0i4V7kVI=";
@@ -218,14 +206,13 @@ in
         tree
         typescript-language-server
         nodePackages.vscode-langservers-extracted
-        # yazi  # Temporarily build from source until https://github.com/sxyazi/yazi/issues/2308 is fixed - see yaziFork
+        yazi
         zellij
         zig
         zls
 
         # Building from source
         hxUtils
-        yaziFork
 
         # Haskell tooling
         ghc
