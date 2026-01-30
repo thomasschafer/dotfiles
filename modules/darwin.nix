@@ -90,9 +90,9 @@
     };
 
     taps = [
+      "anomalyco/tap"
       "nikitabobko/tap"
       "snyk/tap"
-      "sst/tap"
     ];
 
     casks = [
@@ -119,7 +119,7 @@
       "minimal-racket"
       "node"
       "nvm"
-      "anomalyco/tap/opencode"
+      "opencode"
       "pgformatter"
       "poppler"
       "pre-commit"
