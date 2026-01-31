@@ -140,7 +140,6 @@ in
 
       # Yazi
       ".config/yazi/yazi.toml".source = ../yazi/yazi.toml;
-      ".config/yazi/keymap.toml".source = ../yazi/keymap.toml;
       ".config/yazi/theme.toml".source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/catppuccin/yazi/refs/heads/main/themes/macchiato/catppuccin-macchiato-blue.toml";
         sha256 = "sha256-nR48k8uaAO3oQ8GiD8mCLZU3FPc5KSL+DAvt2z5YUmY=";

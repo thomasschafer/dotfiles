@@ -1,9 +1,9 @@
 [opener]
 edit = [
-	{ run = "tmux send-keys -t \"${HELIX_PANE:-$TMUX_PANE}\" \":onc \\\"${@}\\\"\" Enter; tmux kill-pane", block = false },
+	{ run = "tmux send-keys -t $HELIX_PANE \":onc \\\"${@}\\\"\" Enter && tmux kill-pane -t $TMUX_PANE", block = false },
 ]
 open = [
-	{ run = "tmux send-keys -t \"${HELIX_PANE:-$TMUX_PANE}\" \":onc \\\"${@}\\\"\" Enter; tmux kill-pane", block = false },
+	{ run = "tmux send-keys -t $HELIX_PANE \":onc \\\"${@}\\\"\" Enter && tmux kill-pane -t $TMUX_PANE", block = false },
 ]
 
 [mgr]

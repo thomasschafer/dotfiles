@@ -1,4 +1,0 @@
-[[manager.prepend_keymap]]
-on = ["<Enter>"]
-run = ["open", "quit"]
-desc = "Open the selected files"
