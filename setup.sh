@@ -40,9 +40,17 @@ if [[ "$(uname)" == "Darwin" ]]; then
     $nix_exec run nix-darwin -- switch --flake .#"$mode"
 else
     # NixOS: Nix is already installed, just rebuild
-    # TODO: Remove --impure by copying hardware-configuration.nix into the repo
-    # (e.g. hosts/nix-server/hardware-configuration.nix) and importing it relatively
-    sudo nixos-rebuild switch --flake .#"$mode" --impure
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    hw_config_dest="$script_dir/modules/hosts/$mode/hardware-configuration.nix"
+
+    if [ ! -f "$hw_config_dest" ]; then
+        echo "Copying hardware-configuration.nix to repo..."
+        mkdir -p "$(dirname "$hw_config_dest")"
+        sudo cp /etc/nixos/hardware-configuration.nix "$hw_config_dest"
+        sudo chown "$(whoami)" "$hw_config_dest"
+    fi
+
+    sudo nixos-rebuild switch --flake .#"$mode"
 fi
 
 

@@ -53,3 +53,5 @@ keybind = cmd+p=text:\x01F                ## ctrl+a F  (open tmux-sessionizer)
 keybind = cmd+left=text:\x1b[H            ## jump to start of line
 keybind = cmd+right=text:\x1b[F           ## jump to end of line
 keybind = cmd+backspace=text:\x15         ## delete to start of line
+
+shell-integration-features = ssh-terminfo,ssh-env

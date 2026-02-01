@@ -1,12 +1,32 @@
 {
   self,
   pkgs,
+  host,
   hostConfig,
   ...
 }:
 {
   imports = [
-    /etc/nixos/hardware-configuration.nix
+    ./hosts/${host}/hardware-configuration.nix
+  ];
+
+  assertions = [
+    {
+      assertion = hostConfig ? username;
+      message = "hostConfig.username is required";
+    }
+    {
+      assertion = hostConfig ? hostname;
+      message = "hostConfig.hostname is required";
+    }
+    {
+      assertion = hostConfig ? system;
+      message = "hostConfig.system is required";
+    }
+    {
+      assertion = hostConfig ? sshKeys && hostConfig.sshKeys != [ ];
+      message = "hostConfig.sshKeys must be a non-empty list";
+    }
   ];
 
   nix = {
@@ -46,6 +66,14 @@
     };
   };
 
+  services.fail2ban = {
+    enable = true;
+    maxretry = 5;
+    bantime = "1h";
+  };
+
+  users.users.root.openssh.authorizedKeys.keys = hostConfig.sshKeys;
+
   users.users.${hostConfig.username} = {
     isNormalUser = true;
     home = "/home/${hostConfig.username}";
@@ -69,4 +97,7 @@
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
+
+  # Enable nix-ld to run dynamically linked binaries (e.g. Claude Code)
+  programs.nix-ld.enable = true;
 }

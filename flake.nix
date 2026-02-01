@@ -62,7 +62,7 @@
           hostConfig = import ./modules/hosts/${host}.nix;
         in
         nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
+          system = hostConfig.system;
           specialArgs = {
             inherit self hostConfig;
             host = host;

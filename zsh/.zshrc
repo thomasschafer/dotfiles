@@ -3,6 +3,11 @@ if [[ -f $HOME/.zshrc.private ]]; then
     source $HOME/.zshrc.private
 fi
 
+# Auto-attach to tmux on SSH
+if [[ -n "$SSH_CONNECTION" && -z "$TMUX" ]]; then
+    tmux attach-session -t main 2>/dev/null || tmux new-session -s main
+fi
+
 # Treat / as a word delimiter
 WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 
@@ -41,7 +46,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     alias dp="cd $HOME/Development/dotfiles/ && sudo darwin-rebuild switch --flake .#personal && cd -"
     alias dw="cd $HOME/Development/dotfiles/ && sudo darwin-rebuild switch --flake .#work && cd -"
 else
-    alias ns="cd $HOME/Development/dotfiles/ && sudo nixos-rebuild switch --flake .#nix-server && cd -"
+    alias ns="cd $HOME/Development/dotfiles/ && sudo nixos-rebuild switch --flake .#nix-server --impure && cd -"
 fi
 
 # Zsh history

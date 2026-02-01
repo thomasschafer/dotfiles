@@ -25,19 +25,22 @@ cd ~/Development/dotfiles
    ```
    The server will reboot automatically.
 
-4. SSH back in and apply dotfiles:
+4. SSH back in and set the non-root user password first (required for sudo after setup reconfigures SSH):
    ```sh
    ssh root@<server-ip>
-   nix-shell -p git
-   git clone https://github.com/thomasschafer/dotfiles.git ~/dotfiles
-   cd ~/dotfiles && ./setup.sh nix-server
-   ```
-   This creates the non-root user with SSH keys configured, and runs all other setup.
-
-5. Set the user password (required for sudo):
-   ```sh
+   useradd -m tomschafer
    passwd tomschafer
    ```
+
+5. Clone and run the dotfiles setup:
+   ```sh
+   nix-shell -p git
+   git clone https://github.com/thomasschafer/dotfiles.git ~/Development/dotfiles
+   cd ~/Development/dotfiles && ./setup.sh nix-server
+   ```
+   This creates the non-root user with SSH keys configured, installs all packages, and sets up home-manager.
+
+   Note: The first run builds Helix from source which takes several minutes. If home-manager times out, just run `./setup.sh nix-server` again - it will skip already-completed steps.
 
 6. SSH in as the non-root user:
    ```sh

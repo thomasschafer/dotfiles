@@ -44,7 +44,7 @@ let
   };
 
   catppuccinMacchiatoTheme = pkgs.fetchurl {
-    url = "https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme";
+    url = "https://github.com/catppuccin/bat/raw/6810349b28055dce54076712fc05fc68da4b8ec0/themes/Catppuccin%20Macchiato.tmTheme";
     sha256 = "sha256-EQCQ9lW5cOVp2C+zeAwWF2m1m6I0wpDQA5wejEm7WgY=";
   };
 
@@ -72,7 +72,7 @@ let
 
     # Kakoune
     ".config/kak/colors/catppuccin_macchiato.kak".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/kakoune/main/colors/catppuccin_macchiato.kak";
+      url = "https://raw.githubusercontent.com/catppuccin/kakoune/abb4e7c2939361825a69cf02bec9e6b782adf5cc/colors/catppuccin_macchiato.kak";
       sha256 = "sha256-VqcYzb0U5RAS1pJVO/k/V04wMm5EFAh5r4SMKega5M8=";
     };
 
@@ -95,8 +95,8 @@ let
     # Yazi
     ".config/yazi/yazi.toml".source = ../yazi/yazi.toml;
     ".config/yazi/theme.toml".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/yazi/refs/heads/main/themes/macchiato/catppuccin-macchiato-blue.toml";
-      sha256 = "sha256-nR48k8uaAO3oQ8GiD8mCLZU3FPc5KSL+DAvt2z5YUmY=";
+      url = "https://raw.githubusercontent.com/catppuccin/yazi/fc69d6472d29b823c4980d23186c9c120a0ad32c/themes/macchiato/catppuccin-macchiato-blue.toml";
+      sha256 = "sha256-FboUSmRYx7z+orHnf1xS4EFpJOnvalR7OeivbrJKH4s=";
     };
     ".config/yazi/Catppuccin-macchiato.tmTheme".source = catppuccinMacchiatoTheme;
 
@@ -115,7 +115,7 @@ let
 
     # Alacritty
     ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/alacritty/main/catppuccin-macchiato.toml";
+      url = "https://raw.githubusercontent.com/catppuccin/alacritty/f6cb5a5c2b404cdaceaff193b9c52317f62c62f7/catppuccin-macchiato.toml";
       sha256 = "sha256-/Qb5kfR5N6mTMcL6l6qUdsG32wpkpESHu5qjX3GIUHw=";
     };
     ".config/alacritty/alacritty.toml".source = ../alacritty/alacritty.toml;
@@ -210,10 +210,12 @@ in
         helix_dir="${config.home.homeDirectory}/Development/helix"
         if [ ! -d "$helix_dir" ]; then
           $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
-          $DRY_RUN_CMD git clone https://github.com/thomasschafer/helix.git "$helix_dir"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/helix.git "$helix_dir"
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
           cd "$helix_dir"
+          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export CC="${pkgs.stdenv.cc}/bin/cc"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path helix-term --locked
         fi
       '';
@@ -225,14 +227,16 @@ in
       installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/claude" ]; then
           export PATH="${pkgs.curl}/bin:${pkgs.perl}/bin:$PATH"
-          $DRY_RUN_CMD ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh | $DRY_RUN_CMD /bin/bash
+          install_script=$(${pkgs.coreutils}/bin/mktemp)
+          ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh -o "$install_script"
+          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
+          ${pkgs.coreutils}/bin/rm -f "$install_script"
         fi
       '';
-    }
-    // lib.optionalAttrs (!isServer) {
+
       cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -d "${config.home.homeDirectory}/Development/zshelix" ]; then
-          $DRY_RUN_CMD git clone git@github.com:thomasschafer/zshelix.git \
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
             "${config.home.homeDirectory}/Development/zshelix"
         fi
       '';
@@ -287,7 +291,7 @@ in
 
       skins = {
         catppuccin.source = pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/catppuccin/k9s/refs/heads/main/dist/catppuccin-macchiato-transparent.yaml";
+          url = "https://raw.githubusercontent.com/catppuccin/k9s/fdbec82284744a1fc2eb3e2d24cb92ef87ffb8b4/dist/catppuccin-macchiato-transparent.yaml";
           sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
         };
       };
