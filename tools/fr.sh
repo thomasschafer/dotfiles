@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 USAGE="Usage: $(basename "$0") [-F|--fixed-strings] [-p|--preview] <BEFORE> [<AFTER>]"
 

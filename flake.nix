@@ -21,6 +21,21 @@
       home-manager,
     }:
     let
+      mkHomeManagerConfig =
+        hostConfig: host:
+        {
+          home-manager = {
+            backupFileExtension = "bak";
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = {
+              inherit hostConfig;
+              host = host;
+            };
+            users.${hostConfig.username} = import ./modules/home.nix;
+          };
+        };
+
       mkDarwinSystem =
         host:
         let
@@ -36,18 +51,26 @@
             home-manager.darwinModules.home-manager
             {
               users.users.${hostConfig.username}.home = /Users/${hostConfig.username};
-
-              home-manager = {
-                backupFileExtension = "bak";
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                extraSpecialArgs = {
-                  inherit hostConfig;
-                  host = host;
-                };
-                users.${hostConfig.username} = import ./modules/home.nix;
-              };
             }
+            (mkHomeManagerConfig hostConfig host)
+          ];
+        };
+
+      mkNixosSystem =
+        host:
+        let
+          hostConfig = import ./modules/hosts/${host}.nix;
+        in
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {
+            inherit self hostConfig;
+            host = host;
+          };
+          modules = [
+            ./modules/nixos.nix
+            home-manager.nixosModules.home-manager
+            (mkHomeManagerConfig hostConfig host)
           ];
         };
     in
@@ -55,6 +78,10 @@
       darwinConfigurations = {
         personal = mkDarwinSystem "personal";
         work = mkDarwinSystem "work";
+      };
+
+      nixosConfigurations = {
+        nix-server = mkNixosSystem "nix-server";
       };
     };
 }

@@ -95,7 +95,12 @@ formatter = { command = "prettier", args = ["--parser", "javascript"] }
 name = "json"
 language-servers = ["vscode-json-language-server"]
 auto-format = true
-formatter = { command = "biome", args = ["format", "--json-formatter-indent-style=space", "--stdin-file-path", "file.json"] }
+formatter = { command = "biome", args = [
+  "format",
+  "--json-formatter-indent-style=space",
+  "--stdin-file-path",
+  "file.json",
+] }
 
 # ----- SQL -----
 [[language]]
@@ -144,12 +149,3 @@ command = "steel-language-server"
 args = []
 
 
-# ----- Snyk language server -----
-[language-server.snyk-ls]
-command = "snyk"
-args = ["language-server"]
-
-[language-server.snyk-ls.config]
-automaticAuthentication = "false"
-cliPath = "/opt/homebrew/bin/snyk"
-trustedFolders = ["~/Development"]

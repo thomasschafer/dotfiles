@@ -6,7 +6,7 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 else
     dirs=()
-    for d in "$HOME/Development" "$HOME/Development/Snyk"; do
+    for d in "$HOME/Development" "$HOME/Development/Work"; do
         [ -d "$d" ] && dirs+=("$d")
     done
     selected=$(find "${dirs[@]}" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | fzf --layout reverse)

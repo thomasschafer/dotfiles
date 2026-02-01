@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
 # Validate args
-valid_options=("work" "personal")
+valid_options=("work" "personal" "nix-server")
 options_string=$(IFS=, ; echo "${valid_options[*]}")
 
 if [ $# -eq 0 ]; then
@@ -31,26 +31,19 @@ mkdir -p "$HOME/Development"
 
 
 # Nix
-cd nix
+if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS: Install Nix using Determinate Systems installer, then run nix-darwin
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+      sh -s -- install
 
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
-  sh -s -- install
-
-nix_exec=/nix/var/nix/profiles/default/bin/nix
-$nix_exec run nix-darwin -- switch --flake .#"$mode"
-
-cd -
-
-
-# Install Rust toolchain
-if ! command -v cargo &>/dev/null; then
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    . "$HOME/.cargo/env"
+    nix_exec=/nix/var/nix/profiles/default/bin/nix
+    $nix_exec run nix-darwin -- switch --flake .#"$mode"
+else
+    # NixOS: Nix is already installed, just rebuild
+    # TODO: Remove --impure by copying hardware-configuration.nix into the repo
+    # (e.g. hosts/nix-server/hardware-configuration.nix) and importing it relatively
+    sudo nixos-rebuild switch --flake .#"$mode" --impure
 fi
-
-
-# Install Helix fork
-./helix/setup.sh
 
 
 echo "Setup complete"
