@@ -38,7 +38,7 @@ cd ~/Development/dotfiles
    git clone https://github.com/thomasschafer/dotfiles.git ~/Development/dotfiles
    cd ~/Development/dotfiles && ./setup.sh nix-server
    ```
-   This creates the non-root user with SSH keys configured, installs all packages, and sets up home-manager.
+   This creates the non-root user with SSH keys configured, installs all packages, and sets up home-manager. It also adds `/etc/nixos/hardware-configuration.nix` to this repo, which you should commit.
 
    Note: The first run builds Helix from source which takes several minutes. If home-manager times out, just run `./setup.sh nix-server` again - it will skip already-completed steps.
 

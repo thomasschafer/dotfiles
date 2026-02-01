@@ -7,7 +7,7 @@ bufferline = "always"
 end-of-line-diagnostics = "hint"
 smart-tab.enable = false
 undercurl = true
-clipboard-provider = "pasteboard"
+clipboard-provider = "${CLIPBOARD_PROVIDER}"
 true-color = true
 color-modes = true
 
@@ -82,10 +82,10 @@ e = [
   ":reload-all",
 ]
 j = "save_selection"
-y = ":sh echo \"%{buffer_name}\" | tr -d '\n' | pbcopy"
-Y = ":sh echo ${CURRENT_PATH} | tr -d '\n' | pbcopy"
+y = ":sh echo \"%{buffer_name}\" | tr -d '\n' | ${COPY_CMD}"
+Y = ":sh echo ${CURRENT_PATH} | tr -d '\n' | ${COPY_CMD}"
 t = ":toggle inline-diagnostics.cursor-line warning disable"
-u = ":sh echo \"$(git rev-parse --short HEAD)/%{buffer_name}#L%{cursor_line}\" | pbcopy"
+u = ":sh echo \"$(git rev-parse --short HEAD)/%{buffer_name}#L%{cursor_line}\" | ${COPY_CMD}"
 
 [keys.normal-and-select.space]
 p = "paste_after"

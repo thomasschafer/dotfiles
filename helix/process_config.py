@@ -2,7 +2,7 @@ import argparse
 import toml
 
 
-def process_config(input_file: str) -> str:
+def process_config(input_file: str, is_darwin: bool) -> str:
     with open(input_file, "r") as file:
         content = file.read()
 
@@ -12,6 +12,13 @@ def process_config(input_file: str) -> str:
     }
     for var_name, var_value in variables.items():
         content = content.replace(f"${{{var_name}}}", var_value)
+
+    if is_darwin:
+        content = content.replace("${CLIPBOARD_PROVIDER}", "pasteboard")
+        content = content.replace("${COPY_CMD}", "pbcopy")
+    else:
+        content = content.replace("${CLIPBOARD_PROVIDER}", "terminal")
+        content = content.replace("${COPY_CMD}", "xclip -selection clipboard")
 
     config = toml.loads(content)
 
@@ -31,7 +38,10 @@ parser = argparse.ArgumentParser(description="Process Helix config files.")
 parser.add_argument(
     "input_file", type=str, help="Input file name of the custom TOML configuration."
 )
+parser.add_argument(
+    "--darwin", action="store_true", help="Use macOS-specific settings."
+)
 args = parser.parse_args()
 
-result = process_config(args.input_file)
+result = process_config(args.input_file, args.darwin)
 print(result)

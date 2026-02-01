@@ -16,7 +16,11 @@ autoload -Uz vcs_info
 precmd() { vcs_info }
 setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{cyan}%b%f) '
-PROMPT='%B%(?.%F{grey}.%F{red})%?%f%b | %F{green}%1~%f ${vcs_info_msg_0_}$ '
+if [[ "$(uname)" == "Darwin" ]]; then
+    PROMPT='%B%(?.%F{grey}.%F{red})%?%f%b | %F{green}%1~%f ${vcs_info_msg_0_}$ '
+else
+    PROMPT='%B%(?.%F{grey}.%F{red})%?%f%b | %F{magenta}%m%f | %F{green}%1~%f ${vcs_info_msg_0_}$ '
+fi
 
 # Helix keymap (zshelix)
 if [[ -f $HOME/Development/zshelix/zshelix.plugin.zsh ]]; then

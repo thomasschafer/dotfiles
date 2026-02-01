@@ -51,6 +51,11 @@ else
     fi
 
     sudo nixos-rebuild switch --flake .#"$mode"
+
+    if [ -d /etc/nixos ]; then
+        echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
+        sudo mv /etc/nixos /etc/nixos.bak
+    fi
 fi
 
 

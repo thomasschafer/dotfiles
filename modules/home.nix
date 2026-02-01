@@ -24,7 +24,7 @@ let
       }
       ''
         cp ${../helix/process_config.py} process_config.py
-        python3 process_config.py ${../helix/config.template.toml} > $out
+        python3 process_config.py ${../helix/config.template.toml} ${if isDarwin then "--darwin" else ""} > $out
       '';
 
   hxUtils = pkgs.rustPlatform.buildRustPackage {
@@ -189,7 +189,11 @@ in
         zellij
         zig
         zls
-
+      ]
+      ++ lib.optionals (!isDarwin) [
+        xclip
+      ]
+      ++ [
         # Building from source
         hxUtils
 

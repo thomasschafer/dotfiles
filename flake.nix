@@ -59,7 +59,7 @@
       mkNixosSystem =
         host:
         let
-          hostConfig = import ./modules/hosts/${host}.nix;
+          hostConfig = import ./modules/hosts/${host};
         in
         nixpkgs.lib.nixosSystem {
           system = hostConfig.system;
