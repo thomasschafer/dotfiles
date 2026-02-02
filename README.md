@@ -51,11 +51,30 @@ cd ~/Development/dotfiles
 
 After `./setup.sh nix-server`:
 
-1. Note the gateway token printed (or `cat ~/.openclaw/gateway-token.env`)
-2. Run `openclaw onboard` - select Anthropic, enter API key, scan WhatsApp QR
+1. Run `openclaw onboard`
+2. Add Telegram bot: `openclaw channels login telegram` (enter token from @BotFather)
 3. Run `openclaw security audit` to verify config
-4. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then http://127.0.0.1:18789
-5. Approve contacts: `openclaw pairing approve whatsapp <code>`
+4. Approve contacts: `openclaw pairing list telegram`, then `openclaw pairing approve telegram <code>`
+5. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then `http://127.0.0.1:18789/?token=<gateway-token>` (get the token from `~/.openclaw/gateway-token.env`)
+
+<details>
+<summary>Troubleshooting</summary>
+
+```sh
+# Check gateway status
+systemctl --user status openclaw-gateway
+
+# View logs
+tail -f /tmp/openclaw/openclaw-gateway.log
+
+# Restart gateway
+systemctl --user restart openclaw-gateway
+
+# Check channel status
+openclaw channels status
+```
+
+</details>
 
 #### GitHub permissions for OpenClaw
 

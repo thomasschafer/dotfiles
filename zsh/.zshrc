@@ -46,6 +46,33 @@ if [[ "$(uname)" == "Darwin" ]]; then
     alias dw="cd $HOME/Development/dotfiles/ && sudo darwin-rebuild switch --flake .#work && cd -"
 else
     alias ns="cd $HOME/Development/dotfiles/ && sudo nixos-rebuild switch --flake .#nix-server --impure && cd -"
+
+    openclaw() {
+        # TODO: once https://github.com/openclaw/nix-openclaw/issues/45 is fixed, remove hasown workaround
+        local gw_path hasown_path
+        gw_path=$(dirname $(dirname $(readlink -f $(command which openclaw))))
+        hasown_path=$(find "$gw_path/lib/openclaw/node_modules/.pnpm" -maxdepth 2 -type d -name "hasown@*" 2>/dev/null | head -1)
+
+        # TODO: once https://github.com/openclaw/nix-openclaw/issues/18 is fixed, remove templates workaround
+        local templates_dir="$HOME/.openclaw/docs/reference/templates"
+        if [[ ! -d "$templates_dir" ]]; then
+            echo "Fetching openclaw templates..." >&2
+            mkdir -p "$templates_dir"
+            for t in AGENTS.md BOOT.md BOOTSTRAP.md HEARTBEAT.md IDENTITY.md SOUL.md TOOLS.md USER.md; do
+                curl -sL "https://raw.githubusercontent.com/openclaw/openclaw/main/docs/reference/templates/$t" -o "$templates_dir/$t"
+            done
+        fi
+
+        # Run from ~/.openclaw so it finds templates via cwd (part of #18 workaround)
+        (
+            cd "$HOME/.openclaw"
+            if [[ -n "$hasown_path" ]]; then
+                NODE_PATH="$hasown_path/node_modules" command openclaw "$@"
+            else
+                command openclaw "$@"
+            fi
+        )
+    }
 fi
 
 # Zsh history

@@ -137,6 +137,8 @@ let
     # Zed
     ".config/zed/settings.json".source = ../zed/settings.json;
   };
+
+  openclawConfig = { };
 in
 {
   imports = lib.optionals enableOpenClaw [
@@ -146,7 +148,7 @@ in
   home = {
     stateVersion = "23.05";
 
-    file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
+    file = sharedFiles // openclawConfig // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
     packages =
       with pkgs;
@@ -166,7 +168,7 @@ in
         hadolint
         jless
         neovim
-        nixfmt-rfc-style
+        nixfmt
         nushell
         p7zip
         jq
@@ -273,12 +275,32 @@ in
       '';
     }
     // lib.optionalAttrs enableOpenClaw {
+      cleanOpenClawBackups = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
+        ${pkgs.findutils}/bin/find "${config.home.homeDirectory}/.openclaw" -name "*.bak" -type f -delete 2>/dev/null || true
+      '';
       setupOpenClaw = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         OPENCLAW_DIR="${config.home.homeDirectory}/.openclaw"
         TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
+        CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
 
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
+
+        # TODO: remove when nix-openclaw module properly generates config from programs.openclaw.config
+        # Replace nix-openclaw module's empty config symlink with actual config
+        $DRY_RUN_CMD rm -f "$CONFIG_FILE"
+        $DRY_RUN_CMD cat > "$CONFIG_FILE" << 'EOFCONFIG'
+${builtins.toJSON {
+  gateway = {
+    mode = "local";
+    bind = "loopback";
+    auth.mode = "token";
+  };
+  channels.telegram.dmPolicy = "pairing";
+  agents.defaults.sandbox.mode = "off";
+  discovery.mdns.mode = "off";
+}}
+EOFCONFIG
 
         if [ ! -f "$TOKEN_FILE" ]; then
           TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
@@ -389,21 +411,9 @@ in
       ];
     };
 
+    # Config is in openclawConfig (home.file) due to nix-openclaw module bug
     openclaw = lib.mkIf enableOpenClaw {
       enable = true;
-      config = {
-        gateway = {
-          mode = "local";
-          bind = "loopback";
-          auth.mode = "token";
-        };
-        channels.whatsapp = {
-          dmPolicy = "pairing";
-          groups."*".requireMention = true;
-        };
-        agents.defaults.sandbox.mode = "all";
-        discovery.mdns.mode = "off";
-      };
       instances.default = {
         enable = true;
         systemd.enable = true;
@@ -414,6 +424,17 @@ in
   systemd.user.services = lib.mkIf enableOpenClaw {
     openclaw-gateway = {
       Service.EnvironmentFile = "${config.home.homeDirectory}/.openclaw/gateway-token.env";
+      # TODO: remove when https://github.com/openclaw/nix-openclaw/issues/45 is fixed
+      Service.ExecStart =
+        let
+          openclaw = config.programs.openclaw.package;
+          gateway = pkgs.openclaw-gateway;
+          hasownPath = "${gateway}/lib/openclaw/node_modules/.pnpm/hasown@2.0.2/node_modules";
+        in
+        lib.mkForce "${pkgs.writeShellScript "openclaw-gateway-wrapper" ''
+          export NODE_PATH="${hasownPath}"
+          exec ${openclaw}/bin/openclaw gateway --port 18789
+        ''}";
     };
   };
 }
