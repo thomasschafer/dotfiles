@@ -140,7 +140,7 @@ let
 in
 {
   imports = lib.optionals enableOpenClaw [
-    nix-openclaw.homeManagerModules.default
+    nix-openclaw.homeManagerModules.openclaw
   ];
 
   home = {
@@ -161,6 +161,7 @@ in
         # golangci-lint  # Manually installing v1 for now - see `installGolangciLint`
         golangci-lint-langserver
         gopls
+        gh
         git
         hadolint
         jless
@@ -403,13 +404,16 @@ in
         agents.defaults.sandbox.mode = "all";
         discovery.mdns.mode = "off";
       };
+      instances.default = {
+        enable = true;
+        systemd.enable = true;
+      };
     };
   };
 
   systemd.user.services = lib.mkIf enableOpenClaw {
     openclaw-gateway = {
       Service.EnvironmentFile = "${config.home.homeDirectory}/.openclaw/gateway-token.env";
-      Install.WantedBy = [ "default.target" ];
     };
   };
 }

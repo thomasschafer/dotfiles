@@ -47,7 +47,7 @@ cd ~/Development/dotfiles
    ssh tomschafer@<server-ip>
    ```
 
-### OpenClaw setup (nix-server only)
+### OpenClaw setup
 
 After `./setup.sh nix-server`:
 
@@ -56,3 +56,20 @@ After `./setup.sh nix-server`:
 3. Run `openclaw security audit` to verify config
 4. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then http://127.0.0.1:18789
 5. Approve contacts: `openclaw pairing approve whatsapp <code>`
+
+#### GitHub permissions for OpenClaw
+
+To restrict OpenClaw to only pushing branches and creating PRs:
+
+1. Create a fine-grained PAT: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+   - **Repository access:** "Only select repositories" → select repos
+   - **Permissions:** `Contents: Read and write`, `Pull requests: Read and write`, everything else "No access"
+2. Set up branch protection on each repo: Settings → Branches → Add rule → protect `main`
+3. On nix-server:
+   ```sh
+   git config --global user.email "YOUR_EMAIL"
+   git config --global user.name "YOUR_NAME"
+   mkdir -p ~/.openclaw/credentials && (umask 077 && echo "TOKEN" > ~/.openclaw/credentials/github-token)
+   gh auth login --with-token < ~/.openclaw/credentials/github-token
+   gh auth setup-git
+   ```

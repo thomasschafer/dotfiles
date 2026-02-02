@@ -71,6 +71,7 @@
             ./modules/nixos.nix
             home-manager.nixosModules.home-manager
             (mkHomeManagerConfig hostConfig host { inherit nix-openclaw; })
+            { nixpkgs.overlays = [ nix-openclaw.overlays.default ]; }
           ];
         };
     in
