@@ -46,3 +46,13 @@ cd ~/Development/dotfiles
    ```sh
    ssh tomschafer@<server-ip>
    ```
+
+### OpenClaw setup (nix-server only)
+
+After `./setup.sh nix-server`:
+
+1. Note the gateway token printed (or `cat ~/.openclaw/gateway-token.env`)
+2. Run `openclaw onboard` - select Anthropic, enter API key, scan WhatsApp QR
+3. Run `openclaw security audit` to verify config
+4. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then http://127.0.0.1:18789
+5. Approve contacts: `openclaw pairing approve whatsapp <code>`

@@ -1,6 +1,7 @@
 {
   self,
   pkgs,
+  lib,
   host,
   hostConfig,
   ...
@@ -100,4 +101,9 @@
 
   # Enable nix-ld to run dynamically linked binaries (e.g. Claude Code)
   programs.nix-ld.enable = true;
+
+  # OpenClaw: enable lingering so user services start at boot
+  system.activationScripts.openclawLingering = lib.mkIf (hostConfig.enableOpenClaw or false) ''
+    ${pkgs.systemd}/bin/loginctl enable-linger ${hostConfig.username} || true
+  '';
 }

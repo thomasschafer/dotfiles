@@ -4,12 +4,14 @@
   lib,
   host,
   hostConfig,
+  nix-openclaw ? null,
   ...
 }:
 
 let
   isDarwin = pkgs.stdenv.isDarwin;
   isServer = hostConfig.isServer or false;
+  enableOpenClaw = (hostConfig.enableOpenClaw or false) && nix-openclaw != null;
 
   configHome = if isDarwin then "Library/Application Support" else ".config";
 
@@ -137,6 +139,10 @@ let
   };
 in
 {
+  imports = lib.optionals enableOpenClaw [
+    nix-openclaw.homeManagerModules.default
+  ];
+
   home = {
     stateVersion = "23.05";
 
@@ -265,6 +271,27 @@ in
         fi
       '';
     }
+    // lib.optionalAttrs enableOpenClaw {
+      setupOpenClaw = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        OPENCLAW_DIR="${config.home.homeDirectory}/.openclaw"
+        TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
+
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
+
+        if [ ! -f "$TOKEN_FILE" ]; then
+          TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
+          $DRY_RUN_CMD ${pkgs.bash}/bin/bash -c "echo 'OPENCLAW_GATEWAY_TOKEN='\"$TOKEN\" > '$TOKEN_FILE' && chmod 600 '$TOKEN_FILE'"
+          echo "Generated OpenClaw gateway token: $TOKEN"
+          echo "Save this token - you'll need it to access the dashboard."
+        fi
+
+        if [ -d "$OPENCLAW_DIR/credentials" ]; then
+          $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR/credentials"
+          $DRY_RUN_CMD ${pkgs.findutils}/bin/find "$OPENCLAW_DIR/credentials" -type f -exec chmod 600 {} \; 2>/dev/null || true
+        fi
+      '';
+    }
     // lib.optionalAttrs (isDarwin && !isServer) {
       replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -f "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" ] || ! cmp -s "${../alacritty/alacritty.icns}" "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" 2>/dev/null; then
@@ -359,6 +386,30 @@ in
         usernamehw.errorlens
         vscodevim.vim
       ];
+    };
+
+    openclaw = lib.mkIf enableOpenClaw {
+      enable = true;
+      config = {
+        gateway = {
+          mode = "local";
+          bind = "loopback";
+          auth.mode = "token";
+        };
+        channels.whatsapp = {
+          dmPolicy = "pairing";
+          groups."*".requireMention = true;
+        };
+        agents.defaults.sandbox.mode = "all";
+        discovery.mdns.mode = "off";
+      };
+    };
+  };
+
+  systemd.user.services = lib.mkIf enableOpenClaw {
+    openclaw-gateway = {
+      Service.EnvironmentFile = "${config.home.homeDirectory}/.openclaw/gateway-token.env";
+      Install.WantedBy = [ "default.target" ];
     };
   };
 }

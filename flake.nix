@@ -11,6 +11,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-openclaw = {
+      url = "github:openclaw/nix-openclaw";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -19,19 +23,17 @@
       nix-darwin,
       nixpkgs,
       home-manager,
+      nix-openclaw,
     }:
     let
       mkHomeManagerConfig =
-        hostConfig: host:
+        hostConfig: host: extraArgs:
         {
           home-manager = {
             backupFileExtension = "bak";
             useGlobalPkgs = true;
             useUserPackages = true;
-            extraSpecialArgs = {
-              inherit hostConfig;
-              host = host;
-            };
+            extraSpecialArgs = { inherit hostConfig; host = host; } // extraArgs;
             users.${hostConfig.username} = import ./modules/home.nix;
           };
         };
@@ -49,10 +51,8 @@
           modules = [
             ./modules/darwin.nix
             home-manager.darwinModules.home-manager
-            {
-              users.users.${hostConfig.username}.home = /Users/${hostConfig.username};
-            }
-            (mkHomeManagerConfig hostConfig host)
+            { users.users.${hostConfig.username}.home = /Users/${hostConfig.username}; }
+            (mkHomeManagerConfig hostConfig host { })
           ];
         };
 
@@ -70,7 +70,7 @@
           modules = [
             ./modules/nixos.nix
             home-manager.nixosModules.home-manager
-            (mkHomeManagerConfig hostConfig host)
+            (mkHomeManagerConfig hostConfig host { inherit nix-openclaw; })
           ];
         };
     in
