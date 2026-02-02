@@ -39,7 +39,7 @@
       mkDarwinSystem =
         host:
         let
-          hostConfig = import ./modules/hosts/${host}.nix;
+          hostConfig = import ./modules/hosts/${host};
         in
         nix-darwin.lib.darwinSystem {
           specialArgs = {

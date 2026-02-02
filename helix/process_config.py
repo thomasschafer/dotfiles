@@ -17,7 +17,7 @@ def process_config(input_file: str, is_darwin: bool) -> str:
         content = content.replace("${CLIPBOARD_PROVIDER}", "pasteboard")
         content = content.replace("${COPY_CMD}", "pbcopy")
     else:
-        content = content.replace("${CLIPBOARD_PROVIDER}", "terminal")
+        content = content.replace("${CLIPBOARD_PROVIDER}", "tmux")
         content = content.replace("${COPY_CMD}", "xclip -selection clipboard")
 
     config = toml.loads(content)

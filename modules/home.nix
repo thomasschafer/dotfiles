@@ -17,6 +17,8 @@ let
     ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
   '';
 
+  copyCmd = if isDarwin then "pbcopy" else "xclip -selection clipboard";
+
   helixConfig =
     pkgs.runCommand "helix-config"
       {
@@ -192,6 +194,24 @@ in
       ]
       ++ lib.optionals (!isDarwin) [
         xclip
+        (writeShellScriptBin "pbcopy" ''
+          if [[ -n "$DISPLAY" ]]; then
+            xclip -selection clipboard
+          elif [[ -n "$TMUX" ]]; then
+            tmux load-buffer -
+          else
+            exit 1
+          fi
+        '')
+        (writeShellScriptBin "pbpaste" ''
+          if [[ -n "$DISPLAY" ]]; then
+            xclip -selection clipboard -o
+          elif [[ -n "$TMUX" ]]; then
+            tmux show-buffer
+          else
+            exit 1
+          fi
+        '')
       ]
       ++ [
         # Building from source
@@ -308,7 +328,7 @@ in
         resurrect
       ];
       extraConfig = ''
-        ${builtins.readFile ../tmux/tmux.conf}
+        ${builtins.replaceStrings [ "\${COPY_CMD}" ] [ copyCmd ] (builtins.readFile ../tmux/tmux.conf)}
         set -gu default-command
         set -g default-shell "$SHELL"
       '';

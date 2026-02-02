@@ -3,11 +3,6 @@ if [[ -f $HOME/.zshrc.private ]]; then
     source $HOME/.zshrc.private
 fi
 
-# Auto-attach to tmux on SSH
-if [[ -n "$SSH_CONNECTION" && -z "$TMUX" ]]; then
-    tmux attach-session -t main 2>/dev/null || tmux new-session -s main
-fi
-
 # Treat / as a word delimiter
 WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 
