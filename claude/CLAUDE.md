@@ -1,4 +1,4 @@
-1. NEVER git add or commit unless I explicitly ask you to.
+1. NEVER git add or commit unless I explicitly ask you to. When you do commit, don't add a coauthor unless I explicitly ask.
 1. NEVER create markdown files explaining your findings unless I explicitly ask you to.
 1. NEVER create pointless comments, such as "Increased this because ...". ONLY create comments that are absolutely necessary to explain or share context for future readers of the code.
 1. NEVER remove comments unless they are no longer needed. If they become out of date with the code then update the comments as appropriate. The rule above to not add pointless comments does not mean you should delete all existing comments.
