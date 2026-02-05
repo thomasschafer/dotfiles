@@ -275,9 +275,6 @@ in
       '';
     }
     // lib.optionalAttrs enableOpenClaw {
-      cleanOpenClawBackups = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
-        ${pkgs.findutils}/bin/find "${config.home.homeDirectory}/.openclaw" -name "*.bak" -type f -delete 2>/dev/null || true
-      '';
       cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         WORKSPACE="${config.home.homeDirectory}/.openclaw/workspace"
         if [ ! -d "$WORKSPACE/.git" ]; then
