@@ -46,17 +46,45 @@ else
     if [ ! -f "$hw_config_dest" ]; then
         echo "Copying hardware-configuration.nix to repo..."
         mkdir -p "$(dirname "$hw_config_dest")"
-        sudo cp /etc/nixos/hardware-configuration.nix "$hw_config_dest"
-        sudo chown "$(whoami)" "$hw_config_dest"
+        cp /etc/nixos/hardware-configuration.nix "$hw_config_dest"
     fi
 
-    sudo nixos-rebuild switch --flake .#"$mode"
+    # Get the configured username from host config
+    host_config="$script_dir/modules/hosts/$mode/default.nix"
+    username=$(grep 'username' "$host_config" | sed 's/.*"\([^"]*\)".*/\1/')
 
-    if [ -d /etc/nixos ]; then
-        echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
-        sudo mv /etc/nixos /etc/nixos.bak
+    if [ "$(id -u)" -eq 0 ]; then
+        # Running as root (first-time setup)
+        nixos-rebuild switch --flake .#"$mode"
+
+        if [ -d /etc/nixos ]; then
+            echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
+            mv /etc/nixos /etc/nixos.bak
+        fi
+
+        echo ""
+        echo "=========================================="
+        echo "NixOS configured. User '$username' created."
+        echo ""
+        echo "Set a password for sudo access:"
+        passwd "$username"
+
+        echo ""
+        echo "=========================================="
+        echo "Setup complete!"
+        echo ""
+        echo "You can now SSH in as the non-root user:"
+        echo "  ssh $username@<server-ip>"
+        echo "=========================================="
+    else
+        # Running as non-root user (updates)
+        sudo nixos-rebuild switch --flake .#"$mode"
+
+        if [ -d /etc/nixos ]; then
+            echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
+            sudo mv /etc/nixos /etc/nixos.bak
+        fi
+
+        echo "Setup complete"
     fi
 fi
-
-
-echo "Setup complete"
