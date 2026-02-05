@@ -62,8 +62,19 @@
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "prohibit-password";
+      # Disable root login entirely - use sudo instead
+      PermitRootLogin = "no";
+      # Disable all password-based auth
       PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      # Limit authentication attempts
+      MaxAuthTries = 3;
+      LoginGraceTime = 20;
+      # Disconnect idle sessions
+      ClientAliveInterval = 300;
+      ClientAliveCountMax = 2;
+      # Disable unnecessary features
+      X11Forwarding = false;
     };
   };
 
@@ -71,6 +82,17 @@
     enable = true;
     maxretry = 5;
     bantime = "1h";
+    jails = {
+      sshd = {
+        settings = {
+          enabled = true;
+          filter = "sshd[mode=aggressive]";
+          maxretry = 3;
+          bantime = "1h";
+          findtime = "10m";
+        };
+      };
+    };
   };
 
   users.users.root.openssh.authorizedKeys.keys = hostConfig.sshKeys;
