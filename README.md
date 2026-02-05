@@ -31,9 +31,9 @@ cd ~/Development/dotfiles
 
    Note: The first run builds Helix from source which takes several minutes. If home-manager times out, just run `./setup.sh nix-server` again - it will skip already-completed steps.
 
-4. SSH in as the non-root user:
+4. SSH in as the non-root user (username is configured in `modules/hosts/<hostname>/default.nix`):
    ```sh
-   ssh tomschafer@<server-ip>
+   ssh <username>@<server-ip>
    ```
 
 ### OpenClaw setup

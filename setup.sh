@@ -51,7 +51,12 @@ else
 
     # Get the configured username from host config
     host_config="$script_dir/modules/hosts/$mode/default.nix"
-    username=$(grep 'username' "$host_config" | sed 's/.*"\([^"]*\)".*/\1/')
+    username=$(grep 'username' "$host_config" | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+
+    if [ -z "$username" ]; then
+        echo "Error: Could not extract username from $host_config"
+        exit 1
+    fi
 
     if [ "$(id -u)" -eq 0 ]; then
         # Running as root (first-time setup)
@@ -59,6 +64,7 @@ else
 
         if [ -d /etc/nixos ]; then
             echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
+            [ -e /etc/nixos.bak ] && rm -rf /etc/nixos.bak
             mv /etc/nixos /etc/nixos.bak
         fi
 
@@ -82,6 +88,7 @@ else
 
         if [ -d /etc/nixos ]; then
             echo "Moving /etc/nixos to /etc/nixos.bak (no longer needed with flake)..."
+            [ -e /etc/nixos.bak ] && sudo rm -rf /etc/nixos.bak
             sudo mv /etc/nixos /etc/nixos.bak
         fi
 
