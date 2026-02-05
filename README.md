@@ -20,9 +20,9 @@ cd ~/Development/dotfiles
    ```
    The server will reboot automatically.
 
-3. SSH back in and run the dotfiles setup:
+3. SSH back in with agent forwarding (`-A`) and run the dotfiles setup. Agent forwarding allows cloning private repos (e.g. openclaw-workspace) using your local SSH key:
    ```sh
-   ssh root@<server-ip>
+   ssh -A root@<server-ip>
    nix-shell -p git
    git clone https://github.com/thomasschafer/dotfiles.git ~/Development/dotfiles
    cd ~/Development/dotfiles && ./setup.sh nix-server
@@ -38,13 +38,13 @@ cd ~/Development/dotfiles
 
 ### OpenClaw setup
 
-After `./setup.sh nix-server`:
+The setup script automatically clones `openclaw-workspace` and restores config. After `./setup.sh nix-server`:
 
-1. Run `openclaw onboard`
-2. Add Telegram bot: `openclaw channels login telegram` (enter token from @BotFather)
-3. Run `openclaw security audit` to verify config
-4. Approve contacts: `openclaw pairing list telegram`, then `openclaw pairing approve telegram <code>`
-5. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then `http://127.0.0.1:18789/?token=<gateway-token>` (get the token from `~/.openclaw/gateway-token.env`)
+1. Add Telegram bot: `openclaw channels login telegram` (enter token from @BotFather)
+2. Approve contacts: `openclaw pairing list telegram`, then `openclaw pairing approve telegram <code>`
+3. Access dashboard: `ssh -L 18789:127.0.0.1:18789 tomschafer@<server-ip>`, then `http://127.0.0.1:18789/?token=<gateway-token>` (token is in `~/.openclaw/gateway-token.env`)
+
+Optionally run `openclaw security audit` to verify config.
 
 <details>
 <summary>Troubleshooting</summary>

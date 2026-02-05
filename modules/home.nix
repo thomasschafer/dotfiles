@@ -278,29 +278,43 @@ in
       cleanOpenClawBackups = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
         ${pkgs.findutils}/bin/find "${config.home.homeDirectory}/.openclaw" -name "*.bak" -type f -delete 2>/dev/null || true
       '';
-      setupOpenClaw = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        WORKSPACE="${config.home.homeDirectory}/.openclaw/workspace"
+        if [ ! -d "$WORKSPACE/.git" ]; then
+          if ! ${pkgs.openssh}/bin/ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+            echo "ERROR: GitHub SSH auth failed. Connect with 'ssh -A' to forward your agent."
+            exit 1
+          fi
+          echo "Cloning openclaw-workspace..."
+          $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$(dirname "$WORKSPACE")"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone git@github.com:thomasschafer/openclaw-workspace.git "$WORKSPACE"
+        fi
+      '';
+      setupOpenClaw = lib.hm.dag.entryAfter [ "cloneOpenClawWorkspace" ] ''
         OPENCLAW_DIR="${config.home.homeDirectory}/.openclaw"
+        WORKSPACE="$OPENCLAW_DIR/workspace"
         TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
         CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
+        RESTORE_SCRIPT="$WORKSPACE/config/restore.sh"
 
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
 
-        # TODO: remove when nix-openclaw module properly generates config from programs.openclaw.config
-        # Replace nix-openclaw module's empty config symlink with actual config
-        $DRY_RUN_CMD rm -f "$CONFIG_FILE"
-        $DRY_RUN_CMD cat > "$CONFIG_FILE" << 'EOFCONFIG'
-${builtins.toJSON {
-  gateway = {
-    mode = "local";
-    bind = "loopback";
-    auth.mode = "token";
-  };
-  channels.telegram.dmPolicy = "pairing";
-  agents.defaults.sandbox.mode = "off";
-  discovery.mdns.mode = "off";
-}}
-EOFCONFIG
+        # Remove nix-openclaw module's empty config symlink if present
+        if [ -L "$CONFIG_FILE" ]; then
+          $DRY_RUN_CMD rm -f "$CONFIG_FILE"
+        fi
+
+        # Restore config from workspace
+        if [ ! -f "$CONFIG_FILE" ]; then
+          if [ ! -f "$RESTORE_SCRIPT" ]; then
+            echo "ERROR: $RESTORE_SCRIPT not found. Ensure openclaw-workspace is cloned and contains config/restore.sh"
+            exit 1
+          fi
+          echo "Restoring OpenClaw config from workspace..."
+          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT"
+          $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user restart openclaw-gateway 2>/dev/null || true
+        fi
 
         if [ ! -f "$TOKEN_FILE" ]; then
           TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
