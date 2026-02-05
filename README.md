@@ -10,14 +10,9 @@ cd ~/Development/dotfiles
 
 ## NixOS server
 
-1. Provision a server with Debian (or any OS compatible with [nixos-infect](https://github.com/elitak/nixos-infect))
+1. Provision a server with Debian (or any OS compatible with [nixos-infect](https://github.com/elitak/nixos-infect)). Add your SSH key during provisioning, and ensure the same key is in `modules/hosts/<hostname>/default.nix`.
 
-2. Copy your SSH key to root (from your local machine):
-   ```sh
-   ssh-copy-id root@<server-ip>
-   ```
-
-3. SSH in and run nixos-infect (use tmux in case connection drops):
+2. SSH in and run nixos-infect (use tmux in case connection drops):
    ```sh
    ssh root@<server-ip>
    apt update && apt install -y tmux && tmux
@@ -25,14 +20,14 @@ cd ~/Development/dotfiles
    ```
    The server will reboot automatically.
 
-4. SSH back in and set the non-root user password first (required for sudo after setup reconfigures SSH):
+3. SSH back in and set the non-root user password first (required for sudo after setup reconfigures SSH):
    ```sh
    ssh root@<server-ip>
    useradd -m tomschafer
    passwd tomschafer
    ```
 
-5. Clone and run the dotfiles setup:
+4. Clone and run the dotfiles setup:
    ```sh
    nix-shell -p git
    git clone https://github.com/thomasschafer/dotfiles.git ~/Development/dotfiles
@@ -42,7 +37,7 @@ cd ~/Development/dotfiles
 
    Note: The first run builds Helix from source which takes several minutes. If home-manager times out, just run `./setup.sh nix-server` again - it will skip already-completed steps.
 
-6. SSH in as the non-root user:
+5. SSH in as the non-root user:
    ```sh
    ssh tomschafer@<server-ip>
    ```
