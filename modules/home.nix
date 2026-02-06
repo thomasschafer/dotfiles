@@ -236,6 +236,7 @@ in
         # Scripts/tools
         (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../tmux/tmux-sessionizer.sh))
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
+        (writeShellScriptBin "golangci-lint-wrapper" (builtins.readFile ../tools/golangci-lint-wrapper.sh))
       ];
 
     activation = {
