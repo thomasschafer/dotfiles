@@ -303,16 +303,13 @@ in
           $DRY_RUN_CMD rm -f "$CONFIG_FILE"
         fi
 
-        # Restore config from workspace
-        if [ ! -f "$CONFIG_FILE" ]; then
-          if [ ! -f "$RESTORE_SCRIPT" ]; then
-            echo "ERROR: $RESTORE_SCRIPT not found. Ensure openclaw-workspace is cloned and contains config/restore.sh"
-            exit 1
-          fi
-          echo "Restoring OpenClaw config from workspace..."
-          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT"
-          $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user restart openclaw-gateway 2>/dev/null || true
+        # Always restore config from workspace to prevent runtime config drift
+        if [ ! -f "$RESTORE_SCRIPT" ]; then
+          echo "ERROR: $RESTORE_SCRIPT not found. Ensure openclaw-workspace is cloned and contains config/restore.sh"
+          exit 1
         fi
+        $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT"
+        $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user restart openclaw-gateway 2>/dev/null || true
 
         if [ ! -f "$TOKEN_FILE" ]; then
           TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
@@ -446,6 +443,11 @@ in
         in
         lib.mkForce "${pkgs.writeShellScript "openclaw-gateway-wrapper" ''
           export NODE_PATH="${hasownPath}"
+          # Restore declarative config before starting, in case of runtime drift
+          RESTORE_SCRIPT="${config.home.homeDirectory}/.openclaw/workspace/config/restore.sh"
+          if [ -f "$RESTORE_SCRIPT" ]; then
+            ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT" 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t openclaw-restore || true
+          fi
           exec ${openclaw}/bin/openclaw gateway --port 18789
         ''}";
     };
