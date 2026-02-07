@@ -423,8 +423,9 @@ in
       ];
     };
 
+  } // lib.optionalAttrs enableOpenClaw {
     # Config is in openclawConfig (home.file) due to nix-openclaw module bug
-    openclaw = lib.mkIf enableOpenClaw {
+    openclaw = {
       enable = true;
       instances.default = {
         enable = true;
