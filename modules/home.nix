@@ -28,7 +28,9 @@ let
       }
       ''
         cp ${../helix/process_config.py} process_config.py
-        python3 process_config.py ${../helix/config.template.toml} ${if isDarwin then "--darwin" else ""} > $out
+        python3 process_config.py ${../helix/config.template.toml} ${
+          if isDarwin then "--darwin" else ""
+        } > $out
       '';
 
   hxUtils = pkgs.rustPlatform.buildRustPackage {
@@ -153,8 +155,8 @@ in
     packages =
       with pkgs;
       [
-        # CLI tools
         biome
+        codex
         deno
         direnv
         fd
@@ -420,7 +422,8 @@ in
       ];
     };
 
-  } // lib.optionalAttrs enableOpenClaw {
+  }
+  // lib.optionalAttrs enableOpenClaw {
     # Config is in openclawConfig (home.file) due to nix-openclaw module bug
     openclaw = {
       enable = true;

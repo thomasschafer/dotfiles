@@ -34,6 +34,7 @@ export EDITOR=hx
 export VISUAL="$EDITOR"
 alias nv=nvim
 alias c=claude
+alias x=codex
 alias z=zed
 alias y=yazi
 alias s=scooter
