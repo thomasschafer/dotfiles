@@ -105,7 +105,8 @@
       # TODO: we shouldn't need this - manage using home.nix
       "visual-studio-code"
       "zed"
-    ];
+    ]
+    ++ lib.optionals (host == "personal") [ "tailscale" ];
 
     # TODO: move more of these to home.nix
     brews = [

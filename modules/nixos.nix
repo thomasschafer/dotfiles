@@ -52,7 +52,9 @@
     hostName = hostConfig.hostname;
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 ];
+      allowedTCPPorts = if (hostConfig.enableTailscale or false) then [ ] else [ 22 ];
+      interfaces.tailscale0.allowedTCPPorts =
+        lib.mkIf (hostConfig.enableTailscale or false) [ 22 ];
     };
   };
 
@@ -61,6 +63,7 @@
 
   services.openssh = {
     enable = true;
+    openFirewall = !(hostConfig.enableTailscale or false);
     settings = {
       # Disable root login entirely - use sudo instead
       PermitRootLogin = "no";
@@ -123,6 +126,14 @@
 
   # Enable nix-ld to run dynamically linked binaries (e.g. Claude Code)
   programs.nix-ld.enable = true;
+
+  services.tailscale = lib.mkIf (hostConfig.enableTailscale or false) {
+    enable = true;
+    openFirewall = true;
+    useRoutingFeatures = "server";
+    extraUpFlags = [ "--advertise-exit-node" ];
+    authKeyFile = "/etc/tailscale/authkey";
+  };
 
   # OpenClaw: enable lingering so user services start at boot
   system.activationScripts.openclawLingering = lib.mkIf (hostConfig.enableOpenClaw or false) ''
