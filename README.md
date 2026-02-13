@@ -53,7 +53,13 @@ After deploy:
 
 ### OpenClaw setup
 
-The setup script automatically clones `openclaw-workspace` and restores config. After `./setup.sh nix-server`:
+The setup script automatically:
+- Clones `openclaw-workspace` to `~/Development/openclaw-workspace` and symlinks it to `~/.openclaw/workspace`
+- Symlinks `~/.openclaw/cron/jobs.json` to `openclaw-workspace/config/cron-jobs.json`
+- Symlinks `~/.openclaw/openclaw.json` to `dotfiles/openclaw/openclaw.json` (config lives in this repo)
+- Generates a gateway token if one doesn't exist
+
+After running the setup script:
 
 1. Add Telegram bot: `openclaw channels login telegram` (enter token from @BotFather)
 2. Approve contacts: `openclaw pairing list telegram`, then `openclaw pairing approve telegram <code>`

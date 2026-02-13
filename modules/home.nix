@@ -140,7 +140,6 @@ let
     ".config/zed/settings.json".source = ../zed/settings.json;
   };
 
-  openclawConfig = { };
 in
 {
   imports = lib.optionals enableOpenClaw [
@@ -150,7 +149,7 @@ in
   home = {
     stateVersion = "23.05";
 
-    file = sharedFiles // openclawConfig // (if isDarwin && !isServer then darwinOnlyFiles else { });
+    file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
     packages =
       with pkgs;
@@ -279,15 +278,21 @@ in
     }
     // lib.optionalAttrs enableOpenClaw {
       cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        WORKSPACE="${config.home.homeDirectory}/.openclaw/workspace"
-        if [ ! -d "$WORKSPACE/.git" ]; then
+        DEV_DIR="${config.home.homeDirectory}/Development/openclaw-workspace"
+        SYMLINK="${config.home.homeDirectory}/.openclaw/workspace"
+        if [ ! -d "$DEV_DIR/.git" ]; then
           if ! ${pkgs.openssh}/bin/ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
             echo "ERROR: GitHub SSH auth failed. Connect with 'ssh -A' to forward your agent."
             exit 1
           fi
           echo "Cloning openclaw-workspace..."
-          $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$(dirname "$WORKSPACE")"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone git@github.com:thomasschafer/openclaw-workspace.git "$WORKSPACE"
+          $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$(dirname "$DEV_DIR")"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone git@github.com:thomasschafer/openclaw-workspace.git "$DEV_DIR"
+        fi
+        # Symlink workspace into ~/.openclaw
+        if [ ! -L "$SYMLINK" ]; then
+          $DRY_RUN_CMD rm -rf "$SYMLINK"
+          $DRY_RUN_CMD ln -sfn "$DEV_DIR" "$SYMLINK"
         fi
       '';
       setupOpenClaw = lib.hm.dag.entryAfter [ "cloneOpenClawWorkspace" ] ''
@@ -295,23 +300,26 @@ in
         WORKSPACE="$OPENCLAW_DIR/workspace"
         TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
         CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
-        RESTORE_SCRIPT="$WORKSPACE/config/restore.sh"
+        DOTFILES_CONFIG="${config.home.homeDirectory}/Development/dotfiles/openclaw/openclaw.json"
+        CRON_DIR="$OPENCLAW_DIR/cron"
 
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
 
-        # Remove nix-openclaw module's empty config symlink if present
-        if [ -L "$CONFIG_FILE" ]; then
+        # Symlink config to dotfiles-managed copy (remove any existing file/symlink)
+        if [ -e "$CONFIG_FILE" ] || [ -L "$CONFIG_FILE" ]; then
           $DRY_RUN_CMD rm -f "$CONFIG_FILE"
         fi
+        $DRY_RUN_CMD ln -sfn "$DOTFILES_CONFIG" "$CONFIG_FILE"
 
-        # Always restore config from workspace to prevent runtime config drift
-        if [ ! -f "$RESTORE_SCRIPT" ]; then
-          echo "ERROR: $RESTORE_SCRIPT not found. Ensure openclaw-workspace is cloned and contains config/restore.sh"
-          exit 1
+        # Symlink cron jobs to workspace-managed copy
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$CRON_DIR"
+        if [ -f "$WORKSPACE/config/cron-jobs.json" ]; then
+          if [ -e "$CRON_DIR/jobs.json" ] && [ ! -L "$CRON_DIR/jobs.json" ]; then
+            $DRY_RUN_CMD rm -f "$CRON_DIR/jobs.json"
+          fi
+          $DRY_RUN_CMD ln -sfn "$WORKSPACE/config/cron-jobs.json" "$CRON_DIR/jobs.json"
         fi
-        $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT"
-        $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user restart openclaw-gateway 2>/dev/null || true
 
         if [ ! -f "$TOKEN_FILE" ]; then
           TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
@@ -424,7 +432,6 @@ in
 
   }
   // lib.optionalAttrs enableOpenClaw {
-    # Config is in openclawConfig (home.file) due to nix-openclaw module bug
     openclaw = {
       enable = true;
       instances.default = {
@@ -446,11 +453,6 @@ in
         in
         lib.mkForce "${pkgs.writeShellScript "openclaw-gateway-wrapper" ''
           export NODE_PATH="${hasownPath}"
-          # Restore declarative config before starting, in case of runtime drift
-          RESTORE_SCRIPT="${config.home.homeDirectory}/.openclaw/workspace/config/restore.sh"
-          if [ -f "$RESTORE_SCRIPT" ]; then
-            ${pkgs.bash}/bin/bash "$RESTORE_SCRIPT" 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t openclaw-restore || true
-          fi
           exec ${openclaw}/bin/openclaw gateway --port 18789
         ''}";
     };
