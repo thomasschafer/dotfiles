@@ -119,6 +119,8 @@
     git
     vim
     wget
+  ] ++ lib.optionals (hostConfig.enableOpenClaw or false) [
+    chromium
   ];
 
   programs.zsh.enable = true;

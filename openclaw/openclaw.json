@@ -42,5 +42,10 @@
         "enabled": true
       }
     }
+  },
+  "browser": {
+    "defaultProfile": "openclaw",
+    "headless": true,
+    "executablePath": "/run/current-system/sw/bin/chromium"
   }
 }
