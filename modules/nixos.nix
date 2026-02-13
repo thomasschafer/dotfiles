@@ -142,9 +142,4 @@
     ${pkgs.systemd}/bin/loginctl enable-linger ${hostConfig.username} || true
   '';
 
-  # OpenClaw: clean up stale backup files
-  system.activationScripts.openclawCleanup = lib.mkIf (hostConfig.enableOpenClaw or false) ''
-    OPENCLAW_DIR="/home/${hostConfig.username}/.openclaw"
-    rm -f "$OPENCLAW_DIR/openclaw.json.bak" "$OPENCLAW_DIR/openclaw.json.bak."* "$OPENCLAW_DIR/openclaw.json.pre-restore" 2>/dev/null || true
-  '';
 }

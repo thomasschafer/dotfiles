@@ -79,9 +79,6 @@ tail -f /tmp/openclaw/openclaw-gateway.log
 
 # Restart gateway
 systemctl --user restart openclaw-gateway
-
-# Check channel status
-openclaw channels status
 ```
 
 </details>

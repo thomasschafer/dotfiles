@@ -149,7 +149,9 @@ in
   home = {
     stateVersion = "23.05";
 
-    file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
+    file =
+      sharedFiles
+      // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
     packages =
       with pkgs;
@@ -299,18 +301,10 @@ in
         OPENCLAW_DIR="${config.home.homeDirectory}/.openclaw"
         WORKSPACE="$OPENCLAW_DIR/workspace"
         TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
-        CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
-        DOTFILES_CONFIG="${config.home.homeDirectory}/Development/dotfiles/openclaw/openclaw.json"
         CRON_DIR="$OPENCLAW_DIR/cron"
 
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
-
-        # Symlink config to dotfiles-managed copy (remove any existing file/symlink)
-        if [ -e "$CONFIG_FILE" ] || [ -L "$CONFIG_FILE" ]; then
-          $DRY_RUN_CMD rm -f "$CONFIG_FILE"
-        fi
-        $DRY_RUN_CMD ln -sfn "$DOTFILES_CONFIG" "$CONFIG_FILE"
 
         # Symlink cron jobs to workspace-managed copy
         $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$CRON_DIR"
@@ -437,6 +431,35 @@ in
       instances.default = {
         enable = true;
         systemd.enable = true;
+        config = {
+          agents.defaults = {
+            compaction.mode = "safeguard";
+            maxConcurrent = 4;
+            subagents.maxConcurrent = 8;
+          };
+          channels.telegram = {
+            dmPolicy = "pairing";
+            groupPolicy = "allowlist";
+            streamMode = "partial";
+          };
+          commands = {
+            native = "auto";
+            nativeSkills = "auto";
+          };
+          discovery.mdns.mode = "off";
+          gateway = {
+            mode = "local";
+            bind = "loopback";
+            auth.mode = "token";
+          };
+          messages.ackReactionScope = "group-mentions";
+          plugins.entries.telegram.enabled = true;
+          browser = {
+            defaultProfile = "openclaw";
+            headless = true;
+            executablePath = "/run/current-system/sw/bin/chromium";
+          };
+        };
       };
     };
   };
