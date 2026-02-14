@@ -106,7 +106,7 @@
       "visual-studio-code"
       "zed"
     ]
-    ++ lib.optionals (host == "personal") [ "tailscale" ];
+    ++ lib.optionals (host == "personal") [ "tailscale-app" ];
 
     # TODO: move more of these to home.nix
     brews = [

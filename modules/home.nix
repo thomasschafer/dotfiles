@@ -157,7 +157,6 @@ in
       with pkgs;
       [
         biome
-        codex
         deno
         direnv
         fd
@@ -259,6 +258,13 @@ in
 
       linkHelixRuntime = lib.hm.dag.entryAfter [ "installHelix" ] ''
         ln -sfn "${config.home.homeDirectory}/Development/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
+      '';
+
+      installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! command -v codex &>/dev/null; then
+          export PATH="${pkgs.nodejs_22}/bin:$PATH"
+          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" @openai/codex
+        fi
       '';
 
       installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
