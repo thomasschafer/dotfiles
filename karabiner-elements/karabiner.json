@@ -45,6 +45,25 @@
 						]
 					},
 					{
+						"description": "Ctrl+Alt+Shift+R to Dictation",
+						"manipulators": [
+							{
+								"from": {
+									"key_code": "r",
+									"modifiers": {
+										"mandatory": ["control", "option", "shift"]
+									}
+								},
+								"to": [
+									{
+										"consumer_key_code": "dictation"
+									}
+								],
+								"type": "basic"
+							}
+						]
+					},
+					{
 						"description": "Right command to Meh key (Built-in keyboard only)",
 						"manipulators": [
 							{
