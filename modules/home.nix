@@ -268,7 +268,9 @@ in
           $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
         fi
-        if [ ! -x "${config.home.homeDirectory}/.cargo/bin/kiosk" ]; then
+        # Rebuild if source is newer than installed binary
+        kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
+        if [ ! -x "$kiosk_bin" ] || [ "$kiosk_dir/Cargo.lock" -nt "$kiosk_bin" ]; then
           cd "$kiosk_dir"
           export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
           export CC="${pkgs.stdenv.cc}/bin/cc"
