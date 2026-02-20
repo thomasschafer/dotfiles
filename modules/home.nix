@@ -85,6 +85,9 @@ let
     # Lazygit
     "${configHome}/lazygit/config.yml".source = ../lazygit/config.yml;
 
+    # Kiosk
+    ".config/kiosk/config.toml".source = ../kiosk/config.toml;
+
     # Opencode
     ".config/opencode/config.json".source = ../opencode/config.json;
 
@@ -236,7 +239,6 @@ in
         haskellPackages.hoogle
 
         # Scripts/tools
-        (writeShellScriptBin "tmux-sessionizer" (builtins.readFile ../tmux/tmux-sessionizer.sh))
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
         (writeShellScriptBin "golangci-lint-wrapper" (builtins.readFile ../tools/golangci-lint-wrapper.sh))
       ];
@@ -258,6 +260,20 @@ in
 
       linkHelixRuntime = lib.hm.dag.entryAfter [ "installHelix" ] ''
         ln -sfn "${config.home.homeDirectory}/Development/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
+      '';
+
+      installKiosk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        kiosk_dir="${config.home.homeDirectory}/Development/kiosk"
+        if [ ! -d "$kiosk_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
+        fi
+        if [ ! -x "${config.home.homeDirectory}/.cargo/bin/kiosk" ]; then
+          cd "$kiosk_dir"
+          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export CC="${pkgs.stdenv.cc}/bin/cc"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
+        fi
       '';
 
       installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
