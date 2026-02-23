@@ -183,8 +183,6 @@ in
         (python3.withPackages (
           ps: with ps; [
             pip
-            pylsp-mypy
-            python-lsp-server
           ]
         ))
       ]
@@ -244,6 +242,12 @@ in
       ];
 
     activation = {
+      installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! command -v ty >/dev/null 2>&1; then
+          $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest
+        fi
+      '';
+
       installHelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         helix_dir="${config.home.homeDirectory}/Development/helix"
         if [ ! -d "$helix_dir" ]; then

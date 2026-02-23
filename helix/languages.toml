@@ -50,19 +50,12 @@ preview = false
 
 [[language]]
 name = "python"
-language-servers = ["ruff", "pylsp"]
+language-servers = ["ty", "ruff"]
 auto-format = true
 
-[language-server.pylsp.config.pylsp]
-plugins.pyls_mypy.enabled = true
-plugins.pyls_mypy.live_mode = true
-# Handled by Ruff
-plugins.flake8.enabled = false
-plugins.pycodestyle.enabled = false
-plugins.pyflakes.enabled = false
-plugins.black.enabled = false
-plugins.autopep8.enabled = false
-plugins.yapf.enabled = false
+[language-server.ty]
+command = "ty"
+args = ["server"]
 
 
 # ----- TypeScript + JavaScript -----
@@ -141,5 +134,4 @@ language-servers = ["steel-language-server"]
 [language-server.steel-language-server]
 command = "steel-language-server"
 args = []
-
 

@@ -1,5 +1,5 @@
 # Directories to scan for git repos (1 level deep)
-search_dirs = ["~/Development"]
+search_dirs = ["~/Development", "~/Development/Work"]
 
 [session]
 # Command to run in a split pane when creating a new tmux session
