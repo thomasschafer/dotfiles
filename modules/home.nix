@@ -306,6 +306,35 @@ in
             "${config.home.homeDirectory}/Development/zshelix"
         fi
       '';
+
+      cloneScooterHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
+        if [ ! -d "$scooter_hx_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.hx.git \
+            "$scooter_hx_dir"
+        fi
+      '';
+
+      cloneSmoothScrollHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        smooth_scroll_dir="${config.home.homeDirectory}/Development/smooth-scroll.hx"
+        if [ ! -d "$smooth_scroll_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/smooth-scroll.hx.git \
+            "$smooth_scroll_dir"
+        fi
+      '';
+
+      buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" ] ''
+        scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
+        scooter_hx_lib="$scooter_hx_dir/libscooter_hx.dylib"
+        if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$scooter_hx_dir/Cargo.lock" -nt "$scooter_hx_lib" ]; }; then
+          cd "$scooter_hx_dir"
+          export PATH="${pkgs.git}/bin:/usr/bin:$PATH"
+          export CC="/usr/bin/cc"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
+        fi
+      '';
     }
     // lib.optionalAttrs enableOpenClaw {
       cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
