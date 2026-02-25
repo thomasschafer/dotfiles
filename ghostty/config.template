@@ -45,6 +45,8 @@ keybind = cmd+t=text:\x01c                ## ctrl+a c
 keybind = cmd+d=text:\x01|                ## ctrl+a |
 keybind = cmd+shift+d=text:\x01-          ## ctrl+a -
 keybind = cmd+w=text:\x01x                ## ctrl+a x
+keybind = cmd+j=text:\x01)                ## ctrl+a )
+keybind = cmd+k=text:\x01(                ## ctrl+a (
 keybind = cmd+l=text:\x01;                ## ctrl+a ;
 keybind = cmd+comma=text:\x01L            ## ctrl+a L  (jump to last session)
 keybind = cmd+shift+enter=text:\x01z      ## ctrl+a z

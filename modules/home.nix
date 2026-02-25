@@ -256,7 +256,7 @@ in
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
           cd "$helix_dir"
-          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:/usr/bin:$PATH"
           export CC="${pkgs.stdenv.cc}/bin/cc"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path helix-term --locked
         fi
@@ -276,8 +276,9 @@ in
         kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
         if [ ! -x "$kiosk_bin" ] || [ "$kiosk_dir/Cargo.lock" -nt "$kiosk_bin" ]; then
           cd "$kiosk_dir"
-          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-          export CC="${pkgs.stdenv.cc}/bin/cc"
+          export PATH="${pkgs.git}/bin:/usr/bin:$PATH"
+          export CC="/usr/bin/cc"
+          export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
         fi
       '';

@@ -40,7 +40,8 @@ bindings = [
   { key = "D", mods = "Command", chars = "\u0001|" },                 # ctrl+a |
   { key = "D", mods = "Command|Shift", chars = "\u0001-" },           # ctrl+a -
   { key = "F", mods = "Command", chars = "\u0001\\" },                # ctrl+a \
-  { key = "K", mods = "Command", chars = "\u000b" },                  # ctrl+k
+  { key = "J", mods = "Command", chars = "\u0001)" },                 # ctrl+a )
+  { key = "K", mods = "Command", chars = "\u0001(" },                 # ctrl+a (
   { key = "L", mods = "Command", chars = "\u0001;" },                 # ctrl+a ;
   { key = ",", mods = "Command", chars = "\u0001L" },                 # ctrl+a L  (jump to last session)
   { key = "Enter", mods = "Command", action = "ToggleFullscreen" },   # toggle fullscreen
