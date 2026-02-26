@@ -300,6 +300,23 @@ in
         fi
       '';
 
+      installOpenCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! command -v opencode &>/dev/null; then
+          export PATH="${pkgs.nodejs_22}/bin:$PATH"
+          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" opencode-ai
+        fi
+      '';
+
+      installCursorCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/cursor" ]; then
+          export PATH="${pkgs.curl}/bin:${pkgs.bash}/bin:$PATH"
+          install_script=$(${pkgs.coreutils}/bin/mktemp)
+          ${pkgs.curl}/bin/curl -fsSL https://cursor.com/install -o "$install_script"
+          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
+          ${pkgs.coreutils}/bin/rm -f "$install_script"
+        fi
+      '';
+
       cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -d "${config.home.homeDirectory}/Development/zshelix" ]; then
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
