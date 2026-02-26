@@ -342,13 +342,21 @@ in
         fi
       '';
 
-      buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" ] ''
+      installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if ! ${pkgs.cargo}/bin/cargo steel-lib --help > /dev/null 2>&1; then
+          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export CC="${pkgs.stdenv.cc}/bin/cc"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
+        fi
+      '';
+
+      buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
         scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
-        scooter_hx_lib="$scooter_hx_dir/libscooter_hx.dylib"
+        scooter_hx_lib="$scooter_hx_dir/libscooter_hx.so"
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$scooter_hx_dir/Cargo.lock" -nt "$scooter_hx_lib" ]; }; then
           cd "$scooter_hx_dir"
-          export PATH="${pkgs.git}/bin:/usr/bin:$PATH"
-          export CC="/usr/bin/cc"
+          export PATH="${pkgs.cargo}/bin:${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export CC="${pkgs.stdenv.cc}/bin/cc"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
         fi
       '';
