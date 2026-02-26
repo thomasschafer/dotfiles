@@ -22,6 +22,21 @@ let
 
   copyCmd = if isDarwin then "pbcopy" else "xclip -selection clipboard";
 
+  # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds.
+  # extraPathPrefix: colon-separated paths to prepend before the common entries.
+  cargoBuildEnv = extraPathPrefix:
+    let
+      prefix = if extraPathPrefix != "" then "${extraPathPrefix}:" else "";
+    in
+    if isDarwin then ''
+      export PATH="${prefix}${pkgs.git}/bin:/usr/bin:$PATH"
+      export CC="/usr/bin/cc"
+      export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
+    '' else ''
+      export PATH="${prefix}${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+      export CC="${pkgs.stdenv.cc}/bin/cc"
+    '';
+
   helixConfig =
     pkgs.runCommand "helix-config"
       {
@@ -257,8 +272,7 @@ in
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
           cd "$helix_dir"
-          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:/usr/bin:$PATH"
-          export CC="${pkgs.stdenv.cc}/bin/cc"
+          ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path helix-term --locked
         fi
       '';
@@ -279,9 +293,7 @@ in
         stored_hash=$(cat "$kiosk_hash_file" 2>/dev/null || true)
         if [ ! -x "$kiosk_bin" ] || [ "$current_hash" != "$stored_hash" ]; then
           cd "$kiosk_dir"
-          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-          export CC="${pkgs.stdenv.cc}/bin/cc"
-          ${lib.optionalString isDarwin ''export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"''}
+          ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
           echo "$current_hash" > "$kiosk_hash_file"
         fi
@@ -348,8 +360,7 @@ in
 
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/cargo-steel-lib" ]; then
-          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-          export CC="${pkgs.stdenv.cc}/bin/cc"
+          ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
         fi
       '';
@@ -363,9 +374,7 @@ in
         stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
           cd "$scooter_hx_dir"
-          export PATH="${config.home.homeDirectory}/.cargo/bin:${pkgs.cargo}/bin:${pkgs.git}/bin:/usr/bin:$PATH"
-          export CC="/usr/bin/cc"
-          export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
+          ${cargoBuildEnv "${config.home.homeDirectory}/.cargo/bin:${pkgs.cargo}/bin"}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
           echo "$current_hash" > "$scooter_hx_hash_file"
         fi
