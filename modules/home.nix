@@ -14,6 +14,7 @@ let
   enableOpenClaw = (hostConfig.enableOpenClaw or false) && nix-openclaw != null;
 
   configHome = if isDarwin then "Library/Application Support" else ".config";
+  steelHome = if isDarwin then ".steel" else ".local/share/steel";
 
   ghosttyConfig = pkgs.runCommand "ghostty-config" { } ''
     ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
@@ -243,7 +244,7 @@ in
 
     activation = {
       installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if ! command -v ty >/dev/null 2>&1; then
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/ty" ]; then
           $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest
         fi
       '';
@@ -272,19 +273,22 @@ in
           $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
         fi
-        # Rebuild if source is newer than installed binary
         kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
-        if [ ! -x "$kiosk_bin" ] || [ "$kiosk_dir/Cargo.lock" -nt "$kiosk_bin" ]; then
+        kiosk_hash_file="${config.home.homeDirectory}/.cargo/.kiosk-cargo-lock-hash"
+        current_hash=$(${pkgs.coreutils}/bin/md5sum "$kiosk_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
+        stored_hash=$(cat "$kiosk_hash_file" 2>/dev/null || true)
+        if [ ! -x "$kiosk_bin" ] || [ "$current_hash" != "$stored_hash" ]; then
           cd "$kiosk_dir"
-          export PATH="${pkgs.git}/bin:/usr/bin:$PATH"
-          export CC="/usr/bin/cc"
-          export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
+          export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+          export CC="${pkgs.stdenv.cc}/bin/cc"
+          ${lib.optionalString isDarwin ''export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"''}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
+          echo "$current_hash" > "$kiosk_hash_file"
         fi
       '';
 
       installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if ! command -v codex &>/dev/null; then
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/codex" ]; then
           export PATH="${pkgs.nodejs_22}/bin:$PATH"
           $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" @openai/codex
         fi
@@ -301,15 +305,15 @@ in
       '';
 
       installOpenCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if ! command -v opencode &>/dev/null; then
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/opencode" ]; then
           export PATH="${pkgs.nodejs_22}/bin:$PATH"
           $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" opencode-ai
         fi
       '';
 
       installCursorCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/cursor" ]; then
-          export PATH="${pkgs.curl}/bin:${pkgs.bash}/bin:$PATH"
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/agent" ]; then
+          export PATH="${pkgs.curl}/bin:${pkgs.gnutar}/bin:${pkgs.gzip}/bin:${pkgs.bash}/bin:$PATH"
           install_script=$(${pkgs.coreutils}/bin/mktemp)
           ${pkgs.curl}/bin/curl -fsSL https://cursor.com/install -o "$install_script"
           $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
@@ -343,7 +347,7 @@ in
       '';
 
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if ! ${pkgs.cargo}/bin/cargo steel-lib --help > /dev/null 2>&1; then
+        if [ ! -x "${config.home.homeDirectory}/.cargo/bin/cargo-steel-lib" ]; then
           export PATH="${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
           export CC="${pkgs.stdenv.cc}/bin/cc"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
@@ -352,12 +356,18 @@ in
 
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
         scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
-        scooter_hx_lib="$scooter_hx_dir/libscooter_hx.so"
-        if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$scooter_hx_dir/Cargo.lock" -nt "$scooter_hx_lib" ]; }; then
+        steel_home="${config.home.homeDirectory}/${steelHome}"
+        scooter_hx_lib="$steel_home/native/libscooter_hx${if isDarwin then ".dylib" else ".so"}"
+        scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
+        current_hash=$(${pkgs.coreutils}/bin/md5sum "$scooter_hx_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
+        stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
+        if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
           cd "$scooter_hx_dir"
-          export PATH="${pkgs.cargo}/bin:${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-          export CC="${pkgs.stdenv.cc}/bin/cc"
+          export PATH="${config.home.homeDirectory}/.cargo/bin:${pkgs.cargo}/bin:${pkgs.git}/bin:/usr/bin:$PATH"
+          export CC="/usr/bin/cc"
+          export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
+          echo "$current_hash" > "$scooter_hx_hash_file"
         fi
       '';
     }
