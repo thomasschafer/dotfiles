@@ -4,10 +4,6 @@ import = [
   "~/.config/alacritty/private.toml",
 ]
 
-[terminal.shell]
-program = "/bin/zsh"
-args = ["-l", "-c", "tmux attach -t 'λ' || tmux new -s 'λ'"]
-
 [window]
 dimensions = { columns = 200, lines = 60 }
 dynamic_title = true
