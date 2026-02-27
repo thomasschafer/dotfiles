@@ -37,6 +37,7 @@ auto-format = true
 [language-server.rust-analyzer.config]
 check.command = "clippy"
 experimental = { testExplorer = true }
+cargo.targetDir = true
 
 
 # ----- Python -----
