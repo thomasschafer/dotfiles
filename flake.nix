@@ -31,6 +31,7 @@
         {
           home-manager = {
             backupFileExtension = "bak";
+            overwriteBackup = true;
             useGlobalPkgs = true;
             useUserPackages = true;
             extraSpecialArgs = { inherit hostConfig; host = host; } // extraArgs;
