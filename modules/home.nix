@@ -333,6 +333,14 @@ in
         fi
       '';
 
+
+      installGeminiCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ ! -x "${config.home.homeDirectory}/.local/bin/gemini" ]; then
+          export PATH="${pkgs.nodejs_22}/bin:$PATH"
+          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" @google/gemini-cli
+        fi
+      '';
+
       cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -d "${config.home.homeDirectory}/Development/zshelix" ]; then
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
