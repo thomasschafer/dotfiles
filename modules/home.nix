@@ -24,18 +24,22 @@ let
 
   # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds.
   # extraPathPrefix: colon-separated paths to prepend before the common entries.
-  cargoBuildEnv = extraPathPrefix:
+  cargoBuildEnv =
+    extraPathPrefix:
     let
       prefix = if extraPathPrefix != "" then "${extraPathPrefix}:" else "";
     in
-    if isDarwin then ''
-      export PATH="${prefix}${pkgs.git}/bin:/usr/bin:$PATH"
-      export CC="/usr/bin/cc"
-      export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
-    '' else ''
-      export PATH="${prefix}${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-      export CC="${pkgs.stdenv.cc}/bin/cc"
-    '';
+    if isDarwin then
+      ''
+        export PATH="${prefix}${pkgs.git}/bin:/usr/bin:$PATH"
+        export CC="/usr/bin/cc"
+        export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
+      ''
+    else
+      ''
+        export PATH="${prefix}${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
+        export CC="${pkgs.stdenv.cc}/bin/cc"
+      '';
 
   helixConfig =
     pkgs.runCommand "helix-config"
@@ -106,6 +110,7 @@ let
 
     # Opencode
     ".config/opencode/config.json".source = ../opencode/config.json;
+    ".config/opencode/tui.json".source = ../opencode/tui.json;
 
     # Neovim
     ".config/nvim".source = ../neovim/nvim;
@@ -127,6 +132,11 @@ let
 
     # Zshrc
     ".zshrc".source = ../zsh/.zshrc;
+
+    # npm globals: keep CLI self-updates in ~/.local (dotfiles-managed path precedence)
+    ".npmrc".text = ''
+      prefix=${config.home.homeDirectory}/.local
+    '';
 
     # Direnv
     ".config/direnv/direnv.toml".text = ''
@@ -168,9 +178,7 @@ in
   home = {
     stateVersion = "23.05";
 
-    file =
-      sharedFiles
-      // (if isDarwin && !isServer then darwinOnlyFiles else { });
+    file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
     packages =
       with pkgs;
@@ -332,7 +340,6 @@ in
           ${pkgs.coreutils}/bin/rm -f "$install_script"
         fi
       '';
-
 
       installGeminiCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/gemini" ]; then
