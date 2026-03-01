@@ -266,6 +266,11 @@ in
       ];
 
     activation = {
+      ensureGnuReadlinkForLaunchd = lib.hm.dag.entryBefore [ "setupLaunchAgents" ] ''
+        export PATH="${pkgs.coreutils}/bin:${pkgs.findutils}/bin:$PATH"
+        hash -r
+      '';
+
       installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/ty" ]; then
           $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest
