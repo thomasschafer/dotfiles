@@ -48,6 +48,7 @@ bindings = [
   { key = "Right", mods = "Command", chars = "\u001b[F" },            # jump to end of line
   { key = "Back", mods = "Command", chars = "\u0015" },               # delete to start of line
   { key = "3", mods = "Option", chars = "#" },                        # This would be overriden otherwise by option_as_alt
+  { key = "Q", mods = "Control|Shift", action = "Quit" },
 ]
 
 [mouse]
