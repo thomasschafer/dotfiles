@@ -178,6 +178,8 @@ in
   home = {
     stateVersion = "23.05";
 
+    extraActivationPath = [ pkgs.coreutils pkgs.findutils ];
+
     file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
     packages =
@@ -266,11 +268,6 @@ in
       ];
 
     activation = {
-      ensureGnuReadlinkForLaunchd = lib.hm.dag.entryBefore [ "setupLaunchAgents" ] ''
-        export PATH="${pkgs.coreutils}/bin:${pkgs.findutils}/bin:$PATH"
-        hash -r
-      '';
-
       installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/ty" ]; then
           $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest
@@ -285,6 +282,7 @@ in
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
           cd "$helix_dir"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path helix-term --locked
         fi
@@ -304,8 +302,9 @@ in
         kiosk_hash_file="${config.home.homeDirectory}/.cargo/.kiosk-cargo-lock-hash"
         current_hash=$(${pkgs.coreutils}/bin/md5sum "$kiosk_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
         stored_hash=$(cat "$kiosk_hash_file" 2>/dev/null || true)
-        if [ ! -x "$kiosk_bin" ] || [ "$current_hash" != "$stored_hash" ]; then
+        if [ ! -x "$kiosk_bin" ]; then
           cd "$kiosk_dir"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
           echo "$current_hash" > "$kiosk_hash_file"
