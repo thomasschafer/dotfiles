@@ -588,6 +588,7 @@ in
 
   systemd.user.services = lib.mkIf enableOpenClaw {
     openclaw-gateway = {
+      Install.WantedBy = [ "default.target" ];
       Service.EnvironmentFile = "${config.home.homeDirectory}/.openclaw/gateway-token.env";
       # TODO: remove when https://github.com/openclaw/nix-openclaw/issues/45 is fixed
       Service.ExecStart =
