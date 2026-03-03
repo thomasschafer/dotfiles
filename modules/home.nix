@@ -185,6 +185,7 @@ in
     packages =
       with pkgs;
       [
+        atuin
         biome
         deno
         direnv

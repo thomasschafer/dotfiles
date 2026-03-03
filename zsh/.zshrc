@@ -106,3 +106,6 @@ export PATH="$HOME/go/bin:$PATH"
 
 # direnv
 eval "$(direnv hook zsh)"
+
+# atuin
+eval "$(atuin init zsh --disable-up-arrow)"
