@@ -1,8 +1,3 @@
-# Work-specific config
-if [[ -f $HOME/.zshrc.private ]]; then
-    source $HOME/.zshrc.private
-fi
-
 # Treat / as a word delimiter
 WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 
@@ -37,6 +32,7 @@ alias c=claude
 alias cy='claude --dangerously-skip-permissions'
 alias x=codex
 alias xy='codex --yolo'
+alias o='opencode'
 alias z=zed
 alias y=yazi
 alias s=scooter
@@ -103,6 +99,11 @@ export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
 export PATH="$HOME/go/bin:$PATH"
+
+# Work-specific config
+if [[ -f $HOME/.zshrc.private ]]; then
+    source $HOME/.zshrc.private
+fi
 
 # direnv
 eval "$(direnv hook zsh)"
