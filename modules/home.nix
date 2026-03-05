@@ -557,6 +557,7 @@ in
           agents.defaults = {
             compaction.mode = "safeguard";
             maxConcurrent = 4;
+            model.primary = "anthropic/claude-sonnet-4-6";
             subagents.maxConcurrent = 8;
           };
           channels.telegram = {
