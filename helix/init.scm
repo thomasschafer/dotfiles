@@ -3,7 +3,7 @@
 (require "cogs/keymaps.scm")
 
 ; Scooter
-(require "../../Development/scooter-hx/scooter.hx/scooter.scm")
+(require "../../Development/scooter.hx/scooter.scm")
 (keymap (global) (normal (ret (q ":scooter"))))
 
 ; Smooth scroll

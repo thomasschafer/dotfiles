@@ -279,7 +279,7 @@ in
         helix_dir="${config.home.homeDirectory}/Development/helix"
         if [ ! -d "$helix_dir" ]; then
           $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/helix.git "$helix_dir"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone --branch steel-event-system-plus https://github.com/thomasschafer/helix.git "$helix_dir"
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
           cd "$helix_dir"
