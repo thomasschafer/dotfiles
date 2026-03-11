@@ -90,11 +90,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773129284,
-        "narHash": "sha256-7Im5io36qtqHSuLJrlbk10mjiR5S1QcSw1ingGW5TWM=",
+        "lastModified": 1773213044,
+        "narHash": "sha256-zkBv17s/mylMdphgRoCZ6Tl6Jase/JHXdR9kTyp9g7o=",
         "owner": "openclaw",
         "repo": "nix-openclaw",
-        "rev": "a29d1420c2a4c33bc7dfd96f5716f3b9b528820f",
+        "rev": "93e9cfdc9a924c3931e7242cbb933c90e36bf85c",
         "type": "github"
       },
       "original": {
