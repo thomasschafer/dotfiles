@@ -85,6 +85,9 @@ let
         enable: true
     '';
 
+    # Atuin
+    ".config/atuin/config.toml".source = ../atuin/config.toml;
+
     # Helix
     ".config/helix/config.toml".source = helixConfig;
     ".config/helix/languages.toml".source = ../helix/languages.toml;
