@@ -20,7 +20,7 @@ let
     ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
   '';
 
-  copyCmd = if isDarwin then "pbcopy" else "xclip -selection clipboard";
+  copyCmd = "pbcopy";
 
   # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds.
   # extraPathPrefix: colon-separated paths to prepend before the common entries.
@@ -234,25 +234,13 @@ in
         zig
         zls
       ]
-      ++ lib.optionals (!isDarwin) [
-        xclip
+      ++ lib.optionals isServer [
         (writeShellScriptBin "pbcopy" ''
-          if [[ -n "$DISPLAY" ]]; then
-            xclip -selection clipboard
-          elif [[ -n "$TMUX" ]]; then
-            tmux load-buffer -
-          else
-            exit 1
-          fi
+          exec tmux load-buffer -w -
         '')
         (writeShellScriptBin "pbpaste" ''
-          if [[ -n "$DISPLAY" ]]; then
-            xclip -selection clipboard -o
-          elif [[ -n "$TMUX" ]]; then
-            tmux show-buffer
-          else
-            exit 1
-          fi
+          tmux refresh-client -l >/dev/null 2>&1 || true
+          exec tmux save-buffer -
         '')
       ]
       ++ [
