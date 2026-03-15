@@ -303,15 +303,11 @@ in
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
         fi
         kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
-        kiosk_hash_file="${config.home.homeDirectory}/.cargo/.kiosk-cargo-lock-hash"
-        current_hash=$(${pkgs.coreutils}/bin/md5sum "$kiosk_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
-        stored_hash=$(cat "$kiosk_hash_file" 2>/dev/null || true)
         if [ ! -x "$kiosk_bin" ]; then
           cd "$kiosk_dir"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
-          echo "$current_hash" > "$kiosk_hash_file"
         fi
       '';
 
@@ -360,6 +356,26 @@ in
         if [ ! -d "${config.home.homeDirectory}/Development/zshelix" ]; then
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
             "${config.home.homeDirectory}/Development/zshelix"
+        fi
+      '';
+
+      cloneScooter = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        scooter_dir="${config.home.homeDirectory}/Development/scooter"
+        if [ ! -d "$scooter_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.git \
+            "$scooter_dir"
+        fi
+      '';
+
+      installScooter = lib.hm.dag.entryAfter [ "cloneScooter" ] ''
+        scooter_dir="${config.home.homeDirectory}/Development/scooter"
+        scooter_bin="${config.home.homeDirectory}/.cargo/bin/scooter"
+        if [ ! -x "$scooter_bin" ]; then
+          cd "$scooter_dir"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
+          ${cargoBuildEnv ""}
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path scooter --locked
         fi
       '';
 
