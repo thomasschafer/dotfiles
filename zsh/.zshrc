@@ -24,6 +24,9 @@ fi
 # Note: compinit is run by Nix's /etc/zshrc. If we stop using Nix, add back:
 # autoload -Uz compinit && compinit -C
 
+# Claude config
+export CLAUDE_CODE_NO_FLICKER=1
+
 # Aliases and editor config
 export EDITOR=hx
 export VISUAL="$EDITOR"
