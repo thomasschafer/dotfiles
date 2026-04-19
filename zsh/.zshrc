@@ -33,6 +33,7 @@ export VISUAL="$EDITOR"
 alias nv=nvim
 alias c=claude
 alias cy='claude --dangerously-skip-permissions'
+alias ca='claude --permission-mode auto'
 alias x=codex
 alias xy='codex --yolo'
 alias o='opencode'
