@@ -228,7 +228,7 @@ in
         terraform-docs
         tree
         typescript-language-server
-        nodePackages.vscode-langservers-extracted
+        vscode-langservers-extracted
         yazi
         zellij
         zig
