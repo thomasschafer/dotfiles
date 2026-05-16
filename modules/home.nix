@@ -210,7 +210,7 @@ in
         lazygit
       ]
       ++ lib.optionals (host == "personal") [
-        (python3.withPackages (
+        (python314.withPackages (
           ps: with ps; [
             pip
           ]
