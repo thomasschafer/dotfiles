@@ -86,12 +86,6 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt EXTENDED_HISTORY
 
-# Rancher desktop (macOS only)
-if [[ "$(uname)" == "Darwin" ]]; then
-    export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
-    export PATH="$HOME/.rd/bin:$PATH"
-fi
-
 # Nix helpers
 alias NIX_CLEAN="sudo nix-collect-garbage -d"
 alias NIX_ORPHANS="sudo nix store gc && sudo nix store optimise"
@@ -110,7 +104,11 @@ if [[ -f $HOME/.zshrc.private ]]; then
 fi
 
 # direnv
-eval "$(direnv hook zsh)"
+if command -v direnv &>/dev/null; then
+    eval "$(direnv hook zsh)"
+fi
 
 # atuin
-eval "$(atuin init zsh)"
+if command -v atuin &>/dev/null; then
+    eval "$(atuin init zsh)"
+fi
