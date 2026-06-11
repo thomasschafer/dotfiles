@@ -6,5 +6,5 @@ open = [
 	{ run = "tmux send-keys -t $HELIX_PANE \":onc \\\"${@}\\\"\" Enter && tmux kill-pane -t $TMUX_PANE", block = false },
 ]
 
-[mgr]
+[manager]
 show_hidden = true
