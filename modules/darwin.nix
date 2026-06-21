@@ -92,7 +92,6 @@
     taps = [
       "anomalyco/tap"
       "nikitabobko/tap"
-      "snyk/tap"
     ];
 
     casks = [
@@ -126,10 +125,8 @@
       "pre-commit"
       "pyenv"
       "pyright"
-      "qmk/qmk/qmk"
       "shared-mime-info"
       "shellcheck"
-      "snyk"
       "sqlfluff"
       "unar"
       "uv"
