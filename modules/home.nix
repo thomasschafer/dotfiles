@@ -76,6 +76,8 @@ let
 
   sharedFiles = {
     ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
+    ".claude/skills/subagent-review".source = ../skills/subagent-review;
+    ".codex/skills/subagent-review".source = ../skills/subagent-review;
     ".cursor/rules/coding-standards.mdc".source = ../claude/CLAUDE.md;
 
     ".stack/config.yaml".text = ''
@@ -181,7 +183,10 @@ in
   home = {
     stateVersion = "23.05";
 
-    extraActivationPath = [ pkgs.coreutils pkgs.findutils ];
+    extraActivationPath = [
+      pkgs.coreutils
+      pkgs.findutils
+    ];
 
     file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
 
