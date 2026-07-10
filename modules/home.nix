@@ -266,6 +266,13 @@ in
       ];
 
     activation = {
+      # Home Manager's LaunchAgents activation uses GNU-only `readlink -m`.
+      # Ensure it resolves Nix's GNU tools rather than macOS's BSD utilities.
+      ensureGnuLaunchdTools = lib.hm.dag.entryBefore [ "setupLaunchAgents" ] ''
+        export PATH="${pkgs.coreutils}/bin:${pkgs.findutils}/bin:$PATH"
+        hash -r
+      '';
+
       installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/ty" ]; then
           $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest
