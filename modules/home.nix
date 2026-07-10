@@ -11,6 +11,7 @@
 let
   isDarwin = pkgs.stdenv.isDarwin;
   isServer = hostConfig.isServer or false;
+  enableVSCode = hostConfig.enableVSCode or false;
   enableOpenClaw = (hostConfig.enableOpenClaw or false) && nix-openclaw != null;
 
   configHome = if isDarwin then "Library/Application Support" else ".config";
@@ -531,7 +532,7 @@ in
       '';
     };
 
-    vscode = lib.mkIf (isDarwin && !isServer) {
+    vscode = lib.mkIf enableVSCode {
       enable = true;
 
       profiles.default.extensions = with pkgs.vscode-extensions; [

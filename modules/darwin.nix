@@ -101,10 +101,10 @@
       "karabiner-elements"
       "nikitabobko/tap/aerospace"
       "rancher"
-      # TODO: we shouldn't need this - manage using home.nix
-      "visual-studio-code"
       "zed"
     ]
+    # TODO: we shouldn't need this - manage using home.nix
+    ++ lib.optionals (hostConfig.enableVSCode or false) [ "visual-studio-code" ]
     ++ lib.optionals (host == "personal") [ "tailscale-app" ];
 
     # TODO: move more of these to home.nix
