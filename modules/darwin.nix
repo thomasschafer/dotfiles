@@ -81,12 +81,23 @@
       "/System/Library/CoreServices/Menu Extras/Volume.menu"
   '';
 
+  # Homebrew stores tap trust per user. Declare it before `brew bundle` so
+  # third-party casks managed below can be installed and upgraded unattended.
+  system.activationScripts.extraActivation.text = ''
+    if [ -x "/opt/homebrew/bin/brew" ]; then
+      PATH="/opt/homebrew/bin:$PATH" \
+        sudo --preserve-env=PATH --user=${hostConfig.username} --set-home env \
+        brew trust --tap nikitabobko/tap
+    fi
+  '';
+
   homebrew = {
     enable = true;
     onActivation = {
       autoUpdate = true;
       upgrade = true;
       cleanup = hostConfig.homebrew.cleanup;
+      extraFlags = lib.optionals (hostConfig.homebrew.cleanup != "none") [ "--force-cleanup" ];
     };
 
     taps = [
