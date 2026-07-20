@@ -79,6 +79,7 @@ let
     ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
     ".claude/skills/subagent-review".source = ../skills/subagent-review;
     ".codex/skills/subagent-review".source = ../skills/subagent-review;
+    ".claude/keybindings.json".source = ../claude/keybindings.json;
     ".cursor/rules/coding-standards.mdc".source = ../claude/CLAUDE.md;
 
     ".stack/config.yaml".text = ''
@@ -91,9 +92,14 @@ let
     # Atuin
     ".config/atuin/config.toml".source = ../atuin/config.toml;
 
+    # Biome
+    ".config/biome/biome.json".source = ../biome/biome.json;
+
     # Helix
     ".config/helix/config.toml".source = helixConfig;
-    ".config/helix/languages.toml".source = ../helix/languages.toml;
+    ".config/helix/languages.toml".text =
+      builtins.replaceStrings [ "\${HOME_DIR}" ] [ config.home.homeDirectory ]
+        (builtins.readFile ../helix/languages.toml);
     ".config/helix/ignore".source = ../helix/ignore;
     ".config/helix/themes".source = ../helix/themes;
     ".config/helix/init.scm".source = ../helix/init.scm;

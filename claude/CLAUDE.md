@@ -11,3 +11,4 @@
 1. Always program defensively. It is far better to fail loudly when an invariant is violated or we're unable to handle something, rather than silently ignoring the issue.
 1. Lean on types to improve correctness and safety: better to encode an invariant in the type system that have to perform additional runtime checks (and potentially forget those checks and have a buggy application). However, if encoding a given invariant in types is not possible or practical, then ensure you do add those runtime checks.
 1. When creating PRs, do not add the "Generated with Claude Code" line.
+1. When updating PR descriptions, please first read the current description, as I may have updated it since you last read or wrote it.

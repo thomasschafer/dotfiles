@@ -91,9 +91,9 @@ language-servers = ["vscode-json-language-server"]
 auto-format = true
 formatter = { command = "biome", args = [
   "format",
+  "--config-path=${HOME_DIR}/.config/biome",
   "--json-formatter-indent-style=space",
-  "--stdin-file-path",
-  "file.json",
+  "--stdin-file-path=file.json",
 ] }
 
 # ----- SQL -----
