@@ -1,0 +1,33 @@
+onboarding = false
+
+[ui]
+agent_panel_sort = "priority"
+prompt_new_tab_name = false
+
+[ui.toast]
+delivery = "system"
+
+[keys]
+prefix = "ctrl+a"
+
+split_vertical = ["prefix+v", "prefix+|"]
+
+next_tab = ["prefix+n", "ctrl+right"]
+previous_tab = ["prefix+p", "ctrl+left"]
+
+next_workspace = "prefix+)"
+previous_workspace = "prefix+("
+
+focus_pane_left = ["prefix+h", "ctrl+shift+left"]
+focus_pane_right = ["prefix+l", "ctrl+shift+right"]
+
+focus_pane_up = "prefix+shift+k"
+focus_pane_down = ["prefix+k", "prefix+j"]
+
+last_pane_in_tab = "prefix+;"
+last_workspace = "prefix+shift+l"
+
+next_agent = "prefix+a"
+previous_agent = "prefix+shift+a"
+
+copy_mode = ["prefix+[", "ctrl+b"]

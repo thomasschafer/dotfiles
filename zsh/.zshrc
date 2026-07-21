@@ -42,6 +42,7 @@ alias y=yazi
 alias s=scooter
 alias lg=lazygit
 alias ldr=lazydocker
+alias h=herdr
 
 # Platform-specific aliases
 if [[ "$(uname)" == "Darwin" ]]; then

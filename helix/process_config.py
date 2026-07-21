@@ -8,7 +8,7 @@ def process_config(input_file: str, is_darwin: bool) -> str:
 
     variables = {
         "CURRENT_PATH": "$([ '%{buffer_name}' = '[scratch]' ] && echo $PWD || (realpath '%{buffer_name}' 2>/dev/null || echo '%{buffer_name}'))",
-        "TMUX_WINDOW": "tmux new-window -e HELIX_PANE=$TMUX_PANE",
+        "NEW_WINDOW": "mux-new-window",
     }
     for var_name, var_value in variables.items():
         content = content.replace(f"${{{var_name}}}", var_value)

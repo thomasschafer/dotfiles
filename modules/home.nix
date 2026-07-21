@@ -105,6 +105,9 @@ let
     ".config/helix/init.scm".source = ../helix/init.scm;
     ".config/helix/cogs/keymaps.scm".source = ../helix/cogs/keymaps.scm;
 
+    # Herdr
+    ".config/herdr/config.toml".source = ../herdr/config.toml;
+
     # k9s
     "${configHome}/k9s/config.yaml".source = ../k9s/config.yaml;
 
@@ -258,6 +261,7 @@ in
       ++ [
         # Building from source
         hxUtils
+        herdr
 
         # Haskell tooling
         ghc
@@ -269,6 +273,7 @@ in
         # Scripts/tools
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
         (writeShellScriptBin "golangci-lint-wrapper" (builtins.readFile ../tools/golangci-lint-wrapper.sh))
+        (writeShellScriptBin "mux-new-window" (builtins.readFile ../tools/mux-new-window.sh))
       ];
 
     activation = {

@@ -31,6 +31,8 @@ bindings = [
   { key = "l", mods = "Command|Shift", chars = "\u001B[1;6C" },       # ctrl+shift+right
   { key = "k", mods = "Command|Shift", chars = "\u0001K" },           # ctrl+a K
   { key = "j", mods = "Command|Shift", chars = "\u0001k" },           # ctrl+a k
+  { key = "k", mods = "Command|Control", chars = "\u0001A" },         # ctrl+a shift+a
+  { key = "j", mods = "Command|Control", chars = "\u0001a" },         # ctrl+a a
   { key = "T", mods = "Command", chars = "\u0001c" },                 # ctrl+a c
   { key = "W", mods = "Command", chars = "\u0001x" },                 # ctrl+a x
   { key = "D", mods = "Command", chars = "\u0001|" },                 # ctrl+a |
