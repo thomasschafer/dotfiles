@@ -54,7 +54,7 @@ After deploy:
 ### OpenClaw setup
 
 The setup script automatically:
-- Clones `openclaw-workspace` to `~/Development/openclaw-workspace` and symlinks it to `~/.openclaw/workspace`
+- Clones `openclaw-workspace` to `~/Development/Personal/openclaw-workspace` and symlinks it to `~/.openclaw/workspace`
 - Symlinks `~/.openclaw/cron/jobs.json` to `openclaw-workspace/config/cron-jobs.json`
 - Symlinks `~/.openclaw/openclaw.json` to `dotfiles/openclaw/openclaw.json` (config lives in this repo)
 - Generates a gateway token if one doesn't exist

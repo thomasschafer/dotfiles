@@ -13,12 +13,12 @@ else
 fi
 
 # Helix keymap (zshelix)
-if [[ -f $HOME/Development/zshelix/zshelix.plugin.zsh ]]; then
+if [[ -f $HOME/Development/Personal/zshelix/zshelix.plugin.zsh ]]; then
     ZHM_CURSOR_NORMAL=$'\e[2 q\e]12;#b8c0e0\a'
     ZHM_CURSOR_INSERT=$'\e[2 q\e]12;#f4dbd6\a'
     ZHM_CURSOR_SELECT=$'\e[2 q\e]12;#f5a97f\a'
     ZSH_HELIX_SYSTEM_CLIPBOARD=1
-    source $HOME/Development/zshelix/zshelix.plugin.zsh
+    source $HOME/Development/Personal/zshelix/zshelix.plugin.zsh
 fi
 
 # Note: compinit is run by Nix's /etc/zshrc. If we stop using Nix, add back:

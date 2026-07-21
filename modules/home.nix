@@ -291,9 +291,9 @@ in
       '';
 
       installHelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        helix_dir="${config.home.homeDirectory}/Development/helix"
+        helix_dir="${config.home.homeDirectory}/Development/Personal/helix"
         if [ ! -d "$helix_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone --branch steel-event-system-plus https://github.com/thomasschafer/helix.git "$helix_dir"
         fi
         if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
@@ -305,13 +305,13 @@ in
       '';
 
       linkHelixRuntime = lib.hm.dag.entryAfter [ "installHelix" ] ''
-        ln -sfn "${config.home.homeDirectory}/Development/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
+        ln -sfn "${config.home.homeDirectory}/Development/Personal/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
       '';
 
       installKiosk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        kiosk_dir="${config.home.homeDirectory}/Development/kiosk"
+        kiosk_dir="${config.home.homeDirectory}/Development/Personal/kiosk"
         if [ ! -d "$kiosk_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
         fi
         kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
@@ -365,23 +365,24 @@ in
       '';
 
       cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -d "${config.home.homeDirectory}/Development/zshelix" ]; then
+        if [ ! -d "${config.home.homeDirectory}/Development/Personal/zshelix" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
-            "${config.home.homeDirectory}/Development/zshelix"
+            "${config.home.homeDirectory}/Development/Personal/zshelix"
         fi
       '';
 
       cloneScooter = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        scooter_dir="${config.home.homeDirectory}/Development/scooter"
+        scooter_dir="${config.home.homeDirectory}/Development/Personal/scooter"
         if [ ! -d "$scooter_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.git \
             "$scooter_dir"
         fi
       '';
 
       installScooter = lib.hm.dag.entryAfter [ "cloneScooter" ] ''
-        scooter_dir="${config.home.homeDirectory}/Development/scooter"
+        scooter_dir="${config.home.homeDirectory}/Development/Personal/scooter"
         scooter_bin="${config.home.homeDirectory}/.cargo/bin/scooter"
         if [ ! -x "$scooter_bin" ]; then
           cd "$scooter_dir"
@@ -392,18 +393,18 @@ in
       '';
 
       cloneScooterHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
+        scooter_hx_dir="${config.home.homeDirectory}/Development/Personal/scooter.hx"
         if [ ! -d "$scooter_hx_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.hx.git \
             "$scooter_hx_dir"
         fi
       '';
 
       cloneSmoothScrollHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        smooth_scroll_dir="${config.home.homeDirectory}/Development/smooth-scroll.hx"
+        smooth_scroll_dir="${config.home.homeDirectory}/Development/Personal/smooth-scroll.hx"
         if [ ! -d "$smooth_scroll_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development"
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/smooth-scroll.hx.git \
             "$smooth_scroll_dir"
         fi
@@ -417,7 +418,7 @@ in
       '';
 
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
-        scooter_hx_dir="${config.home.homeDirectory}/Development/scooter.hx"
+        scooter_hx_dir="${config.home.homeDirectory}/Development/Personal/scooter.hx"
         steel_home="${config.home.homeDirectory}/${steelHome}"
         scooter_hx_lib="$steel_home/native/libscooter_hx${if isDarwin then ".dylib" else ".so"}"
         scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
@@ -433,7 +434,7 @@ in
     }
     // lib.optionalAttrs enableOpenClaw {
       cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        DEV_DIR="${config.home.homeDirectory}/Development/openclaw-workspace"
+        DEV_DIR="${config.home.homeDirectory}/Development/Personal/openclaw-workspace"
         SYMLINK="${config.home.homeDirectory}/.openclaw/workspace"
         if [ ! -d "$DEV_DIR/.git" ]; then
           if ! ${pkgs.openssh}/bin/ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
