@@ -31,3 +31,9 @@ next_agent = "prefix+a"
 previous_agent = "prefix+shift+a"
 
 copy_mode = ["prefix+[", "ctrl+b"]
+
+[[keys.command]]
+key = "prefix+F"
+type = "plugin_action"
+command = "thomasschafer.herdr-kiosk.open-picker"
+description = "open repo picker"
