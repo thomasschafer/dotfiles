@@ -7,6 +7,9 @@ prompt_new_tab_name = false
 [ui.toast]
 delivery = "system"
 
+[workspace]
+dynamic_naming = false
+
 [keys]
 prefix = "ctrl+a"
 
@@ -23,6 +26,10 @@ focus_pane_down = ["prefix+k", "prefix+j"]
 
 last_pane_in_tab = "prefix+;"
 last_workspace = "prefix+shift+l"
+
+# Re-pin the selected workspace's name/git status to its current directory
+# (dynamic_naming is off above, so this is the only way to update them).
+refresh_workspace_identity = "prefix+i"
 
 next_workspace = "prefix+a"
 previous_workspace = "prefix+shift+a"
