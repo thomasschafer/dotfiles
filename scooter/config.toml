@@ -1,5 +1,5 @@
 [editor_open]
-command = 'tmux send-keys -t "${HELIX_PANE:-$TMUX_PANE}" ":onc \"%file:%line\"" Enter'
+command = 'mux-send-keys ":onc \"%file:%line\""'
 exit = true
 
 [preview]

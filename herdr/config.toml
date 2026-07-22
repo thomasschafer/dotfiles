@@ -15,9 +15,6 @@ split_vertical = ["prefix+v", "prefix+|"]
 next_tab = ["prefix+n", "ctrl+right"]
 previous_tab = ["prefix+p", "ctrl+left"]
 
-next_workspace = "prefix+)"
-previous_workspace = "prefix+("
-
 focus_pane_left = ["prefix+h", "ctrl+shift+left"]
 focus_pane_right = ["prefix+l", "ctrl+shift+right"]
 
@@ -27,8 +24,11 @@ focus_pane_down = ["prefix+k", "prefix+j"]
 last_pane_in_tab = "prefix+;"
 last_workspace = "prefix+shift+l"
 
-next_agent = "prefix+a"
-previous_agent = "prefix+shift+a"
+next_workspace = "prefix+a"
+previous_workspace = "prefix+shift+a"
+
+next_agent = "prefix+)"
+previous_agent = "prefix+("
 
 copy_mode = ["prefix+[", "ctrl+b"]
 

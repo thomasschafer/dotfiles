@@ -274,6 +274,7 @@ in
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
         (writeShellScriptBin "golangci-lint-wrapper" (builtins.readFile ../tools/golangci-lint-wrapper.sh))
         (writeShellScriptBin "mux-new-window" (builtins.readFile ../tools/mux-new-window.sh))
+        (writeShellScriptBin "mux-send-keys" (builtins.readFile ../tools/mux-send-keys.sh))
       ];
 
     activation = {

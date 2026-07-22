@@ -2,6 +2,6 @@ gui:
   scrollHeight: 10 # how many lines you scroll by
   showFileTree: false # for rendering changes files in a tree format
 os:
-  edit: 'tmux send-keys -t "${HELIX_PANE:-$TMUX_PANE}" ":onc {{filename}}" Enter'
-  editAtLine: 'tmux send-keys -t "${HELIX_PANE:-$TMUX_PANE}" ":onc {{filename}}:{{line}}" Enter'
+  edit: 'mux-send-keys ":onc {{filename}}"'
+  editAtLine: 'mux-send-keys ":onc {{filename}}:{{line}}"'
   editInTerminal: false
