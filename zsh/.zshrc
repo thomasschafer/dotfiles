@@ -93,6 +93,13 @@ alias NIX_ORPHANS="sudo nix store gc && sudo nix store optimise"
 alias NIX_WIPE="sudo nix profile wipe-history"
 alias NIX_SYSTEM_CLEAN="NIX_CLEAN && NIX_ORPHANS && NIX_WIPE"
 
+# herdr vendors a Zig build that requires an exact 0.15.x toolchain
+# (see herdr/CLAUDE.md); brew's zig@0.15 is kept off PATH so it doesn't
+# shadow the newer default `zig`, so point ZIG at it directly instead.
+if [[ -x /opt/homebrew/opt/zig@0.15/bin/zig ]]; then
+    export ZIG=/opt/homebrew/opt/zig@0.15/bin/zig
+fi
+
 # Path
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
