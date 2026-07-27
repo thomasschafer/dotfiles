@@ -1,0 +1,12 @@
+[[search_dirs]]
+path = "~/Development/Personal"
+depth = 1
+
+[[search_dirs]]
+path = "~/Development/Work"
+depth = 1
+
+[on_open]
+panes = [
+  { command = "hx", direction = "right" },
+]
