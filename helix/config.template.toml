@@ -45,6 +45,7 @@ F8 = "goto_next_diag"
 A-F8 = "goto_prev_diag"
 A-j = "page_down"
 A-k = "page_up"
+A-w = ":toggle-option soft-wrap.enable"
 A-up = [ # shift selections up one line
   "ensure_selections_forward",
   "extend_to_line_bounds",
