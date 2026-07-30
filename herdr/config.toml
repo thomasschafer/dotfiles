@@ -4,6 +4,9 @@ onboarding = false
 agent_panel_sort = "priority"
 prompt_new_tab_name = false
 pane_gaps = false
+# Inactive panes get a slightly lighter background, matching tmux window-style
+# (catppuccin-macchiato default, slightly brightened).
+inactive_pane_bg = "#2d3049"
 
 [ui.toast]
 delivery = "system"
