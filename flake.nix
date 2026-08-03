@@ -15,10 +15,6 @@
       url = "github:openclaw/nix-openclaw";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    herdr = {
-      url = "github:thomasschafer/herdr";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -28,7 +24,6 @@
       nixpkgs,
       home-manager,
       nix-openclaw,
-      herdr,
     }:
     let
       mkHomeManagerConfig =
@@ -58,7 +53,6 @@
             ./modules/darwin.nix
             home-manager.darwinModules.home-manager
             { users.users.${hostConfig.username}.home = /Users/${hostConfig.username}; }
-            { nixpkgs.overlays = [ herdr.overlays.default ]; }
             (mkHomeManagerConfig hostConfig host { })
           ];
         };
@@ -78,7 +72,7 @@
             ./modules/nixos.nix
             home-manager.nixosModules.home-manager
             (mkHomeManagerConfig hostConfig host { inherit nix-openclaw; })
-            { nixpkgs.overlays = [ nix-openclaw.overlays.default herdr.overlays.default ]; }
+            { nixpkgs.overlays = [ nix-openclaw.overlays.default ]; }
           ];
         };
     in

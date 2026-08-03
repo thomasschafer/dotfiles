@@ -42,6 +42,12 @@ let
         export CC="${pkgs.stdenv.cc}/bin/cc"
       '';
 
+  # herdr's vendored libghostty-vt needs an exact Zig 0.15.x toolchain (see
+  # herdr/CLAUDE.md). On macOS nixpkgs' zig_0_15 can't link against the system
+  # SDK outside the Nix sandbox, so use Homebrew's zig@0.15, matching the ZIG
+  # export in zsh/.zshrc.
+  zigForHerdr = if isDarwin then "/opt/homebrew/opt/zig@0.15/bin/zig" else "${pkgs.zig_0_15}/bin/zig";
+
   helixConfig =
     pkgs.runCommand "helix-config"
       {
@@ -263,7 +269,6 @@ in
       ++ [
         # Building from source
         hxUtils
-        herdr
 
         # Haskell tooling
         ghc
@@ -412,6 +417,31 @@ in
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path scooter --locked
+        fi
+      '';
+
+      cloneHerdr = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        herdr_dir="${config.home.homeDirectory}/Development/Personal/herdr"
+        if [ ! -d "$herdr_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/herdr.git \
+            "$herdr_dir"
+        fi
+      '';
+
+      installHerdr = lib.hm.dag.entryAfter [ "cloneHerdr" ] ''
+        herdr_dir="${config.home.homeDirectory}/Development/Personal/herdr"
+        herdr_bin="${config.home.homeDirectory}/.cargo/bin/herdr"
+        if [ ! -x "$herdr_bin" ]; then
+          export ZIG="${zigForHerdr}"
+          if [ ! -x "$ZIG" ]; then
+            echo "installHerdr: Zig 0.15 not found at $ZIG" >&2
+            exit 1
+          fi
+          cd "$herdr_dir"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
+          ${cargoBuildEnv ""}
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path . --locked
         fi
       '';
 
