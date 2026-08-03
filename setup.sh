@@ -27,7 +27,7 @@ if [ "$valid" = false ]; then
 fi
 
 
-mkdir -p "$HOME/Development"
+mkdir -p "$HOME/Development/Personal"
 
 
 # Nix

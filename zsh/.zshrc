@@ -45,10 +45,10 @@ alias h=herdr
 
 # Platform-specific aliases
 if [[ "$(uname)" == "Darwin" ]]; then
-    alias dp="cd $HOME/Development/dotfiles/ && sudo darwin-rebuild switch --flake .#personal && cd -"
-    alias dw="cd $HOME/Development/dotfiles/ && sudo darwin-rebuild switch --flake .#work && cd -"
+    alias dp="cd $HOME/Development/Personal/dotfiles/ && sudo darwin-rebuild switch --flake .#personal && cd -"
+    alias dw="cd $HOME/Development/Personal/dotfiles/ && sudo darwin-rebuild switch --flake .#work && cd -"
 else
-    alias ns="cd $HOME/Development/dotfiles/ && sudo nixos-rebuild switch --flake .#nix-server --impure && cd -"
+    alias ns="cd $HOME/Development/Personal/dotfiles/ && sudo nixos-rebuild switch --flake .#nix-server --impure && cd -"
 
     openclaw() {
         # TODO: once https://github.com/openclaw/nix-openclaw/issues/45 is fixed, remove hasown workaround

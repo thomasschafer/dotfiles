@@ -1,6 +1,6 @@
 {
   username = "thomasschafer";
   enableVSCode = false;
-  homebrew.cleanup = "none";
+  homebrew.pruneOldVersions = false;
   autohideDock = false;
 }

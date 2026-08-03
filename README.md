@@ -3,8 +3,8 @@
 ## macOS
 
 ```sh
-git clone git@github.com:thomasschafer/dotfiles.git ~/Development/dotfiles
-cd ~/Development/dotfiles
+git clone git@github.com:thomasschafer/dotfiles.git ~/Development/Personal/dotfiles
+cd ~/Development/Personal/dotfiles
 ./setup.sh personal  # or ./setup.sh work
 ```
 
@@ -26,8 +26,8 @@ cd ~/Development/dotfiles
    ```sh
    ssh -A root@<server-ip>
    nix-shell -p git tmux --command tmux # use tmux to keep session alive as rebuild locks SSH to Tailscale only
-   git clone https://github.com/thomasschafer/dotfiles.git ~/Development/dotfiles
-   cd ~/Development/dotfiles && ./setup.sh nix-server
+   git clone https://github.com/thomasschafer/dotfiles.git ~/Development/Personal/dotfiles
+   cd ~/Development/Personal/dotfiles && ./setup.sh nix-server
    ```
    This creates the non-root user with SSH keys configured, installs all packages, and sets up home-manager. It will prompt you to set a password for the non-root user (required for sudo), and for the Tailscale auth key from the previous step. It also copies `/etc/nixos/hardware-configuration.nix` to the repo, which you should commit.
 

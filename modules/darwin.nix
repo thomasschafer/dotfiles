@@ -79,6 +79,14 @@
       "/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \
       "/System/Library/CoreServices/Menu Extras/Clock.menu" \
       "/System/Library/CoreServices/Menu Extras/Volume.menu"
+  ''
+  + lib.optionalString hostConfig.homebrew.pruneOldVersions ''
+
+    if [ -x "/opt/homebrew/bin/brew" ]; then
+      PATH="/opt/homebrew/bin:$PATH" \
+        sudo --preserve-env=PATH --user=${hostConfig.username} --set-home env \
+        brew cleanup
+    fi
   '';
 
   # Homebrew stores tap trust per user. Declare it before `brew bundle` so
@@ -93,15 +101,18 @@
 
   homebrew = {
     enable = true;
+    # Cleanup is left off here and done via `brew cleanup` in postActivation above.
+    # nix-darwin implements it as `brew bundle --force-cleanup`, which deletes
+    # ~/.homebrew/trust.json and then exits 1 refusing to load the aerospace cask
+    # from nikitabobko/tap, aborting the rebuild. Running `brew cleanup` directly
+    # prunes the same old versions and caches without disturbing trust.
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = hostConfig.homebrew.cleanup;
-      extraFlags = lib.optionals (hostConfig.homebrew.cleanup != "none") [ "--force-cleanup" ];
+      cleanup = "none";
     };
 
     taps = [
-      "anomalyco/tap"
       "nikitabobko/tap"
     ];
 
