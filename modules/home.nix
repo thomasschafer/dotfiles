@@ -79,6 +79,8 @@ let
     ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
     ".claude/skills/subagent-review".source = ../skills/subagent-review;
     ".codex/skills/subagent-review".source = ../skills/subagent-review;
+    ".claude/skills/review-loop".source = ../skills/review-loop;
+    ".codex/skills/review-loop".source = ../skills/review-loop;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
     ".cursor/rules/coding-standards.mdc".source = ../claude/CLAUDE.md;
 

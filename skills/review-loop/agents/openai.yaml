@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Loop"
+  short_description: "Iterative review loop with a headless reviewer agent (Claude Code or Codex)"
+  default_prompt: "Use $review-loop to get the current changes reviewed by another agent (optionally naming the reviewer model) and iterate to consensus."
