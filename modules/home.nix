@@ -343,6 +343,26 @@ in
         fi
       '';
 
+      # Merge our overrides into settings.json rather than owning the whole
+      # file, so the rest stays writable by Claude Code. The desired keys live
+      # in claude/settings-overrides.json; the if only picks the base to merge
+      # onto (existing file, or an empty object on first run).
+      setClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        claude_dir="${config.home.homeDirectory}/.claude"
+        claude_settings="$claude_dir/settings.json"
+        $DRY_RUN_CMD mkdir -p "$claude_dir"
+        base=$(${pkgs.coreutils}/bin/mktemp)
+        if [ -f "$claude_settings" ]; then
+          ${pkgs.coreutils}/bin/cat "$claude_settings" > "$base"
+        else
+          echo '{}' > "$base"
+        fi
+        merged=$(${pkgs.coreutils}/bin/mktemp)
+        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$base" ${../claude/settings-overrides.json} > "$merged"
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mv "$merged" "$claude_settings"
+        ${pkgs.coreutils}/bin/rm -f "$base"
+      '';
+
       installOpenCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/opencode" ]; then
           export PATH="${pkgs.nodejs_22}/bin:$PATH"
