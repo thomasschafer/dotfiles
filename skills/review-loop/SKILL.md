@@ -19,7 +19,7 @@ Map the user's requested model to a CLI:
 
 To discover available models:
 
-- Codex: `jq -r '.models[].slug' ~/.codex/models_cache.json` lists current slugs with `.display_name` and `.description` alongside. If that file does not exist, run `/model` in the interactive `codex` TUI once to populate it. The default model is the `model` key in `~/.codex/config.toml`.
+- Codex: `jq -r '.models[].slug' ~/.codex/models_cache.json` lists current slugs with `.display_name` and `.description` alongside. If that file does not exist, the default model is the `model` key in `~/.codex/config.toml` — if the requested model matches that default, just use it (it is verifiably valid); otherwise run `/model` in the interactive `codex` TUI once to populate the cache.
 - Claude Code: there is no CLI listing; the aliases above are stable, and the authoritative picker is `/model` in the interactive TUI. The default is the `model` key in `~/.claude/settings.json`. An invalid `--model` fails with a clear API error, so verifying a guess costs one cheap call: `claude -p "say OK" --model <candidate> < /dev/null`.
 
 If the requested model matches neither CLI's known names, verify it as above rather than guessing; if it is not available, tell the user and list what is.
@@ -28,7 +28,9 @@ If the requested model matches neither CLI's known names, verify it as above rat
 
 Both CLIs:
 
-- Run every invocation from the repo root. Claude session resume fails outright from any other directory ("No conversation found"); Codex resumes but re-roots the reviewer's workdir at your current directory.
+- Run every invocation from the same directory each turn — the repo root for a single-repo review. Claude session resume fails outright from any other directory ("No conversation found"); Codex resumes but re-roots the reviewer's workdir at your current directory, so stay consistent.
+- Diff against `origin/main` (or whatever the default branch is) after a fetch (`git fetch origin`, then `git diff origin/main...HEAD`), not a bare `main...HEAD`: a stale local `main` gives the wrong merge-base.
+- Multi-repo changes (or out-of-tree docs): run the reviewer from a common parent directory and hand it absolute per-repo commands, e.g. `git -C /abs/path/<repo> diff origin/main...HEAD`. Codex re-roots to your cwd, so absolute paths are the robust choice. Share files outside any repo (e.g. a runbook) by copying them into the reviewer's readable tree (clean up afterward) or inlining them in the prompt.
 - Append `< /dev/null` to every invocation, or both CLIs wait on piped stdin (claude stalls 3 seconds with a warning; codex reads stdin as extra prompt input).
 - Use a generous timeout: review turns routinely take 3-5 minutes on a real diff. If your shell tool has a default timeout under 10 minutes, raise it for these calls.
 
@@ -43,7 +45,7 @@ Codex reviewer:
 
 - You cannot preset the session ID. Capture merged output to a file and extract the `session id:` line from the startup banner; the clean final message goes to a separate file via `-o`.
 - Pass `-m <model>` on every turn including resumes: unlike claude, a resumed codex session reverts to the config default model if `-m` is omitted.
-- `-s read-only` sandboxes the reviewer so it cannot modify files (also the `codex exec` default, but pass it explicitly).
+- `-s read-only` sandboxes the reviewer so it cannot modify files (also the `codex exec` default, but pass it explicitly on the first `codex exec`). Note: some codex builds' `exec resume` subcommand rejects `-s` (`error: unexpected argument '-s' found`) — a resumed session inherits the original sandbox, so omit `-s` on resume turns (keep `-m` and `-o`).
 - `codex review --base <branch>` is a purpose-built one-shot alternative for the first review, but use `codex exec` for the loop so every turn works the same way.
 
 ## Round 1: request the review
@@ -79,7 +81,7 @@ You are the code reviewer in an iterative review loop with another AI agent (the
 
 Product context: <what the project is, what this change is for, constraints that matter>.
 
-Review the changes: <exact command, e.g. git diff main...HEAD>. Read surrounding code as needed for full context. Review in depth: correctness, regressions, edge cases, maintainability, integration behavior, missing verification.
+Review the changes: <exact command, e.g. git diff origin/main...HEAD>. Read surrounding code as needed for full context. Review in depth: correctness, regressions, edge cases, maintainability, integration behavior, missing verification.
 
 Ground rules:
 - Do not modify any files; only the author makes changes.
@@ -103,9 +105,9 @@ claude -p --resume "$session_id" "<author response, see template>" < /dev/null
 Codex reviewer:
 
 ```bash
-codex exec resume "$session_id" -m gpt-5.6-sol -s read-only \
+codex exec resume "$session_id" -m gpt-5.6-sol \
   -o /tmp/review-N.txt "<author response, see template>" \
-  < /dev/null > /tmp/review-N-full.txt 2>&1
+  < /dev/null > /tmp/review-N-full.txt 2>&1   # no -s on resume; see Codex mechanics note
 cat /tmp/review-N.txt
 ```
 
