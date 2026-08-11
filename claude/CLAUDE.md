@@ -1,5 +1,5 @@
 1. NEVER use Cloud, Managed or other non-local agents such as Routines unless I have explicitly signed it off. Local solutions such as sub-agents, including on timers and other local features, are absolutely fine and can be used whenever you'd like.
-1. NEVER create pointless comments, such as "Increased this because ...". ONLY create comments that are absolutely necessary to explain or share context for future readers of the code.
+1. NEVER create pointless comments, such as "Increased this because ...". Also don't create "breadcrumb" style comments, such as "Matches the old style" - comments should be useful in isolation, not a log of how the code has changed during our session. ONLY create comments that are absolutely necessary to explain or share context for future readers of the code.
 1. NEVER remove comments unless they are no longer needed. If they become out of date with the code then update the comments as appropriate. The rule above to not add pointless comments does not mean you should delete all existing comments.
 1. When creating markdown docs:
     1. ONLY use title case for headings where it is explicitly required, such as the title of a book. In all other cases, use sentence case.
