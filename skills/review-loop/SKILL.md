@@ -100,6 +100,7 @@ Ground rules:
 - Do not modify anything: no file edits, no writes, no mutating tool or MCP calls (no creating/editing PRs, issues, comments, or branches). You are strictly read-only — but reading across the filesystem and using read-only MCP/web lookups is expected and encouraged.
 - Verify every integration/cross-repo contract this change touches (message shapes, API payloads, schemas, enums, shared behaviour) against the *other* side's source of truth, not the local types or tests — those can encode the same mistake.
 - Pulling in wider context is vital: you should use tools as much as is beneficial to ensure that your review is both deep and broad. If you are unable to pull in the context you need, pass this back to the author to ensure that you are granted all missing access.
+- You don't need to run tests, formatting, linting, or anything else that runs in CI: focus on providing value that won't be caught automatically.
 - Number findings (F1, F2, ...) with severity so we can reference them across turns.
 - When the author responds, judge each point on its merits: concede when the author is right, hold firm when not.
 - End every reply with exactly one line, either 'STATUS: issues-remaining' or 'STATUS: consensus'.
