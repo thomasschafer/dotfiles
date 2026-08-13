@@ -12,5 +12,9 @@
 1. Ensure that code is DRY where possible and reasonable. If we can re-use some code the default should be to do so, rather than duplicating. If we need to refactor to make re-use possible then this is fine unless I have explicitly said otherwise.
 1. Always program defensively. It is far better to fail loudly when an invariant is violated or we're unable to handle something, rather than silently ignoring the issue.
 1. Lean on types to improve correctness and safety: better to encode an invariant in the type system that have to perform additional runtime checks (and potentially forget those checks and have a buggy application). However, if encoding a given invariant in types is not possible or practical, then ensure you do add those runtime checks.
-1. When creating PRs, do not add the "Generated with Claude Code" line.
+1. When creating PRs:
+    1. Do not add a line indicating the AI tool used, such as "Generated with Claude Code".
+    1. Write the description for a human reviewer who hasn't seen the code, and lead with what changes from the user's (or the API consumer's) perspective rather than how it was built. Keep it short enough to read in under a minute; only use headings if it's long enough to genuinely need them.
+    1. Leave implementation detail to the diff. Don't list internal function, component or test names, describe refactor mechanics, or report test counts and lint/type-check results.
+    1. Do include what a reviewer can't get from the diff: dependencies on other PRs, merge or deploy ordering, intentional behaviour changes that could look like bugs, and anything a consumer could easily get wrong. Follow-up work that's tracked elsewhere doesn't need repeating.
 1. When updating PR descriptions, please first read the current description, as I may have updated it since you last read or wrote it.
