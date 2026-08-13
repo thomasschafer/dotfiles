@@ -17,6 +17,15 @@ let
   configHome = if isDarwin then "Library/Application Support" else ".config";
   steelHome = if isDarwin then ".steel" else ".local/share/steel";
 
+  codexInstructions = pkgs.writeText "codex-AGENTS.md" (
+    builtins.concatStringsSep "\n" (
+      builtins.filter (instructions: instructions != "") [
+        (builtins.readFile ../agents/shared.md)
+        (builtins.readFile ../codex/instructions.md)
+      ]
+    )
+  );
+
   ghosttyConfig = pkgs.runCommand "ghostty-config" { } ''
     ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
   '';
@@ -82,13 +91,15 @@ let
   };
 
   sharedFiles = {
+    ".config/ai/instructions.md".source = ../agents/shared.md;
     ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
+    ".codex/AGENTS.md".source = codexInstructions;
     ".claude/skills/subagent-review".source = ../skills/subagent-review;
     ".codex/skills/subagent-review".source = ../skills/subagent-review;
     ".claude/skills/review-loop".source = ../skills/review-loop;
     ".codex/skills/review-loop".source = ../skills/review-loop;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
-    ".cursor/rules/coding-standards.mdc".source = ../claude/CLAUDE.md;
+    ".cursor/rules/coding-standards.mdc".source = ../agents/shared.md;
 
     ".stack/config.yaml".text = ''
       system-ghc: true
