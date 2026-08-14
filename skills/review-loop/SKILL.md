@@ -60,7 +60,7 @@ Product context: <purpose and constraints>.
 External context: <companion repos, MCP sources, and contract owners>.
 Review scope: <exact branch and/or working-tree commands>.
 
-Review for correctness, regressions, edge cases, maintainability, integration behavior, and missing verification. Verify external contracts at their authoritative source rather than trusting local types, tests, comments, or documentation alone. Run targeted tests when useful to investigate an issue, but do not duplicate routine CI without a reason.
+Review for correctness, regressions, edge cases, maintainability, integration behavior, and missing verification. Verify external contracts at their authoritative source rather than trusting local types, tests, comments, or documentation alone. Do not run tests, linting or formatting for the sake of it: run targeted tests when useful to investigate an issue, but do not duplicate routine CI without a clear reason.
 
 Number findings F1, F2, ... with severity, evidence, and a recommendation. Judge the author's later responses on their merits: concede when the author is right and hold firm when not.
 
