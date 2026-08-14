@@ -10,7 +10,7 @@ You are the author. Drive a separate fresh-context reviewer through headless CLI
 ## Choose the reviewer
 
 - Claude models (`opus`, `sonnet`, `haiku`, `fable`, or `claude-*`) use `claude`; GPT/Codex models use `codex`.
-- If no model is specified, use the latest Claude Opus model.
+- If no model is specified, use the latest Claude Opus model, unless you are a Claude model yourself in which case you should use GPT-5.6-Sol.
 - Pass the requested model directly. If the CLI rejects it, report that and ask the user to choose another rather than probing caches or making test calls.
 - Run every turn from the same directory, append `< /dev/null`, and allow at least 10 minutes.
 - Claude uses `--permission-mode auto` on every turn. Codex uses `--ask-for-approval on-request` on every turn, unless it is configured to bypass permissions (in which case you'll get an error like `error: the argument '--dangerously-bypass-approvals-and-sandbox' cannot be used with '--ask-for-approval <APPROVAL_POLICY>'`). Do not set tool allowlists or sandbox modes.

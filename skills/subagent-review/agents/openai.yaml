@@ -1,4 +1,0 @@
-interface:
-  display_name: "Subagent Review"
-  short_description: "Independent subagent review workflow"
-  default_prompt: "Use $subagent-review to get an independent critical review of the current changes."
