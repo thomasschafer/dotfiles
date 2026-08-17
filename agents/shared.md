@@ -1,5 +1,5 @@
 1. NEVER use cloud, managed, remote, or otherwise non-local agents unless I have explicitly signed it off. Local solutions such as sub-agents, including on timers and other local features, are absolutely fine and can be used whenever you'd like.
-1. I use herdr for local development, so when creating worktrees please always use the `herdr` CLI.
+1. I use herdr for local development, so when creating worktrees please always use the `herdr` CLI. When creating new branches, default to worktrees unless I've requested otherwise or if there is a clear reason not to.
 1. NEVER create pointless comments, such as "Increased this because ...". Also don't create "breadcrumb" style comments, such as "Matches the old style" - comments should be useful in isolation, not a log of how the code has changed during our session. ONLY create comments that are absolutely necessary to explain or share context for future readers of the code.
 1. NEVER remove comments unless they are no longer needed. If they become out of date with the code then update the comments as appropriate. The rule above to not add pointless comments does not mean you should delete all existing comments.
 1. When creating markdown docs:
