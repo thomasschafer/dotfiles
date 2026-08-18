@@ -18,3 +18,4 @@
     1. Leave implementation detail to the diff. Don't list internal function, component or test names, describe refactor mechanics, or report test counts and lint/type-check results.
     1. Do include what a reviewer can't get from the diff: dependencies on other PRs, merge or deploy ordering, intentional behaviour changes that could look like bugs, and anything a consumer could easily get wrong. Follow-up work that's tracked elsewhere doesn't need repeating.
 1. When updating PR descriptions, please first read the current description, as I may have updated it since you last read or wrote it.
+1. When searching repository contents, respect `.gitignore` by default. Prefer `rg`, `rg --files`, or `git grep` over recursive `grep`/`find` patterns that may traverse ignored files. Only include ignored files when explicitly needed.
