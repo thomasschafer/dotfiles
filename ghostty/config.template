@@ -74,7 +74,7 @@ keybind = cmd+shift+j=text:\x01k          ## focus pane down
 # Workspaces
 keybind = cmd+ctrl+j=text:\x01a           ## next workspace
 keybind = cmd+ctrl+k=text:\x01A           ## previous workspace
-keybind = cmd+comma=text:\x01L            ## last workspace
+keybind = cmd+,=text:\x01L                ## last workspace; `,` and `comma` are distinct triggers to Ghostty, and the open_config default binds `,`
 
 # Agents
 keybind = cmd+j=text:\x01)                ## next agent
