@@ -1,61 +1,94 @@
-window-padding-y = 12
+# Trailing `##` comments are stripped by build-config.sh, which renders this
+# template into the config Ghostty actually reads.
+
+# --- Window ---
+
+window-width = 200
+window-height = 60
 window-padding-x = 12
+window-padding-y = 12
 macos-titlebar-style = hidden
 resize-overlay = never
+quit-after-last-window-closed = true
+
+# --- Appearance ---
 
 theme = Catppuccin Macchiato
-
-background-opacity = 0.9
+background-opacity = 0.8
 background-opacity-cells = true
-background-blur = true
+background-blur = 80                      ## `true` is only intensity 20, weaker than Alacritty's
 
+# --- Font ---
+
+font-family = JetBrainsMono Nerd Font Mono
 font-size = 12
 font-thicken = true
+font-feature = -calt
+adjust-cell-width = 1
+adjust-cell-height = 1
+
+# --- Cursor ---
 
 cursor-style = block
 cursor-style-blink = false
 cursor-text = black
 
-initial-command = /bin/zsh -l -c "tmux attach -t 'λ' || tmux new -s 'λ'"
+# --- Behaviour ---
 
 confirm-close-surface = false
-
-font-feature = -calt
-
 mouse-hide-while-typing = true
-
 macos-option-as-alt = true
+shell-integration-features = ssh-terminfo,ssh-env
 
-###  Keybindings  ###
-keybind = alt+3=text:#
+# --- Keybindings ---
+
+# Most of these send the key sequence that herdr (prefix: ctrl+a) binds, so the
+# cmd-based chords drive the multiplexer rather than Ghostty itself. The comment
+# on each line is the herdr action it triggers.
+
+keybind = alt+3=text:#                    ## macos-option-as-alt would otherwise swallow this
 keybind = cmd+r=reload_config
-keybind = cmd+alt+left=text:\x1b[1;5D     ## ctrl+left
-keybind = cmd+alt+right=text:\x1b[1;5C    ## ctrl+right
-keybind = cmd+shift+left=text:\x1b[1;6D   ## ctrl+shift+left
-keybind = cmd+shift+right=text:\x1b[1;6C  ## ctrl+shift+right
-keybind = cmd+shift+up=text:\x01K         ## ctrl+a K
-keybind = cmd+shift+down=text:\x01k       ## ctrl+a k
-keybind = cmd+alt+h=text:\x1b[1;5D        ## ctrl+left
-keybind = cmd+alt+l=text:\x1b[1;5C        ## ctrl+right
-keybind = cmd+shift+h=text:\x1b[1;6D      ## ctrl+shift+left
-keybind = cmd+shift+l=text:\x1b[1;6C      ## ctrl+shift+right
-keybind = cmd+shift+k=text:\x01K          ## ctrl+a K
-keybind = cmd+shift+j=text:\x01k          ## ctrl+a k
-keybind = cmd+t=text:\x01c                ## ctrl+a c
-keybind = cmd+d=text:\x01|                ## ctrl+a |
-keybind = cmd+shift+d=text:\x01-          ## ctrl+a -
-keybind = cmd+w=text:\x01x                ## ctrl+a x
-keybind = cmd+j=text:\x01)                ## ctrl+a )
-keybind = cmd+k=text:\x01(                ## ctrl+a (
-keybind = cmd+l=text:\x01;                ## ctrl+a ;
-keybind = cmd+comma=text:\x01L            ## ctrl+a L  (jump to last session)
-keybind = cmd+shift+enter=text:\x01z      ## ctrl+a z
-keybind = cmd+s=text:\x01s                ## ctrl+a s  (view tmux sessions)
-keybind = cmd+p=text:\x01F                ## ctrl+a F  (kiosk)
-keybind = cmd+o=text:\x01G                ## ctrl+a G  (kiosk sessions view)
-keybind = cmd+i=text:\x01H                ## ctrl+a H  (kiosk next session)
+
+# Tabs
+keybind = cmd+t=text:\x01c                ## new tab
+keybind = cmd+ctrl+left=text:\x1b[1;5D    ## previous tab
+keybind = cmd+ctrl+right=text:\x1b[1;5C   ## next tab
+keybind = cmd+ctrl+h=text:\x1b[1;5D       ## previous tab
+keybind = cmd+ctrl+l=text:\x1b[1;5C       ## next tab
+
+# Panes
+keybind = cmd+d=text:\x01|                ## split vertical
+keybind = cmd+shift+d=text:\x01-          ## split horizontal
+keybind = cmd+w=text:\x01x                ## close pane
+keybind = cmd+shift+enter=text:\x01z      ## zoom pane
+keybind = cmd+l=text:\x01;                ## last pane in tab
+keybind = cmd+shift+left=text:\x1b[1;6D   ## focus pane left
+keybind = cmd+shift+right=text:\x1b[1;6C  ## focus pane right
+keybind = cmd+shift+h=text:\x1b[1;6D      ## focus pane left
+keybind = cmd+shift+l=text:\x1b[1;6C      ## focus pane right
+keybind = cmd+shift+up=text:\x01K         ## focus pane up
+keybind = cmd+shift+down=text:\x01k       ## focus pane down
+keybind = cmd+shift+k=text:\x01K          ## focus pane up
+keybind = cmd+shift+j=text:\x01k          ## focus pane down
+
+# Workspaces
+keybind = cmd+ctrl+j=text:\x01a           ## next workspace
+keybind = cmd+ctrl+k=text:\x01A           ## previous workspace
+keybind = cmd+comma=text:\x01L            ## last workspace
+
+# Agents
+keybind = cmd+j=text:\x01)                ## next agent
+keybind = cmd+k=text:\x01(                ## previous agent
+
+# Other herdr actions
+keybind = cmd+s=text:\x01s                ## settings
+keybind = cmd+p=text:\x01F                ## kiosk repo picker
+
+# Line editing
 keybind = cmd+left=text:\x1b[H            ## jump to start of line
 keybind = cmd+right=text:\x1b[F           ## jump to end of line
 keybind = cmd+backspace=text:\x15         ## delete to start of line
 
-shell-integration-features = ssh-terminfo,ssh-env
+# Window
+keybind = cmd+enter=toggle_fullscreen
+keybind = ctrl+shift+q=quit

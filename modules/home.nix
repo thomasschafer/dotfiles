@@ -26,9 +26,14 @@ let
     )
   );
 
-  ghosttyConfig = pkgs.runCommand "ghostty-config" { } ''
-    ${pkgs.gnused}/bin/sed 's/[[:space:]]*##.*$//' ${../ghostty/config.template} > $out
-  '';
+  ghosttyConfig =
+    pkgs.runCommand "ghostty-config"
+      {
+        nativeBuildInputs = [ pkgs.gnused ];
+      }
+      ''
+        ${pkgs.bash}/bin/bash ${../ghostty/build-config.sh} ${../ghostty/config.template} > $out
+      '';
 
   copyCmd = "pbcopy";
 
