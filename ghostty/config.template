@@ -85,6 +85,8 @@ keybind = cmd+s=text:\x01s                ## settings
 keybind = cmd+p=text:\x01F                ## kiosk repo picker
 
 # Line editing
+keybind = alt+left=text:\x1b[1;3D         ## move to previous word
+keybind = alt+right=text:\x1b[1;3C        ## move to next word
 keybind = cmd+left=text:\x1b[H            ## jump to start of line
 keybind = cmd+right=text:\x1b[F           ## jump to end of line
 keybind = cmd+backspace=text:\x15         ## delete to start of line
