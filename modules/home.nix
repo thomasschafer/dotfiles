@@ -17,15 +17,6 @@ let
   configHome = if isDarwin then "Library/Application Support" else ".config";
   steelHome = if isDarwin then ".steel" else ".local/share/steel";
 
-  codexInstructions = pkgs.writeText "codex-AGENTS.md" (
-    builtins.concatStringsSep "\n" (
-      builtins.filter (instructions: instructions != "") [
-        (builtins.readFile ../agents/shared.md)
-        (builtins.readFile ../codex/instructions.md)
-      ]
-    )
-  );
-
   ghosttyConfig =
     pkgs.runCommand "ghostty-config"
       {
@@ -96,16 +87,11 @@ let
   };
 
   sharedFiles = {
-    ".config/ai/instructions.md".source = ../agents/shared.md;
-    ".claude/CLAUDE.md".source = ../claude/CLAUDE.md;
-    ".codex/AGENTS.md".source = codexInstructions;
-    ".claude/skills/subagent-review".source = ../skills/subagent-review;
-    ".codex/skills/subagent-review".source = ../skills/subagent-review;
+    ".claude/CLAUDE.md".source = ../agents/shared.md;
+    ".codex/AGENTS.md".source = ../agents/shared.md;
     ".claude/skills/review-loop".source = ../skills/review-loop;
     ".codex/skills/review-loop".source = ../skills/review-loop;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
-    ".cursor/rules/coding-standards.mdc".source = ../agents/shared.md;
-
     ".stack/config.yaml".text = ''
       system-ghc: true
       install-ghc: false
@@ -388,16 +374,6 @@ in
         if [ ! -x "${config.home.homeDirectory}/.local/bin/opencode" ]; then
           export PATH="${pkgs.nodejs_22}/bin:$PATH"
           $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" opencode-ai
-        fi
-      '';
-
-      installCursorCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/agent" ]; then
-          export PATH="${pkgs.curl}/bin:${pkgs.gnutar}/bin:${pkgs.gzip}/bin:${pkgs.bash}/bin:$PATH"
-          install_script=$(${pkgs.coreutils}/bin/mktemp)
-          ${pkgs.curl}/bin/curl -fsSL https://cursor.com/install -o "$install_script"
-          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
-          ${pkgs.coreutils}/bin/rm -f "$install_script"
         fi
       '';
 
