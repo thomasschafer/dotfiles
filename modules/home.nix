@@ -535,6 +535,13 @@ in
           $DRY_RUN_CMD ${pkgs.go}/bin/go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.0
         fi
       '';
+
+      # herdr snapshots the manifest and resolved store path when linking, so
+      # relink on every switch to pick up changes before old paths are GC'd.
+      linkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
+        $DRY_RUN_CMD "${config.home.homeDirectory}/.cargo/bin/herdr" plugin link \
+          ${../herdr/plugins/caffeinate} >/dev/null
+      '';
     };
   };
 
