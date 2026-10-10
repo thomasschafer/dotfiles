@@ -155,7 +155,7 @@
       "watchman"
       "wget"
       "yamllint"
-      "zig@0.15"
+      "zig@0.16"
     ]
     ++ lib.optionals (host == "work") [ "python" ];
   };

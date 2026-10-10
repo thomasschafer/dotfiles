@@ -1,6 +1,0 @@
-# Directories to scan for git repos (1 level deep)
-search_dirs = ["~/Development", "~/Development/Personal", "~/Development/Work"]
-
-[session]
-# Command to run in a split pane when creating a new tmux session
-split_command = "hx"

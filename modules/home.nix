@@ -26,8 +26,6 @@ let
         ${pkgs.bash}/bin/bash ${../ghostty/build-config.sh} ${../ghostty/config.template} > $out
       '';
 
-  copyCmd = "pbcopy";
-
   # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds.
   # extraPathPrefix: colon-separated paths to prepend before the common entries.
   cargoBuildEnv =
@@ -47,11 +45,11 @@ let
         export CC="${pkgs.stdenv.cc}/bin/cc"
       '';
 
-  # herdr's vendored libghostty-vt needs an exact Zig 0.15.x toolchain (see
-  # herdr/CLAUDE.md). On macOS nixpkgs' zig_0_15 can't link against the system
-  # SDK outside the Nix sandbox, so use Homebrew's zig@0.15, matching the ZIG
-  # export in zsh/.zshrc.
-  zigForHerdr = if isDarwin then "/opt/homebrew/opt/zig@0.15/bin/zig" else "${pkgs.zig_0_15}/bin/zig";
+  # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
+  # crates/ghostty-vt/build.rs in herdr). On macOS nixpkgs' Zig can't link
+  # against the system SDK outside the Nix sandbox, so use Homebrew's versioned
+  # formula, matching the ZIG export in zsh/.zshrc.
+  zigForHerdr = if isDarwin then "/opt/homebrew/opt/zig@0.16/bin/zig" else "${pkgs.zig_0_16}/bin/zig";
 
   helixConfig =
     pkgs.runCommand "helix-config"
@@ -117,6 +115,8 @@ let
 
     # Herdr
     ".config/herdr/config.toml".source = ../herdr/config.toml;
+    ".config/herdr/plugins/config/thomasschafer.herdr-kiosk/config.toml".source =
+      ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
     # k9s
     "${configHome}/k9s/config.yaml".source = ../k9s/config.yaml;
@@ -129,9 +129,6 @@ let
 
     # Lazygit
     "${configHome}/lazygit/config.yml".source = ../lazygit/config.yml;
-
-    # Kiosk
-    ".config/kiosk/config.toml".source = ../kiosk/config.toml;
 
     # Opencode
     ".config/opencode/config.json".source = ../opencode/config.json;
@@ -253,12 +250,12 @@ in
         zls
       ]
       ++ lib.optionals isServer [
+        # OSC 52 asks the local terminal (via herdr, over SSH) to set the
+        # system clipboard. Write to the controlling terminal rather than
+        # stdout, which callers such as Helix's `:sh` capture.
         (writeShellScriptBin "pbcopy" ''
-          exec tmux load-buffer -w -
-        '')
-        (writeShellScriptBin "pbpaste" ''
-          tmux refresh-client -l >/dev/null 2>&1 || true
-          exec tmux save-buffer -
+          set -euo pipefail
+          printf '\033]52;c;%s\a' "$(${pkgs.coreutils}/bin/base64 -w0)" > /dev/tty
         '')
       ]
       ++ [
@@ -309,21 +306,6 @@ in
 
       linkHelixRuntime = lib.hm.dag.entryAfter [ "installHelix" ] ''
         ln -sfn "${config.home.homeDirectory}/Development/Personal/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
-      '';
-
-      installKiosk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        kiosk_dir="${config.home.homeDirectory}/Development/Personal/kiosk"
-        if [ ! -d "$kiosk_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/kiosk.git "$kiosk_dir"
-        fi
-        kiosk_bin="${config.home.homeDirectory}/.cargo/bin/kiosk"
-        if [ ! -x "$kiosk_bin" ]; then
-          cd "$kiosk_dir"
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path kiosk --locked
-        fi
       '';
 
       installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -420,13 +402,35 @@ in
         if [ ! -x "$herdr_bin" ]; then
           export ZIG="${zigForHerdr}"
           if [ ! -x "$ZIG" ]; then
-            echo "installHerdr: Zig 0.15 not found at $ZIG" >&2
+            echo "installHerdr: Zig not found at $ZIG" >&2
             exit 1
           fi
           cd "$herdr_dir"
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path . --locked
+        fi
+      '';
+
+      cloneHerdrKiosk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        herdr_kiosk_dir="${config.home.homeDirectory}/Development/Personal/herdr-kiosk"
+        if [ ! -d "$herdr_kiosk_dir" ]; then
+          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/herdr-kiosk.git \
+            "$herdr_kiosk_dir"
+        fi
+      '';
+
+      # Linking runs the plugin's build step, which downloads a release binary
+      # (or builds from source), so only link when the plugin is missing.
+      linkHerdrKiosk = lib.hm.dag.entryAfter [ "installHerdr" "cloneHerdrKiosk" ] ''
+        herdr_bin="${config.home.homeDirectory}/.cargo/bin/herdr"
+        kiosk_plugins=$("$herdr_bin" plugin list --plugin thomasschafer.herdr-kiosk --json)
+        if ! printf '%s' "$kiosk_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
+          export PATH="${pkgs.curl}/bin:${pkgs.gawk}/bin:${pkgs.gnused}/bin:${pkgs.cargo}/bin:$PATH"
+          ${cargoBuildEnv ""}
+          $DRY_RUN_CMD "$herdr_bin" plugin link \
+            "${config.home.homeDirectory}/Development/Personal/herdr-kiosk" >/dev/null
         fi
       '';
 
@@ -574,19 +578,6 @@ in
           sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
         };
       };
-    };
-
-    tmux = {
-      enable = true;
-      plugins = with pkgs.tmuxPlugins; [
-        sensible
-        resurrect
-      ];
-      extraConfig = ''
-        ${builtins.replaceStrings [ "\${COPY_CMD}" ] [ copyCmd ] (builtins.readFile ../tmux/tmux.conf)}
-        set -gu default-command
-        set -g default-shell "$SHELL"
-      '';
     };
 
     vscode = lib.mkIf enableVSCode {
