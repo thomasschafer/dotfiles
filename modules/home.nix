@@ -173,13 +173,6 @@ let
     # Aerospace
     ".config/aerospace/aerospace.toml".source = ../aerospace/aerospace.toml;
 
-    # Alacritty
-    ".config/alacritty/catppuccin-macchiato.toml".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/alacritty/f6cb5a5c2b404cdaceaff193b9c52317f62c62f7/catppuccin-macchiato.toml";
-      sha256 = "sha256-/Qb5kfR5N6mTMcL6l6qUdsG32wpkpESHu5qjX3GIUHw=";
-    };
-    ".config/alacritty/alacritty.toml".source = ../alacritty/alacritty.toml;
-
     # Ghostty
     ".config/ghostty/config".source = ghosttyConfig;
 
@@ -528,13 +521,6 @@ in
       '';
     }
     // lib.optionalAttrs (isDarwin && !isServer) {
-      replaceAlacrittyIcon = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" ] || ! cmp -s "${../alacritty/alacritty.icns}" "/Applications/Alacritty.app/Contents/Resources/alacritty.icns" 2>/dev/null; then
-          $DRY_RUN_CMD /usr/bin/sudo cp -f ${../alacritty/alacritty.icns} /Applications/Alacritty.app/Contents/Resources/alacritty.icns || true
-          $DRY_RUN_CMD /usr/bin/sudo touch /Applications/Alacritty.app || true
-        fi
-      '';
-
       # TODO: currently relies on raco from homebrew, should move to platform-agnostic setup
       installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if ! $DRY_RUN_CMD /opt/homebrew/bin/raco fmt --help &>/dev/null; then

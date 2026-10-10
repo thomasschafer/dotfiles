@@ -117,7 +117,6 @@
     ];
 
     casks = [
-      "alacritty"
       "font-jetbrains-mono-nerd-font"
       "ghostty"
       "karabiner-elements"

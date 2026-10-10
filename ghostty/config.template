@@ -16,7 +16,7 @@ quit-after-last-window-closed = true
 theme = Catppuccin Macchiato
 background-opacity = 0.8
 background-opacity-cells = true
-background-blur = 80                      ## `true` is only intensity 20, weaker than Alacritty's
+background-blur = 80                      ## `true` is only intensity 20, too weak
 
 # --- Font ---
 
