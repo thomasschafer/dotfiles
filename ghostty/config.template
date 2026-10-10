@@ -42,55 +42,29 @@ shell-integration-features = ssh-terminfo,ssh-env
 
 # --- Keybindings ---
 
-# Most of these send the key sequence that herdr (prefix: ctrl+a) binds, so the
-# cmd-based chords drive the multiplexer rather than Ghostty itself. The comment
-# on each line is the herdr action it triggers.
+# herdr binds these cmd chords directly (see herdr/config.toml) and receives
+# them through the kitty keyboard protocol, so Ghostty's defaults for them are
+# unbound to let the keys through.
+keybind = cmd+t=unbind                    ## new tab
+keybind = cmd+ctrl+arrow_left=unbind      ## previous tab
+keybind = cmd+ctrl+arrow_right=unbind     ## next tab
+keybind = cmd+d=unbind                    ## split vertical
+keybind = cmd+shift+d=unbind              ## split horizontal
+keybind = cmd+w=unbind                    ## close pane
+keybind = cmd+shift+enter=unbind          ## zoom pane
+keybind = cmd+shift+arrow_up=unbind       ## focus pane up
+keybind = cmd+shift+arrow_down=unbind     ## focus pane down
+keybind = cmd+shift+j=unbind              ## focus pane down
+keybind = cmd+,=unbind                    ## last workspace; `,` and `comma` are distinct triggers to Ghostty, and the open_config default binds `,`
+keybind = cmd+j=unbind                    ## next agent
+keybind = cmd+k=unbind                    ## previous agent
 
 keybind = alt+3=text:#                    ## macos-option-as-alt would otherwise swallow this
 keybind = cmd+r=reload_config
-
-# Tabs
-keybind = cmd+t=text:\x01c                ## new tab
-keybind = cmd+ctrl+left=text:\x1b[1;5D    ## previous tab
-keybind = cmd+ctrl+right=text:\x1b[1;5C   ## next tab
-keybind = cmd+ctrl+h=text:\x1b[1;5D       ## previous tab
-keybind = cmd+ctrl+l=text:\x1b[1;5C       ## next tab
-
-# Panes
-keybind = cmd+d=text:\x01|                ## split vertical
-keybind = cmd+shift+d=text:\x01-          ## split horizontal
-keybind = cmd+w=text:\x01x                ## close pane
-keybind = cmd+shift+enter=text:\x01z      ## zoom pane
-keybind = cmd+l=text:\x01;                ## last pane in tab
-keybind = cmd+shift+left=text:\x1b[1;6D   ## focus pane left
-keybind = cmd+shift+right=text:\x1b[1;6C  ## focus pane right
-keybind = cmd+shift+h=text:\x1b[1;6D      ## focus pane left
-keybind = cmd+shift+l=text:\x1b[1;6C      ## focus pane right
-keybind = cmd+shift+up=text:\x01K         ## focus pane up
-keybind = cmd+shift+down=text:\x01k       ## focus pane down
-keybind = cmd+shift+k=text:\x01K          ## focus pane up
-keybind = cmd+shift+j=text:\x01k          ## focus pane down
-
-# Workspaces
-keybind = cmd+ctrl+j=text:\x01a           ## next workspace
-keybind = cmd+ctrl+k=text:\x01A           ## previous workspace
-keybind = cmd+,=text:\x01L                ## last workspace; `,` and `comma` are distinct triggers to Ghostty, and the open_config default binds `,`
-
-# Agents
-keybind = cmd+j=text:\x01)                ## next agent
-keybind = cmd+k=text:\x01(                ## previous agent
-
-# Other herdr actions
-keybind = cmd+s=text:\x01s                ## settings
-keybind = cmd+p=text:\x01F                ## kiosk repo picker
+keybind = ctrl+shift+q=quit
 
 # Line editing
 keybind = alt+left=text:\x1b[1;3D         ## move to previous word
 keybind = alt+right=text:\x1b[1;3C        ## move to next word
-keybind = cmd+left=text:\x1b[H            ## jump to start of line
+keybind = cmd+left=text:\x1b[H            ## jump to start of line; the default sends ctrl+a, herdr's prefix
 keybind = cmd+right=text:\x1b[F           ## jump to end of line
-keybind = cmd+backspace=text:\x15         ## delete to start of line
-
-# Window
-keybind = cmd+enter=toggle_fullscreen
-keybind = ctrl+shift+q=quit
