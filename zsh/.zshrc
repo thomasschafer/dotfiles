@@ -116,6 +116,11 @@ if command -v direnv &>/dev/null; then
     eval "$(direnv hook zsh)"
 fi
 
+# mise
+if command -v mise &>/dev/null; then
+    eval "$(mise activate zsh)"
+fi
+
 # atuin
 if command -v atuin &>/dev/null; then
     eval "$(atuin init zsh)"

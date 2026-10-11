@@ -223,6 +223,7 @@ in
         p7zip
         jq
         lazygit
+        mise
       ]
       ++ lib.optionals (host == "personal") [
         (python314.withPackages (
