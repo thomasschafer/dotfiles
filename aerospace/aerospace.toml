@@ -204,6 +204,28 @@ run = 'move-node-to-workspace S'
 if.app-id = 'com.google.Chrome.app.pjibgclleladliembfgfagdaldikeohf'
 run = 'move-node-to-workspace D'
 
+# Citrix seamless windows all report the AXDialog subrole, so AeroSpace floats them by default.
+# Leave Citrix helper windows floating, force-tile the rest.
+[[on-window-detected]]
+if.app-id = 'com.citrix.receiver.icaviewer.mac'
+if.window-title-regex-substring = '^wdmm-Win32Window'
+run = 'move-node-to-workspace Q'
+
+[[on-window-detected]]
+if.app-id = 'com.citrix.receiver.icaviewer.mac'
+if.window-title-regex-substring = '^Launchpad\b'
+run = 'move-node-to-workspace E'
+
+[[on-window-detected]]
+if.app-id = 'com.citrix.receiver.icaviewer.mac'
+if.window-title-regex-substring = '^IB - '
+run = ['layout tiling', 'move-node-to-workspace W']
+
+[[on-window-detected]]
+if.app-id = 'com.citrix.receiver.icaviewer.mac'
+if.window-title-regex-substring = '\S'
+run = ['layout tiling', 'move-node-to-workspace Q']
+
 [[on-window-detected]]
 if.app-id = 'com.citrix.receiver.icaviewer.mac'
 run = 'move-node-to-workspace Q'
