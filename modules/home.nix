@@ -169,6 +169,10 @@ let
   darwinOnlyFiles = {
     # Aerospace
     ".config/aerospace/aerospace.toml".source = ../aerospace/aerospace.toml;
+    ".config/aerospace/citrix-windows.sh" = {
+      source = ../aerospace/citrix-windows.sh;
+      executable = true;
+    };
 
     # Ghostty
     ".config/ghostty/config".source = ghosttyConfig;

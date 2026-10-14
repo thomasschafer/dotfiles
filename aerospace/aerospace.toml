@@ -35,10 +35,17 @@ default-root-container-orientation = 'auto'
 # Fallback value (if you omit the key): on-focused-monitor-changed = []
 # on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
+on-focus-changed = ['exec-and-forget ~/.config/aerospace/citrix-windows.sh']
+
 # You can effectively turn off macOS "Hide application" (cmd-h) feature by toggling this flag
 # Useful if you don't use this macOS feature, but accidentally hit cmd-h or cmd-alt-h key
 # Also see: https://nikitabobko.github.io/AeroSpace/goodies#disable-hide-app
 automatically-unhide-macos-hidden-apps = false
+
+# The Homebrew cask links the aerospace CLI into /opt/homebrew/bin (on AeroSpace's default PATH);
+# manual installs put it in ~/.local/bin, which isn't
+[exec.env-vars]
+PATH = '${HOME}/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:${PATH}'
 
 # Possible values: (qwerty|dvorak)
 # See https://nikitabobko.github.io/AeroSpace/guide#key-mapping
@@ -204,28 +211,8 @@ run = 'move-node-to-workspace S'
 if.app-id = 'com.google.Chrome.app.pjibgclleladliembfgfagdaldikeohf'
 run = 'move-node-to-workspace D'
 
-# Citrix seamless windows all report the AXDialog subrole, so AeroSpace floats them by default.
-# Leave Citrix helper windows floating, force-tile the rest.
-[[on-window-detected]]
-if.app-id = 'com.citrix.receiver.icaviewer.mac'
-if.window-title-regex-substring = '^wdmm-Win32Window'
-run = 'move-node-to-workspace Q'
-
-[[on-window-detected]]
-if.app-id = 'com.citrix.receiver.icaviewer.mac'
-if.window-title-regex-substring = '^Launchpad\b'
-run = 'move-node-to-workspace E'
-
-[[on-window-detected]]
-if.app-id = 'com.citrix.receiver.icaviewer.mac'
-if.window-title-regex-substring = '^IB - '
-run = ['layout tiling', 'move-node-to-workspace W']
-
-[[on-window-detected]]
-if.app-id = 'com.citrix.receiver.icaviewer.mac'
-if.window-title-regex-substring = '\S'
-run = ['layout tiling', 'move-node-to-workspace Q']
-
+# Citrix windows are often untitled when detected, so citrix-windows.sh (see on-focus-changed)
+# routes and tiles them once they have a title
 [[on-window-detected]]
 if.app-id = 'com.citrix.receiver.icaviewer.mac'
 run = 'move-node-to-workspace Q'
