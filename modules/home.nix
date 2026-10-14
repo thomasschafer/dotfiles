@@ -173,6 +173,11 @@ let
       source = ../aerospace/citrix-windows.sh;
       executable = true;
     };
+    ".config/aerospace/monitor-workspaces.sh" = {
+      source = ../aerospace/monitor-workspaces.sh;
+      executable = true;
+    };
+    ".config/aerospace/lib.sh".source = ../aerospace/lib.sh;
 
     # Ghostty
     ".config/ghostty/config".source = ghosttyConfig;

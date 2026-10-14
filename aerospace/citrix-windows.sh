@@ -8,37 +8,20 @@
 
 set -euo pipefail
 
+readonly SCRIPT_NAME='Citrix'
+# shellcheck source=lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+trap 'notify_error "Failed at line $LINENO"' ERR
+
 readonly APP_ID='com.citrix.receiver.icaviewer.mac'
 readonly RETRY_DELAYS=(1 3)
 
-notify_error() {
-    osascript -e "display notification \"$1\" with title \"AeroSpace Citrix script\"" || true
-}
-trap 'notify_error "Failed at line $LINENO"' ERR
-
-aerospace_pids=$(pgrep -ax AeroSpace || true)
-if [[ $(wc -l <<<"$aerospace_pids") -ne 1 || -z $aerospace_pids ]]; then
-    notify_error "Expected exactly one AeroSpace process, found: ${aerospace_pids:-none}"
-    exit 1
-fi
+require_single_aerospace
 
 # Keyed by AeroSpace PID: AeroSpace re-runs on-window-detected for every window on restart, so
 # windows need handling again
-readonly STATE_FILE="${TMPDIR:-/tmp}/aerospace-citrix-handled-$aerospace_pids"
+readonly STATE_FILE="${TMPDIR:-/tmp}/aerospace-citrix-handled-$AEROSPACE_PID"
 readonly LOCK_DIR="${TMPDIR:-/tmp}/aerospace-citrix.lock"
-
-acquire_lock() {
-    if mkdir "$LOCK_DIR" 2>/dev/null; then
-        return 0
-    fi
-    # Clear a lock left behind by a run that was killed
-    if [[ -n $(find "$LOCK_DIR" -maxdepth 0 -mmin +1) ]]; then
-        rmdir "$LOCK_DIR"
-        mkdir "$LOCK_DIR"
-        return 0
-    fi
-    return 1
-}
 
 tile() {
     local err
@@ -63,7 +46,8 @@ handle_new_windows() {
         : >"$STATE_FILE"
     fi
 
-    while IFS=$'\t' read -r id title; do
+    # Read from fd 3 because the aerospace CLI reads stdin, which would swallow the list
+    while IFS=$'\t' read -r -u 3 id title; do
         [[ $title =~ [^[:space:]] ]] || continue
         if grep -Fxq "$id" <<<"$handled"; then
             continue
@@ -81,12 +65,12 @@ handle_new_windows() {
                 ;;
         esac
         echo "$id" >>"$STATE_FILE"
-    done <<<"$windows"
+    done 3<<<"$windows"
 }
 
 run_once() {
     # Another run is in progress and will pick up any new windows
-    acquire_lock || return 0
+    acquire_lock "$LOCK_DIR" || return 0
     trap 'rmdir "$LOCK_DIR"' EXIT
     handle_new_windows
     rmdir "$LOCK_DIR"
