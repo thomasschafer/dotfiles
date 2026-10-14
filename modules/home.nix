@@ -168,16 +168,11 @@ let
 
   darwinOnlyFiles = {
     # Aerospace
-    ".config/aerospace/aerospace.toml".source = ../aerospace/aerospace.toml;
-    ".config/aerospace/citrix-windows.sh" = {
-      source = ../aerospace/citrix-windows.sh;
-      executable = true;
+    # Scripts keep their executable bit from git
+    ".config/aerospace" = {
+      source = ../aerospace;
+      recursive = true;
     };
-    ".config/aerospace/monitor-workspaces.sh" = {
-      source = ../aerospace/monitor-workspaces.sh;
-      executable = true;
-    };
-    ".config/aerospace/lib.sh".source = ../aerospace/lib.sh;
 
     # Ghostty
     ".config/ghostty/config".source = ghosttyConfig;

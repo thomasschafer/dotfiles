@@ -5,12 +5,11 @@
 # Nothing happens between monitor changes, so workspaces can still be moved manually, which
 # workspace-to-monitor-force-assignment would block.
 
-set -euo pipefail
+set -Eeuo pipefail
 
 readonly SCRIPT_NAME='monitor workspaces'
 # shellcheck source=lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
-trap 'notify_error "Failed at line $LINENO"' ERR
 
 readonly LAPTOP_WORKSPACES=(B D M Z)
 # AeroSpace monitor patterns are case-insensitive regexes matched against monitor names
@@ -20,8 +19,8 @@ readonly EXTERNAL_PATTERN='^(?!built-in)'
 require_single_aerospace
 
 # Keyed by AeroSpace PID so workspaces are arranged again after a restart
-readonly STATE_FILE="${TMPDIR:-/tmp}/aerospace-monitors-$AEROSPACE_PID"
-readonly LOCK_DIR="${TMPDIR:-/tmp}/aerospace-monitors.lock"
+STATE_FILE=$(state_path "monitors-$AEROSPACE_PID")
+readonly STATE_FILE
 
 is_laptop_workspace() {
     local workspace
@@ -44,17 +43,19 @@ arrange_workspaces() {
     done 3< <(aerospace list-workspaces --all)
 }
 
-# Another run is in progress and will handle any monitor change
-acquire_lock "$LOCK_DIR" || exit 0
-trap 'rmdir "$LOCK_DIR"' EXIT
+update_workspaces() {
+    local monitors
+    monitors=$(aerospace list-monitors --format '%{monitor-name}' | sort)
+    if [[ -f $STATE_FILE && $(<"$STATE_FILE") == "$monitors" ]]; then
+        return 0
+    fi
 
-monitors=$(aerospace list-monitors --format '%{monitor-name}' | sort)
-if [[ -f $STATE_FILE && $(<"$STATE_FILE") == "$monitors" ]]; then
-    exit 0
-fi
+    # With only the laptop's display, or only external monitors (lid closed), there's nothing to
+    # split
+    if grep -qi "$BUILT_IN_PATTERN" <<<"$monitors" && grep -qvi "$BUILT_IN_PATTERN" <<<"$monitors"; then
+        arrange_workspaces
+    fi
+    echo "$monitors" >"$STATE_FILE"
+}
 
-# With only the laptop's display, or only external monitors (lid closed), there's nothing to split
-if grep -qi "$BUILT_IN_PATTERN" <<<"$monitors" && grep -qvi "$BUILT_IN_PATTERN" <<<"$monitors"; then
-    arrange_workspaces
-fi
-echo "$monitors" >"$STATE_FILE"
+run_exclusively monitors update_workspaces

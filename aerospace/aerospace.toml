@@ -39,6 +39,7 @@ default-root-container-orientation = 'auto'
 # connected or disconnected. AeroSpace has no callback for that, so it checks on focus changes.
 on-focus-changed = [
   'exec-and-forget ~/.config/aerospace/citrix-windows.sh',
+  'exec-and-forget ~/.config/aerospace/zoom-windows.sh',
   'exec-and-forget ~/.config/aerospace/monitor-workspaces.sh',
 ]
 on-focused-monitor-changed = ['exec-and-forget ~/.config/aerospace/monitor-workspaces.sh']
@@ -227,6 +228,8 @@ run = 'move-node-to-workspace M'
 if.app-id = 'com.citrix.receiver.icaviewer.mac'
 run = 'move-node-to-workspace Q'
 
+# zoom-windows.sh (see on-focus-changed) moves meeting and webinar windows to Z once they have a
+# title
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
 run = 'move-node-to-workspace B'
