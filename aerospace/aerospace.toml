@@ -68,6 +68,33 @@ outer.bottom = 5
 outer.top = 5
 outer.right = 5
 
+# Media and Zoom stay on the laptop screen; everything else moves to the external monitor when one
+# is connected. '^(?!built-in)' matches any monitor that isn't the laptop's own display.
+# See: https://nikitabobko.github.io/AeroSpace/guide#assign-workspaces-to-monitors
+[workspace-to-monitor-force-assignment]
+B = 'built-in'
+D = 'built-in'
+M = 'built-in'
+Z = 'built-in'
+A = ['^(?!built-in)', 'built-in']
+C = ['^(?!built-in)', 'built-in']
+E = ['^(?!built-in)', 'built-in']
+F = ['^(?!built-in)', 'built-in']
+G = ['^(?!built-in)', 'built-in']
+I = ['^(?!built-in)', 'built-in']
+N = ['^(?!built-in)', 'built-in']
+O = ['^(?!built-in)', 'built-in']
+P = ['^(?!built-in)', 'built-in']
+Q = ['^(?!built-in)', 'built-in']
+R = ['^(?!built-in)', 'built-in']
+S = ['^(?!built-in)', 'built-in']
+T = ['^(?!built-in)', 'built-in']
+U = ['^(?!built-in)', 'built-in']
+V = ['^(?!built-in)', 'built-in']
+W = ['^(?!built-in)', 'built-in']
+X = ['^(?!built-in)', 'built-in']
+Y = ['^(?!built-in)', 'built-in']
+
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
 # 'main' binding mode must be always presented
@@ -210,6 +237,10 @@ run = 'move-node-to-workspace S'
 [[on-window-detected]]
 if.app-id = 'com.google.Chrome.app.pjibgclleladliembfgfagdaldikeohf'
 run = 'move-node-to-workspace D'
+
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome.app.cinhimbnkkaeohfgghhklpknlkffjgod'
+run = 'move-node-to-workspace M'
 
 # Citrix windows are often untitled when detected, so citrix-windows.sh (see on-focus-changed)
 # routes and tiles them once they have a title
