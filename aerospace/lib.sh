@@ -40,32 +40,46 @@ run_exclusively() {
     trap - EXIT
 }
 
+# Seconds to keep checking for a title on a window first seen without one
+readonly ROUTE_TITLE_WAIT=60
+
 # Routes each window of an app the first time it is seen with a title for which
 # should_route_window <title> succeeds, by calling route_window <window-id> <title>. Callers define
 # both functions. Windows are only routed once, so manual moves afterwards are left alone. Titles
-# can be set without a further focus change, so this checks again after short delays.
+# can be set without a further focus change (apps such as Citrix can take a while to title new
+# windows), so this keeps checking for a few seconds, and for longer while there are untitled
+# windows first seen less than ROUTE_TITLE_WAIT seconds ago.
 route_new_windows() {
-    local delay
+    local started=$SECONDS
     readonly ROUTE_APP_ID=$1 ROUTE_NAME=$2
     require_single_aerospace
     # Keyed by AeroSpace PID: AeroSpace re-runs on-window-detected for every window on restart, so
     # windows need routing again
     ROUTE_STATE_FILE=$(state_path "$ROUTE_NAME-handled-$AEROSPACE_PID")
-    readonly ROUTE_STATE_FILE
+    # Untitled windows, with the time each was first seen
+    ROUTE_UNTITLED_FILE=$(state_path "$ROUTE_NAME-untitled-$AEROSPACE_PID")
+    readonly ROUTE_STATE_FILE ROUTE_UNTITLED_FILE
 
-    run_exclusively "$ROUTE_NAME" route_unhandled_windows
-    for delay in 1 3; do
-        sleep "$delay"
+    while true; do
+        ROUTE_AWAITING_TITLE=false
         run_exclusively "$ROUTE_NAME" route_unhandled_windows
+        if ((SECONDS - started >= 4)) && [[ $ROUTE_AWAITING_TITLE == false ]]; then
+            break
+        fi
+        sleep 1
     done
 }
 
+# Sets ROUTE_AWAITING_TITLE to true if any untitled window is still within ROUTE_TITLE_WAIT
 route_unhandled_windows() {
-    local windows handled id title
+    local windows handled untitled new_untitled='' now first_seen id title
     windows=$(aerospace list-windows --monitor all --app-bundle-id "$ROUTE_APP_ID" --format '%{window-id}%{tab}%{window-title}')
-    [[ -n $windows ]] || return 0
+    if [[ -z $windows ]]; then
+        : >"$ROUTE_UNTITLED_FILE"
+        return 0
+    fi
 
-    touch "$ROUTE_STATE_FILE"
+    touch "$ROUTE_STATE_FILE" "$ROUTE_UNTITLED_FILE"
     # Drop closed windows so the state file only tracks live window IDs
     handled=$(cut -f1 <<<"$windows" | grep -Fx -f "$ROUTE_STATE_FILE" || true)
     if [[ -n $handled ]]; then
@@ -73,15 +87,27 @@ route_unhandled_windows() {
     else
         : >"$ROUTE_STATE_FILE"
     fi
+    untitled=$(<"$ROUTE_UNTITLED_FILE")
+    now=$(date +%s)
 
     # Read from fd 3 because the aerospace CLI reads stdin, which would swallow the list
     while IFS=$'\t' read -r -u 3 id title; do
-        [[ $title =~ [^[:space:]] ]] || continue
         if grep -Fxq "$id" <<<"$handled"; then
+            continue
+        fi
+        if ! [[ $title =~ [^[:space:]] ]]; then
+            first_seen=$(awk -F '\t' -v id="$id" '$1 == id { print $2 }' <<<"$untitled")
+            first_seen=${first_seen:-$now}
+            new_untitled+="$id"$'\t'"$first_seen"$'\n'
+            if ((now - first_seen < ROUTE_TITLE_WAIT)); then
+                ROUTE_AWAITING_TITLE=true
+            fi
             continue
         fi
         should_route_window "$title" || continue
         route_window "$id" "$title"
         echo "$id" >>"$ROUTE_STATE_FILE"
     done 3<<<"$windows"
+
+    printf '%s' "$new_untitled" >"$ROUTE_UNTITLED_FILE"
 }
