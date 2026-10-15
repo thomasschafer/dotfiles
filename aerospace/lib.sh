@@ -22,22 +22,50 @@ state_path() {
     echo "${TMPDIR:-/tmp}/aerospace-$1"
 }
 
+# Takes the lock at the given path, failing if another run holds it
+try_lock() {
+    if ! mkdir "$1" 2>/dev/null; then
+        # Clear a lock left behind by a run that was killed
+        [[ -n $(find "$1" -maxdepth 0 -mmin +1) ]] || return 1
+        rmdir "$1"
+        mkdir "$1"
+    fi
+}
+
+# Runs a command, then releases the lock at the given path (also if the command exits early)
+run_holding_lock() {
+    local lock_dir=$1
+    shift
+    trap "rmdir $(printf %q "$lock_dir")" EXIT
+    "$@"
+    rmdir "$lock_dir"
+    trap - EXIT
+}
+
 # Runs a command while holding the named lock. If another run already holds it, does nothing and
 # relies on that run to do the work.
 run_exclusively() {
     local lock_dir
     lock_dir=$(state_path "$1.lock")
     shift
-    if ! mkdir "$lock_dir" 2>/dev/null; then
-        # Clear a lock left behind by a run that was killed
-        [[ -n $(find "$lock_dir" -maxdepth 0 -mmin +1) ]] || return 0
-        rmdir "$lock_dir"
-        mkdir "$lock_dir"
-    fi
-    trap "rmdir $(printf %q "$lock_dir")" EXIT
-    "$@"
-    rmdir "$lock_dir"
-    trap - EXIT
+    try_lock "$lock_dir" || return 0
+    run_holding_lock "$lock_dir" "$@"
+}
+
+# Runs a command while holding the named lock, waiting for another run to release it first
+run_when_unlocked() {
+    local lock_dir attempt
+    lock_dir=$(state_path "$1.lock")
+    shift
+    for attempt in {1..50}; do
+        if try_lock "$lock_dir"; then
+            run_holding_lock "$lock_dir" "$@"
+            return 0
+        fi
+        sleep 0.1
+    done
+    notify_error "Timed out waiting for the $(basename "$lock_dir") lock"
+    exit 1
 }
 
 # Seconds to keep checking for a title on a window first seen without one
