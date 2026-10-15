@@ -14,8 +14,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 tile() {
     local err
-    # 'layout tiling' exits non-zero without output when the window is already tiled
-    if ! err=$(aerospace layout --window-id "$1" tiling 2>&1) && [[ -n $err ]]; then
+    # 'layout tiling' exits non-zero without output when the window is already tiled. The subshell
+    # inherits the ERR trap (set -E), so clear it there to avoid notifying about that expected exit.
+    if ! err=$(trap - ERR; aerospace layout --window-id "$1" tiling 2>&1) && [[ -n $err ]]; then
         echo "$err" >&2
         return 1
     fi
