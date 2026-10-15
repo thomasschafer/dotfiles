@@ -19,4 +19,5 @@ route_window() {
     aerospace move-node-to-workspace --focus-follows-window --window-id "$1" Z
 }
 
-route_new_windows 'us.zoom.xos' zoom
+route_setup 'us.zoom.xos' zoom
+route_new_windows

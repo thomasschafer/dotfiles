@@ -6,6 +6,11 @@
 # Nothing happens between monitor changes, so workspaces can still be moved manually, which
 # workspace-to-monitor-force-assignment would block.
 #
+# Workspaces holding Citrix windows are only moved once the monitors stop changing (external
+# monitors can connect a few seconds apart), and their windows are then resized (see
+# citrix-windows.sh). Moving them earlier gains nothing, as they keep their old size until then
+# anyway, and each move is slow and jittery.
+#
 # Run with toggle-laptop-only (bound to a key) to move every workspace to the laptop's display, and
 # again to go back to the split above.
 
@@ -19,6 +24,11 @@ readonly LAPTOP_WORKSPACES=(B D M Z)
 readonly LEFT_WORKSPACES=(Q W E)
 # AeroSpace monitor names, matched case-insensitively
 readonly BUILT_IN_PATTERN='built-in'
+# How long the set of monitors must stay the same before it counts as settled. Needs to cover the
+# gap between external monitors connecting, about 3 seconds for a dock with two.
+readonly SETTLE_SECONDS=5
+CITRIX_SCRIPT="$(dirname "${BASH_SOURCE[0]}")/citrix-windows.sh"
+readonly CITRIX_SCRIPT
 
 require_single_aerospace
 
@@ -27,6 +37,8 @@ STATE_FILE=$(state_path "monitors-$AEROSPACE_PID")
 # Exists while toggle-laptop-only has moved every workspace to the laptop's display
 LAPTOP_ONLY_FILE=$(state_path "laptop-only-$AEROSPACE_PID")
 readonly STATE_FILE LAPTOP_ONLY_FILE
+
+MONITORS_CHANGED=false
 
 contains() {
     local item=$1 element
@@ -37,13 +49,19 @@ contains() {
     return 1
 }
 
+list_monitors() {
+    aerospace list-monitors --format '%{monitor-id}%{tab}%{monitor-name}'
+}
+
 # Sets BUILT_IN_MONITOR, LEFT_MONITOR and RIGHT_MONITOR to monitor sequence numbers (counted from the
 # left), or to empty strings for monitors that aren't connected. Unlike names, sequence numbers tell
-# identical monitors apart.
+# identical monitors apart. Also sets MONITORS to the output of list_monitors, and MONITOR_NAMES to
+# the sorted monitor names, which identify the set of connected monitors.
 find_monitors() {
-    local monitors id name
+    local id name
     BUILT_IN_MONITOR='' LEFT_MONITOR='' RIGHT_MONITOR=''
-    monitors=$(aerospace list-monitors --format '%{monitor-id}%{tab}%{monitor-name}')
+    MONITORS=$(list_monitors)
+    MONITOR_NAMES=$(cut -f2 <<<"$MONITORS" | sort)
     while IFS=$'\t' read -r id name; do
         if ! [[ $id =~ ^[0-9]+$ ]]; then
             notify_error "Unexpected monitor ID: $id"
@@ -63,13 +81,29 @@ find_monitors() {
                 RIGHT_MONITOR=$id
             fi
         fi
-    done <<<"$monitors"
+    done <<<"$MONITORS"
 }
 
 # With only the laptop's display, or only external monitors (lid closed), there's nothing to split
 has_split() {
     [[ -n $BUILT_IN_MONITOR && -n $LEFT_MONITOR ]]
 }
+
+# Sets CITRIX_WORKSPACES to the workspaces Citrix windows are routed to, and any others holding
+# Citrix windows, one per line. Citrix rebuilds its windows when the monitors change, so routed
+# workspaces can be briefly empty.
+find_citrix_workspaces() {
+    CITRIX_WORKSPACES=$({
+        printf '%s\n' "$CITRIX_MAIN_WORKSPACE" "$CITRIX_IB_WORKSPACE" "$CITRIX_LAUNCHPAD_WORKSPACE"
+        aerospace list-windows --monitor all --app-bundle-id "$CITRIX_APP_ID" --format '%{workspace}'
+    } | sort -u)
+}
+
+is_citrix_workspace() {
+    grep -Fxq "$1" <<<"$CITRIX_WORKSPACES"
+}
+
+# Target functions print the monitor a workspace should be on, or nothing to leave it where it is
 
 split_target() {
     if contains "$1" "${LAPTOP_WORKSPACES[@]}"; then
@@ -81,45 +115,104 @@ split_target() {
     fi
 }
 
+non_citrix_split_target() {
+    is_citrix_workspace "$1" || split_target "$1"
+}
+
+citrix_split_target() {
+    if is_citrix_workspace "$1"; then
+        split_target "$1"
+    fi
+}
+
 laptop_target() {
     echo "$BUILT_IN_MONITOR"
 }
 
 # Moves each workspace to the monitor printed by <target-function> <workspace>, keeping the focused
-# workspace focused
+# workspace focused. Monitors can disconnect one at a time partway through, in which case this stops
+# and sets MOVE_INTERRUPTED to true, so the caller can start again with the monitors now connected.
 move_workspaces() {
     local target_function=$1 focused workspaces workspace monitor target
+    MOVE_INTERRUPTED=false
     focused=$(aerospace list-workspaces --focused)
     workspaces=$(aerospace list-workspaces --all --format '%{workspace}%{tab}%{monitor-id}')
     # Read from fd 3 because the aerospace CLI reads stdin, which would swallow the list
     while IFS=$'\t' read -r -u 3 workspace monitor; do
         target=$("$target_function" "$workspace")
-        if [[ $monitor != "$target" ]]; then
-            aerospace move-workspace-to-monitor --workspace "$workspace" "$target"
+        [[ -n $target && $target != "$monitor" ]] || continue
+        if ! aerospace move-workspace-to-monitor --workspace "$workspace" "$target"; then
+            if [[ $(list_monitors) == "$MONITORS" ]]; then
+                notify_error "Couldn't move workspace $workspace to monitor $target"
+                exit 1
+            fi
+            MOVE_INTERRUPTED=true
+            return 0
         fi
     done 3<<<"$workspaces"
     aerospace workspace "$focused"
 }
 
+# If the set of connected monitors changed since the last run, moves workspaces without Citrix
+# windows, sets MONITORS_CHANGED to true and pushes back the deadline for the monitors to settle
 update_workspaces() {
-    local monitors
-    monitors=$(aerospace list-monitors --format '%{monitor-name}' | sort)
-    if [[ -f $STATE_FILE && $(<"$STATE_FILE") == "$monitors" ]]; then
-        return 0
-    fi
+    for _ in 1 2 3 4 5; do
+        find_monitors
+        if [[ -f $STATE_FILE && $(<"$STATE_FILE") == "$MONITOR_NAMES" ]]; then
+            return 0
+        fi
 
-    rm -f "$LAPTOP_ONLY_FILE"
-    find_monitors
-    if has_split; then
-        move_workspaces split_target
+        MONITORS_CHANGED=true
+        trace "Monitors changed: $(tr '\n' ',' <<<"$MONITOR_NAMES")"
+        push_deadline monitors-settle "$SETTLE_SECONDS"
+        rm -f "$LAPTOP_ONLY_FILE"
+        MOVE_INTERRUPTED=false
+        if has_split; then
+            find_citrix_workspaces
+            move_workspaces non_citrix_split_target
+        fi
+        if [[ $MOVE_INTERRUPTED == false ]]; then
+            echo "$MONITOR_NAMES" >"$STATE_FILE"
+            return 0
+        fi
+        sleep 1
+    done
+    notify_error "Monitors kept changing while arranging workspaces"
+    exit 1
+}
+
+# Once the monitors have settled, moves Citrix workspaces and resizes Citrix windows
+settle_monitors() {
+    until deadline_passed monitors-settle; do
+        sleep 1
+    done
+    trace "Monitors settled"
+    run_when_unlocked monitors move_citrix_workspaces
+    # Otherwise the monitors changed again meanwhile, and run_until_deadline calls this again
+    if deadline_passed monitors-settle; then
+        "$CITRIX_SCRIPT" refresh-window-sizes "$(($(read_deadline monitors-settle) - SETTLE_SECONDS))"
     fi
-    echo "$monitors" >"$STATE_FILE"
+}
+
+move_citrix_workspaces() {
+    # Picks up monitor changes no focus change has reported yet
+    update_workspaces
+    deadline_passed monitors-settle || return 0
+    has_split || return 0
+    # The toggle moves every workspace itself
+    [[ ! -f $LAPTOP_ONLY_FILE ]] || return 0
+
+    find_citrix_workspaces
+    move_workspaces citrix_split_target
+    trace "Moved Citrix workspaces"
+    if [[ $MOVE_INTERRUPTED == true ]]; then
+        update_workspaces
+    fi
 }
 
 toggle_laptop_only() {
     # Picks up a monitor change first, so the next focus change doesn't undo the toggle
     update_workspaces
-    find_monitors
     if ! has_split; then
         notify_error 'Needs both the laptop display and an external monitor'
         exit 1
@@ -127,9 +220,15 @@ toggle_laptop_only() {
 
     if [[ -f $LAPTOP_ONLY_FILE ]]; then
         move_workspaces split_target
-        rm "$LAPTOP_ONLY_FILE"
     else
         move_workspaces laptop_target
+    fi
+
+    if [[ $MOVE_INTERRUPTED == true ]]; then
+        update_workspaces
+    elif [[ -f $LAPTOP_ONLY_FILE ]]; then
+        rm "$LAPTOP_ONLY_FILE"
+    else
         touch "$LAPTOP_ONLY_FILE"
     fi
 }
@@ -142,3 +241,7 @@ case ${1:-} in
         exit 1
         ;;
 esac
+
+if [[ $MONITORS_CHANGED == true ]]; then
+    run_until_deadline monitors-settle settle_monitors
+fi
