@@ -5,3 +5,6 @@ os:
   edit: 'mux-send-keys ":onc {{filename}}"'
   editAtLine: 'mux-send-keys ":onc {{filename}}:{{line}}"'
   editInTerminal: false
+git:
+  diffRenderers:
+    - command: delta --{{colorScheme}} --paging=never --hunk-header-style=omit --line-numbers --syntax-theme="Catppuccin Macchiato"

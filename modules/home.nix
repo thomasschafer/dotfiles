@@ -209,6 +209,7 @@ in
       [
         atuin
         biome
+        delta
         deno
         direnv
         fd
