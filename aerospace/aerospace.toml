@@ -35,8 +35,10 @@ default-root-container-orientation = 'auto'
 # Fallback value (if you omit the key): on-focused-monitor-changed = []
 # on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
-# monitor-workspaces.sh moves workspaces between the laptop and external monitors when monitors are
-# connected or disconnected. AeroSpace has no callback for that, so it checks on focus changes.
+# citrix-windows.sh and zoom-windows.sh route windows once they have titles, and citrix-windows.sh
+# also resizes Citrix windows after monitor layout changes. monitor-workspaces.sh moves workspaces
+# between the laptop and external monitors when monitors are connected or disconnected. AeroSpace
+# has no callback for that, so it checks on focus changes.
 on-focus-changed = [
   'exec-and-forget ~/.config/aerospace/citrix-windows.sh',
   'exec-and-forget ~/.config/aerospace/zoom-windows.sh',

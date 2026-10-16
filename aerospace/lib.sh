@@ -35,6 +35,17 @@ state_path() {
     echo "${TMPDIR:-/tmp}/aerospace-$1"
 }
 
+# Deletes state files left by previous AeroSpace processes, which end with their PIDs. Needs
+# AEROSPACE_PID (see require_single_aerospace).
+remove_stale_state() {
+    local file
+    for file in "$(state_path '')"*; do
+        if [[ -f $file && $file =~ -([0-9]+)$ && ${BASH_REMATCH[1]} != "$AEROSPACE_PID" ]]; then
+            rm -f "$file"
+        fi
+    done
+}
+
 # Appends a timestamped line to a trace log, for working out what happened during monitor changes
 trace() {
     local file

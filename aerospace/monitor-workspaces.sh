@@ -40,9 +40,14 @@ require_single_aerospace
 STATE_FILE=$(state_path "monitors-$AEROSPACE_PID")
 # Exists while toggle-laptop-only has moved every workspace to the laptop's display
 LAPTOP_ONLY_FILE=$(state_path "laptop-only-$AEROSPACE_PID")
-# The workspaces showing when the monitors were last settled
+# The visible workspaces, recorded on focus changes while the monitors are settled
 VISIBLE_FILE=$(state_path "visible-workspaces-$AEROSPACE_PID")
 readonly STATE_FILE LAPTOP_ONLY_FILE VISIBLE_FILE
+
+# First run since AeroSpace started
+if [[ ! -f $STATE_FILE ]]; then
+    remove_stale_state
+fi
 
 MONITORS_CHANGED=false
 
@@ -96,6 +101,11 @@ has_split() {
 }
 
 count_external_monitors() {
+    # A here-string always has at least one line, which would count as a monitor
+    if [[ -z $1 ]]; then
+        echo 0
+        return 0
+    fi
     grep -cvi "$BUILT_IN_PATTERN" <<<"$1" || true
 }
 
