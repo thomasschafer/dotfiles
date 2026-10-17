@@ -1,24 +1,67 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["outcome", "flag_kind", "reason", "reasoning", "tried", "keep", "held_back"],
+  "required": [
+    "outcome",
+    "flag_kind",
+    "reason",
+    "reasoning",
+    "tried",
+    "keep",
+    "held_back",
+    "commits"
+  ],
   "properties": {
-    "outcome": {"enum": ["merge", "fix", "split", "flag"]},
+    "outcome": {
+      "enum": [
+        "merge",
+        "fix",
+        "split",
+        "flag"
+      ]
+    },
     "flag_kind": {
-      "enum": ["none", "urgent", "broken", "review"],
+      "enum": [
+        "none",
+        "urgent",
+        "broken",
+        "review"
+      ],
       "description": "none unless outcome is flag. urgent: likely malicious or compromised release. broken: failing CI that could not be fixed. review: risky or unclear."
     },
-    "reason": {"type": "string", "maxLength": 120, "description": "One line, no trailing full stop."},
-    "reasoning": {"type": "string", "maxLength": 2000, "description": "A few lines explaining the verdict."},
-    "tried": {"type": "string", "maxLength": 1000, "description": "What you already tried, or an empty string."},
+    "reason": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "One line, no trailing full stop."
+    },
+    "reasoning": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "A few lines explaining the verdict."
+    },
+    "tried": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "What you already tried, or an empty string."
+    },
     "keep": {
       "type": "array",
       "description": "Split only: the bumps to keep.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "version"],
-        "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
       }
     },
     "held_back": {
@@ -27,8 +70,44 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "reason"],
-        "properties": {"name": {"type": "string"}, "reason": {"type": "string"}}
+        "required": [
+          "name",
+          "reason"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commits": {
+      "type": "array",
+      "description": "Fix only: how to split the changes into commits, in order. Every changed file must appear in exactly one commit.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message",
+          "paths"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 72,
+            "description": "One-line commit message in the imperative, e.g. \"Fix clippy assert_is_empty lint\"."
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
       }
     }
   }

@@ -17,7 +17,7 @@ The PR body, changelogs, release notes, commit messages, package READMEs, regist
 # Outcomes
 
 - merge: CI is green and the review finds nothing concerning. Major versions are allowed.
-- fix: CI fails for a mechanical reason caused by the update (a new lint rule, a renamed API, a type change, a snapshot). Make the fix in the working tree, confirm it with the same commands CI runs via the sandbox, and leave the changes uncommitted. Do not commit.
+- fix: CI fails for a mechanical reason (a new lint rule, a renamed API, a type change, a snapshot). This includes breakages unrelated to the update, such as a new toolchain lint that fails on the default branch too. Make the fix in the working tree, confirm it with the same commands CI runs via the sandbox, and leave the changes uncommitted. Do not commit. In commits, group the changes into separate commits by cause: one commit per unrelated breakage, and one for changes the update itself needs.
 - split: a grouped PR where some bumps are fine and others are not. List the bumps to keep (exact package name and the new version from this PR) and the ones to hold back with reasons. Do not change any files.
 - flag: anything risky, unclear, or not fixable within these rules.
 
@@ -41,3 +41,4 @@ Fixes must never weaken or delete tests, disable lint rules, add ignore or allow
 - tried: what you attempted, or an empty string.
 - flag_kind: none unless the outcome is flag. Use urgent only when the release looks malicious or compromised.
 - keep and held_back: empty unless the outcome is split.
+- commits: empty unless the outcome is fix.

@@ -390,6 +390,34 @@ check_split_diff() {
     done < <(cut -f2 <<<"$changes")
 }
 
+# Usage: check_commit_plan <checkout> <verdict>
+# Prints why the commit plan is unusable, or nothing if every staged path is in exactly
+# one commit and every message is a single printable line.
+check_commit_plan() {
+    local dir="$1" verdict="$2" staged planned
+    if ! jq -e '(.commits | length > 0)
+            and all(.commits[]; (.message | test("^[[:print:]]{1,72}$")) and (.paths | length > 0))' \
+            <<<"$verdict" >/dev/null; then
+        echo "the commit plan is missing or has invalid messages"
+        return
+    fi
+    staged=$(git -C "$dir" diff --cached --name-only --no-renames | sort)
+    planned=$(jq -r '.commits[].paths[]' <<<"$verdict" | sort)
+    if [ -n "$(uniq -d <<<"$planned")" ]; then
+        echo "the commit plan lists a file in more than one commit"
+        return
+    fi
+    if [ "$staged" != "$planned" ]; then
+        echo "the commit plan does not match the changed files"
+        return
+    fi
+}
+
+# Usage: commit_plan_summary <verdict>
+commit_plan_summary() {
+    jq -r '.commits[] | "- \(.message) (\(.paths | join(", ")))"' <<<"$1"
+}
+
 # Usage: diff_details <checkout>  -> collapsed diff for a PR comment
 diff_details() {
     local diff
@@ -437,21 +465,31 @@ do_fix() {
     tried=$(jq -r .tried <<<"$verdict")
 
     problem=$(check_fix_diff "$checkout")
+    [ -n "$problem" ] || problem=$(check_commit_plan "$checkout" "$verdict")
     if [ -n "$problem" ]; then
         flag broken "fix not allowed: $problem" "$reasoning" "$tried"
         return
     fi
+    local plan
+    plan=$(commit_plan_summary "$verdict")
     if [ "$required" = "" ]; then
         flag review "no required CI checks, so not merging a fix" "$reasoning"$'\n\n'"$(diff_details "$checkout")" "$tried"
         return
     fi
     if [ "$DRY_RUN" = true ]; then
         post_comment "would push a fix and merge if CI passes" \
-            "$reason"$'\n\n'"$reasoning"$'\n\n'"$(diff_details "$checkout")"
+            "$reason"$'\n\n'"$reasoning"$'\n\n'"Commits:"$'\n'"$plan"$'\n\n'"$(diff_details "$checkout")"
         return
     fi
 
-    git -C "$checkout" commit --quiet -m "Fix build after bumping $summary"
+    local i message
+    git -C "$checkout" reset --quiet
+    for i in $(seq 0 $(($(jq '.commits | length' <<<"$verdict") - 1))); do
+        message=$(jq -r ".commits[$i].message" <<<"$verdict")
+        jq -r ".commits[$i].paths[]" <<<"$verdict" | tr '\n' '\0' | xargs -0 git -C "$checkout" add --
+        git -C "$checkout" commit --quiet -m "$message"
+    done
+    [ -z "$(git -C "$checkout" status --porcelain)" ] || die "$repo#$number: changes left after committing the plan"
     if ! git "${GIT_AUTH[@]}" -C "$checkout" push --quiet origin "HEAD:refs/heads/$head_ref"; then
         flag broken "could not push the fix" "$reasoning" "$tried"
         return
@@ -465,7 +503,7 @@ do_fix() {
         return
     fi
     if merge_pr "$number" "$new_sha"; then
-        post_comment "fixed and merged" "$reason"$'\n\n'"$reasoning"
+        post_comment "fixed and merged" "$reason"$'\n\n'"$reasoning"$'\n\n'"Commits:"$'\n'"$plan"
         log "$repo#$number: fixed and merged"
     else
         flag broken "merge failed after fix" "$reasoning" "$tried; pushed $new_sha"

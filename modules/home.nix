@@ -190,9 +190,13 @@ let
 
 in
 {
-  imports = lib.optionals enableOpenClaw [
-    nix-openclaw.homeManagerModules.openclaw
-  ];
+  imports =
+    lib.optionals enableOpenClaw [
+      nix-openclaw.homeManagerModules.openclaw
+    ]
+    ++ lib.optionals (host == "personal") [
+      ../dependabot-review/nix/home.nix
+    ];
 
   home = {
     stateVersion = "23.05";

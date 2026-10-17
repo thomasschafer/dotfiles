@@ -48,7 +48,7 @@ For each PR, `review-pr` checks out the head commit and runs `claude -p` with a 
 Claude returns a verdict: merge, fix, split or flag. `review-pr` then checks it against fixed rules before acting:
 
 - It only merges when every required check passes on the exact reviewed commit. Repos without required checks are never merged.
-- Fixes may not touch manifests, lockfiles or `.github`, delete files, add ignore or allow annotations, or remove test assertions.
+- Fixes may not touch manifests, lockfiles or `.github`, delete files, add ignore or allow annotations, or remove test assertions. They can also cover CI breakages unrelated to the update, such as a new toolchain lint, with one commit per cause.
 - Splits may only change manifests and lockfiles that the original PR changed.
 
 A revision that has already been reviewed is skipped, using a hidden marker in the PR comment. Todoist tasks are deduplicated by PR URL.
