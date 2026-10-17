@@ -17,25 +17,16 @@ In scope: repos owned by my account, not forks, not archived, with a `.github/de
 
 ## Setup
 
-1. Create a fine-grained GitHub token. Set the resource owner to your account and give it access to all repos, with these permissions:
-   - Contents, Pull requests: read and write
-   - Checks, Actions, Commit statuses: read
+`./setup.sh personal` or `dp` installs the tools and the hourly trigger, then runs `setup-secrets`. That script prompts for any token not yet in the keychain; run it again any time to add one you skipped. Create the tokens first:
 
-   Don't grant Administration or Workflows. Store it in the keychain:
+- GitHub: a fine-grained token. Set the resource owner to your account and give it access to all repos, with these permissions:
+  - Contents, Pull requests: read and write
+  - Checks, Actions, Commit statuses: read
 
-   ```sh
-   security add-generic-password -s dependabot-review-github -a "$USER" -w
-   ```
+  Don't grant Administration or Workflows.
+- Todoist: your API token, from Settings, Integrations, Developer.
 
-2. Create a Todoist API token (Settings, Integrations, Developer) and store it:
-
-   ```sh
-   security add-generic-password -s dependabot-review-todoist -a "$USER" -w
-   ```
-
-   On Linux, use `secret-tool store --label=... service <name>` with the same service names.
-
-3. Run `./setup.sh personal` (or rebuild) from the dotfiles root. This installs the tools and the hourly trigger.
+They're stored as `dependabot-review-github` and `dependabot-review-todoist`, in the keychain on macOS or `secret-tool` on Linux.
 
 The `claude` CLI must be installed and logged in at `~/.local/bin/claude`.
 

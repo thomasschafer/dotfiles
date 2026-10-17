@@ -38,6 +38,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
 
     nix_exec=/nix/var/nix/profiles/default/bin/nix
     $nix_exec run nix-darwin -- switch --flake .#"$mode"
+
+    if [ "$mode" = "personal" ]; then
+        ./dependabot-review/setup-secrets
+    fi
 else
     # NixOS: Nix is already installed, just rebuild
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

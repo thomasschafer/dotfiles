@@ -8,6 +8,8 @@ cd ~/Development/Personal/dotfiles
 ./setup.sh personal  # or ./setup.sh work
 ```
 
+On `personal`, setup (and `dp`) also installs the weekly Dependabot review job and prompts for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
+
 ## NixOS server
 
 1. Provision a server with Debian (or any OS compatible with [nixos-infect](https://github.com/elitak/nixos-infect)). Add your SSH key during provisioning, and ensure the same key is in `modules/hosts/<hostname>/default.nix`.
