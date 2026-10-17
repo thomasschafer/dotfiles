@@ -1,0 +1,596 @@
+#!/usr/bin/env bash
+# Reviews one Dependabot PR with a headless Claude session and carries out the outcome:
+# merge, fix and merge, split, or flag. Claude never holds the GitHub or Todoist tokens;
+# it only returns a verdict and, for fixes and splits, leaves changes in the working tree.
+# This script checks those changes against fixed rules before pushing or merging anything.
+#
+# Usage: review-pr [--preview] <owner/repo> <number>
+#   --preview  review as in dry-run mode, but print comments, labels and Todoist tasks
+#              instead of creating them. Uses your normal gh login if GH_TOKEN is unset.
+# Expects GH_TOKEN and TODOIST_TOKEN in the environment and the colima profile running.
+# Called by review-all; can also be run by hand.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$script_dir/lib.sh"
+
+preview=false
+if [ "${1:-}" = --preview ]; then
+    preview=true
+    DRY_RUN=true
+    shift
+fi
+[ $# -eq 2 ] || die "usage: review-pr [--preview] <owner/repo> <number>"
+repo="$1"
+number="$2"
+[[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "invalid repo: $repo"
+[[ "$number" =~ ^[0-9]+$ ]] || die "invalid PR number: $number"
+
+require_commands gh git jq docker claude curl
+if [ "$preview" = false ]; then
+    [ -n "${GH_TOKEN:-}" ] || die "GH_TOKEN is not set"
+    [ -n "${TODOIST_TOKEN:-}" ] || die "TODOIST_TOKEN is not set"
+fi
+
+# Manifests and lockfiles. Fixes may not touch these; splits may touch only these.
+MANIFEST_PATTERN='(^|/)(Cargo\.toml|Cargo\.lock|package\.json|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|requirements[^/]*\.(txt|in)|pyproject\.toml|poetry\.lock|uv\.lock|Pipfile(\.lock)?|Gemfile(\.lock)?|[^/]*\.gemspec|go\.mod|go\.sum|rust-toolchain(\.toml)?|\.tool-versions|mise\.toml)$'
+# Added lines matching this silence a check rather than fix it.
+SUPPRESSION_PATTERN='#!?\[(allow|expect)\(|#\[ignore|eslint-disable|@ts-(ignore|expect-error|nocheck)|biome-ignore|#[[:space:]]*(noqa|type:[[:space:]]*ignore|pylint:[[:space:]]*disable)|//[[:space:]]*nolint|rubocop:disable|\.skip\(|\bx(it|describe|test)\(|pytest\.mark\.(skip|xfail)|t\.Skip\('
+# Lines that look like test definitions or assertions. A fix may rewrite them but not remove them.
+ASSERTION_PATTERN='assert|#\[test\]|#\[tokio::test|\bexpect\(|\bdef test_|\bfunc Test|\bit\(|\btest\(|\bdescribe\('
+
+GIT_AUTH=(-c credential.helper= -c "credential.helper=!gh auth git-credential")
+WEBFETCH_DOMAINS=(
+    github.com api.github.com raw.githubusercontent.com
+    crates.io static.crates.io docs.rs lib.rs
+    registry.npmjs.org www.npmjs.com
+    pypi.org
+    rubygems.org
+    proxy.golang.org pkg.go.dev sum.golang.org
+)
+
+pr=$(gh pr view "$number" -R "$repo" \
+    --json number,title,url,body,author,headRefName,headRefOid,baseRefName,files,labels,mergeable,comments,state)
+[ "$(jq -r .state <<<"$pr")" = "OPEN" ] || die "$repo#$number is not open"
+author=$(jq -r .author.login <<<"$pr")
+case "$author" in
+    app/dependabot | dependabot | "dependabot[bot]") ;;
+    *) die "$repo#$number is authored by $author, not Dependabot" ;;
+esac
+
+url=$(jq -r .url <<<"$pr")
+title=$(jq -r .title <<<"$pr")
+head_ref=$(jq -r .headRefName <<<"$pr")
+head_sha=$(jq -r .headRefOid <<<"$pr")
+base_ref=$(jq -r .baseRefName <<<"$pr")
+summary=$(summarise_dependabot_title "$title")
+repo_short="${repo#*/}"
+marker="$REVIEW_MARKER_PREFIX$head_sha -->"
+
+if jq -e --arg m "$marker" 'any(.comments[]; .body | contains($m))' <<<"$pr" >/dev/null; then
+    log "$repo#$number: head $head_sha already reviewed, skipping"
+    exit 0
+fi
+
+[[ "$head_ref" =~ ^dependabot/([^/]+)/ ]] || die "unexpected Dependabot branch name: $head_ref"
+ecosystem="${BASH_REMATCH[1]}"
+case "$ecosystem" in
+    cargo) image="rust:1" cache_mount="dependabot-review-cargo:/usr/local/cargo/registry" ;;
+    npm_and_yarn) image="node:lts" cache_mount="dependabot-review-npm:/root/.npm" ;;
+    pip | uv) image="python:3" cache_mount="dependabot-review-pip:/root/.cache" ;;
+    bundler) image="ruby:3" cache_mount="dependabot-review-bundler:/usr/local/bundle" ;;
+    go_modules) image="golang:1" cache_mount="dependabot-review-go:/go/pkg/mod" ;;
+    *) image="" cache_mount="" ;;
+esac
+
+required=$(required_checks "$repo" "$base_ref")
+id="${repo//\//__}-$number"
+context_dir="$STATE_DIR/context/$id"
+bin_dir="$STATE_DIR/bin/$id"
+cache_repo="$WORK_DIR/repos/${repo//\//__}.git"
+checkout="$WORK_DIR/checkouts/$id"
+split_checkout="$WORK_DIR/checkouts/$id-split"
+
+cleanup() {
+    local dir
+    for dir in "$checkout" "$split_checkout"; do
+        if [ -d "$dir" ]; then
+            git -C "$cache_repo" worktree remove --force "$dir" 2>/dev/null || rm -rf "$dir"
+        fi
+    done
+    git -C "$cache_repo" worktree prune 2>/dev/null || true
+    rm -rf "$context_dir" "$bin_dir"
+}
+trap cleanup EXIT
+
+dry_label=""
+[ "$DRY_RUN" = true ] && dry_label=" (dry run)"
+
+# GitHub writes
+
+post_comment() {
+    local heading="$1" body="$2"
+    if [ "$preview" = true ]; then
+        printf '\n----- Comment on %s: %s\n%s\n-----\n' "$url" "$heading" "$body"
+        return
+    fi
+    printf '**Dependabot review%s: %s**\n\n%s\n\n%s\n' "$dry_label" "$heading" "$body" "$marker" |
+        gh pr comment "$number" -R "$repo" --body-file - >/dev/null
+}
+
+# Usage: flag <kind> <reason> <reasoning> <tried>
+flag() {
+    local kind="$1" reason="$2" reasoning="$3" tried="$4" body
+    body="$reason"$'\n\n'"$reasoning"
+    [ -n "$tried" ] && body+=$'\n\n'"Tried: $tried"
+    post_comment "flagged" "$body"
+    if [ "$preview" = true ]; then
+        printf '\n----- Would label %s and create a %s Todoist task:\n%s\n-----\n' \
+            "$NEEDS_TOM_LABEL" "$kind" "$repo_short: $summary - $reason"
+        return
+    fi
+    gh label create "$NEEDS_TOM_LABEL" -R "$repo" --force --color D93F0B \
+        --description "Needs a human decision" >/dev/null
+    gh pr edit "$number" -R "$repo" --add-label "$NEEDS_TOM_LABEL" >/dev/null
+    local description="$url"$'\n\n'"$reasoning"
+    [ -n "$tried" ] && description+=$'\n\n'"Tried: $tried"
+    todoist_flag "$kind" "$repo_short: $summary - $reason" "$description" "$url"
+    log "$repo#$number: flagged ($kind): $reason"
+}
+
+# Usage: merge_pr <number> <sha>
+merge_pr() {
+    gh pr merge "$1" -R "$repo" --squash --match-head-commit "$2"
+}
+
+# CI
+
+# Usage: ci_state <sha>  -> passing | failing | pending | none
+ci_state() {
+    local sha="$1" runs statuses
+    if [ -z "$required" ]; then
+        echo none
+        return
+    fi
+    runs=$(gh api "repos/$repo/commits/$sha/check-runs?per_page=100" --jq '.check_runs')
+    statuses=$(gh api "repos/$repo/commits/$sha/status" --jq '.statuses')
+    jq -rn --argjson runs "$runs" --argjson statuses "$statuses" --arg required "$required" '
+        ($required | split("\n") | map(select(. != ""))) as $req
+        | [ $req[] as $name
+            | ([$runs[] | select(.name == $name)] | max_by(.id)) as $run
+            | ([$statuses[] | select(.context == $name)] | first) as $status
+            | if $run != null then
+                if $run.status != "completed" then "pending"
+                elif ($run.conclusion | IN("success", "neutral", "skipped")) then "pass"
+                else "fail" end
+              elif $status != null then
+                if $status.state == "success" then "pass"
+                elif $status.state == "pending" then "pending"
+                else "fail" end
+              else "pending" end ]
+        | if any(. == "fail") then "failing"
+          elif all(. == "pass") then "passing"
+          else "pending" end'
+}
+
+# Usage: wait_for_ci <sha>  -> passing | failing | none | timeout
+wait_for_ci() {
+    local sha="$1" deadline state
+    deadline=$(($(date +%s) + CI_TIMEOUT_MINUTES * 60))
+    while :; do
+        state=$(ci_state "$sha")
+        if [ "$state" != pending ]; then
+            echo "$state"
+            return
+        fi
+        if [ "$(date +%s)" -ge "$deadline" ]; then
+            echo timeout
+            return
+        fi
+        sleep 30
+    done
+}
+
+write_ci_context() {
+    local sha="$1" state="$2" run_ids run_id
+    gh api "repos/$repo/commits/$sha/check-runs?per_page=100" \
+        --jq '[.check_runs[] | {name, status, conclusion, details_url}]' |
+        jq --arg state "$state" --arg required "$required" \
+            '{overall: $state, required: ($required | split("\n") | map(select(. != ""))), check_runs: .}' \
+            >"$context_dir/ci.json"
+    if [ "$state" = failing ]; then
+        run_ids=$(jq -r '.check_runs[] | select(.conclusion == "failure") | .details_url
+            | capture("/actions/runs/(?<id>[0-9]+)")?.id' "$context_dir/ci.json" | sort -u)
+        : >"$context_dir/failed-logs.txt"
+        for run_id in $run_ids; do
+            gh run view "$run_id" -R "$repo" --log-failed >>"$context_dir/failed-logs.txt" 2>&1 || true
+        done
+        if [ "$(wc -l <"$context_dir/failed-logs.txt")" -gt 4000 ]; then
+            tail -n 4000 "$context_dir/failed-logs.txt" >"$context_dir/failed-logs.tmp"
+            mv "$context_dir/failed-logs.tmp" "$context_dir/failed-logs.txt"
+        fi
+    fi
+}
+
+# Checkouts and sandbox
+
+prepare_cache_repo() {
+    mkdir -p "$(dirname "$cache_repo")" "$WORK_DIR/checkouts"
+    if [ ! -d "$cache_repo" ]; then
+        git "${GIT_AUTH[@]}" clone --quiet --bare "https://github.com/$repo.git" "$cache_repo"
+    fi
+    git "${GIT_AUTH[@]}" -C "$cache_repo" fetch --quiet origin \
+        "+refs/heads/$head_ref:refs/remotes/origin/$head_ref" \
+        "+refs/heads/$base_ref:refs/remotes/origin/$base_ref"
+    local fetched
+    fetched=$(git -C "$cache_repo" rev-parse "refs/remotes/origin/$head_ref")
+    [ "$fetched" = "$head_sha" ] || die "$repo#$number moved during review ($head_sha -> $fetched)"
+}
+
+# Usage: write_sandbox <checkout> <path>
+# Writes a wrapper that runs one shell command in a container with only <checkout> mounted.
+# Settings are baked in so the agent cannot change the image or mounts.
+write_sandbox() {
+    local dir="$1" path="$2"
+    mkdir -p "$(dirname "$path")"
+    if [ -z "$image" ]; then
+        cat >"$path" <<EOF
+#!/usr/bin/env bash
+echo "No build environment for the $ecosystem ecosystem; review without building." >&2
+exit 1
+EOF
+    else
+        cat >"$path" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+[ \$# -eq 1 ] || { echo "usage: sandbox '<shell command>'" >&2; exit 2; }
+export DOCKER_CONFIG=$(printf '%q' "$STATE_DIR/docker")
+exec docker --context $(printf '%q' "$DOCKER_CONTEXT") run --rm --network bridge \\
+    --security-opt no-new-privileges --pids-limit 4096 --memory 6g \\
+    -v $(printf '%q' "$dir:/work") -w /work -v $(printf '%q' "$cache_mount") \\
+    $(printf '%q' "$image") sh -c "\$1"
+EOF
+    fi
+    chmod +x "$path"
+}
+
+# Usage: render_prompt <template> <sandbox> [KEY=VALUE...]
+render_prompt() {
+    local template="$1" sandbox="$2" text kv sandbox_note=""
+    shift 2
+    [ -z "$image" ] && sandbox_note="There is no build environment for this ecosystem, so the sandbox will refuse; review without building and rely on CI."
+    text=$(<"$template")
+    text="${text//\{\{REPO\}\}/$repo}"
+    text="${text//\{\{PR_NUMBER\}\}/$number}"
+    text="${text//\{\{ECOSYSTEM\}\}/$ecosystem}"
+    text="${text//\{\{CONTEXT_DIR\}\}/$context_dir}"
+    text="${text//\{\{SANDBOX\}\}/$sandbox}"
+    text="${text//\{\{SANDBOX_NOTE\}\}/$sandbox_note}"
+    text="${text//\{\{COOLDOWN_DAYS\}\}/$COOLDOWN_DAYS}"
+    text="${text//\{\{NOW_UTC\}\}/$(epoch_to_utc_rfc3339 "$(date +%s)")}"
+    for kv in "$@"; do
+        text="${text//\{\{${kv%%=*}\}\}/${kv#*=}}"
+    done
+    if [[ "$text" =~ \{\{[A-Z_]+\}\} ]]; then
+        die "unfilled placeholder ${BASH_REMATCH[0]} in $template"
+    fi
+    printf '%s\n' "$text"
+}
+
+# Usage: run_claude <cwd> <sandbox> <prompt> <output-file>
+# Prints the verdict JSON, or nothing if the session failed or hit a cap. Writes the raw
+# result to <output-file>.
+run_claude() {
+    local cwd="$1" sandbox="$2" prompt="$3" output="$4" domain status=0
+    local allowed=(
+        Read Grep Glob
+        "Edit(/$cwd/**)" "Write(/$cwd/**)"
+        "Bash($sandbox:*)"
+        "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)" "Bash(git status:*)"
+    )
+    for domain in "${WEBFETCH_DOMAINS[@]}"; do
+        allowed+=("WebFetch(domain:$domain)")
+    done
+    local settings='{"env": {"BASH_DEFAULT_TIMEOUT_MS": "3600000", "BASH_MAX_TIMEOUT_MS": "3600000"}}'
+
+    (
+        cd "$cwd"
+        env -u GH_TOKEN -u GITHUB_TOKEN -u TODOIST_TOKEN claude -p \
+            --model "$CLAUDE_MODEL" \
+            --max-turns "$MAX_TURNS_PER_PR" \
+            --max-budget-usd "$MAX_BUDGET_USD_PER_PR" \
+            --output-format json \
+            --json-schema "$(<"$script_dir/verdict-schema.json")" \
+            --permission-mode dontAsk \
+            --allowedTools "${allowed[@]}" \
+            --strict-mcp-config \
+            --setting-sources "" \
+            --settings "$settings" \
+            --add-dir "$context_dir" \
+            --no-session-persistence \
+            --disable-slash-commands \
+            <<<"$prompt"
+    ) >"$output" 2>"$output.stderr" || status=$?
+
+    local subtype cost
+    subtype=$(jq -r '.subtype // "unknown"' "$output" 2>/dev/null || echo unparsable)
+    cost=$(jq -r '.total_cost_usd // "?"' "$output" 2>/dev/null || echo "?")
+    log "$repo#$number: Claude session ended: $subtype (exit $status, \$$cost)"
+    if [ "$subtype" = success ]; then
+        jq -c '.structured_output // empty' "$output"
+    fi
+}
+
+# Usage: session_failure_reason <output-file>
+session_failure_reason() {
+    local subtype
+    subtype=$(jq -r '.subtype // "unknown"' "$1" 2>/dev/null || echo unparsable)
+    case "$subtype" in
+        error_max_turns) echo "review hit the turn cap" ;;
+        error_max_budget_usd) echo "review hit the spend cap" ;;
+        *) echo "review session failed ($subtype)" ;;
+    esac
+}
+
+# Usage: stage_changes <checkout>  -> prints "STATUS<TAB>path" lines of staged changes
+stage_changes() {
+    git -C "$1" add -A
+    git -C "$1" diff --cached --name-status --no-renames
+}
+
+# Usage: check_fix_diff <checkout>
+# Prints why the fix is not allowed, or nothing if it is.
+check_fix_diff() {
+    local dir="$1" changes removed added
+    changes=$(stage_changes "$dir")
+    if [ -z "$changes" ]; then
+        echo "no changes were made"
+        return
+    fi
+    if grep -q '^D' <<<"$changes"; then
+        echo "the fix deletes files"
+        return
+    fi
+    if cut -f2 <<<"$changes" | grep -Eq "$MANIFEST_PATTERN|^\.github/"; then
+        echo "the fix changes manifests, lockfiles or .github"
+        return
+    fi
+    if git -C "$dir" diff --cached -U0 | grep '^+[^+]' | grep -Eq "$SUPPRESSION_PATTERN"; then
+        echo "the fix adds an ignore, allow or skip annotation"
+        return
+    fi
+    removed=$(git -C "$dir" diff --cached -U0 | grep '^-[^-]' | grep -Ec "$ASSERTION_PATTERN" || true)
+    added=$(git -C "$dir" diff --cached -U0 | grep '^+[^+]' | grep -Ec "$ASSERTION_PATTERN" || true)
+    if [ "$removed" -gt "$added" ]; then
+        echo "the fix removes more test assertions than it adds"
+        return
+    fi
+}
+
+# Usage: check_split_diff <checkout>
+check_split_diff() {
+    local dir="$1" changes pr_files path
+    changes=$(stage_changes "$dir")
+    if [ -z "$changes" ]; then
+        echo "the split made no changes"
+        return
+    fi
+    if grep -vq '^M' <<<"$changes"; then
+        echo "the split adds or deletes files"
+        return
+    fi
+    pr_files=$(jq -r '.files[].path' <<<"$pr")
+    while IFS= read -r path; do
+        if ! grep -Eq "$MANIFEST_PATTERN" <<<"$path" || ! grep -Fxq "$path" <<<"$pr_files"; then
+            echo "the split changes $path, which the original PR does not"
+            return
+        fi
+    done < <(cut -f2 <<<"$changes")
+}
+
+# Usage: diff_details <checkout>  -> collapsed diff for a PR comment
+diff_details() {
+    local diff
+    diff=$(git -C "$1" diff --cached | head -c 20000)
+    local fence='```'
+    printf '<details><summary>Diff</summary>\n\n%sdiff\n%s\n%s\n\n</details>' "$fence" "$diff" "$fence"
+}
+
+# Outcomes
+
+do_merge() {
+    local ci="$1" verdict="$2"
+    local reason reasoning
+    reason=$(jq -r .reason <<<"$verdict")
+    reasoning=$(jq -r .reasoning <<<"$verdict")
+    if [ -n "$(git -C "$checkout" status --porcelain)" ]; then
+        flag review "review left unexpected changes" "$reasoning" ""
+        return
+    fi
+    if [ "$ci" = none ]; then
+        flag review "no required CI checks, so not merging" "$reasoning" ""
+        return
+    fi
+    if [ "$ci" != passing ]; then
+        flag broken "CI is $ci" "$reasoning" ""
+        return
+    fi
+    if [ "$DRY_RUN" = true ]; then
+        post_comment "would merge" "$reason"$'\n\n'"$reasoning"
+        return
+    fi
+    if merge_pr "$number" "$head_sha"; then
+        post_comment "merged" "$reason"$'\n\n'"$reasoning"
+        log "$repo#$number: merged"
+    else
+        flag broken "merge failed" "$reasoning" ""
+    fi
+}
+
+do_fix() {
+    local verdict="$1"
+    local reason reasoning tried problem new_sha ci
+    reason=$(jq -r .reason <<<"$verdict")
+    reasoning=$(jq -r .reasoning <<<"$verdict")
+    tried=$(jq -r .tried <<<"$verdict")
+
+    problem=$(check_fix_diff "$checkout")
+    if [ -n "$problem" ]; then
+        flag broken "fix not allowed: $problem" "$reasoning" "$tried"
+        return
+    fi
+    if [ "$required" = "" ]; then
+        flag review "no required CI checks, so not merging a fix" "$reasoning"$'\n\n'"$(diff_details "$checkout")" "$tried"
+        return
+    fi
+    if [ "$DRY_RUN" = true ]; then
+        post_comment "would push a fix and merge if CI passes" \
+            "$reason"$'\n\n'"$reasoning"$'\n\n'"$(diff_details "$checkout")"
+        return
+    fi
+
+    git -C "$checkout" commit --quiet -m "Fix build after bumping $summary"
+    if ! git "${GIT_AUTH[@]}" -C "$checkout" push --quiet origin "HEAD:refs/heads/$head_ref"; then
+        flag broken "could not push the fix" "$reasoning" "$tried"
+        return
+    fi
+    new_sha=$(git -C "$checkout" rev-parse HEAD)
+    marker="$REVIEW_MARKER_PREFIX$new_sha -->"
+    log "$repo#$number: pushed fix $new_sha, waiting for CI"
+    ci=$(wait_for_ci "$new_sha")
+    if [ "$ci" != passing ]; then
+        flag broken "CI is $ci after pushing a fix" "$reasoning" "$tried; pushed $new_sha"
+        return
+    fi
+    if merge_pr "$number" "$new_sha"; then
+        post_comment "fixed and merged" "$reason"$'\n\n'"$reasoning"
+        log "$repo#$number: fixed and merged"
+    else
+        flag broken "merge failed after fix" "$reasoning" "$tried; pushed $new_sha"
+    fi
+}
+
+do_split() {
+    local verdict="$1"
+    local reason reasoning held_back keep_list problem split_verdict split_branch split_url split_sha ci
+    reason=$(jq -r .reason <<<"$verdict")
+    reasoning=$(jq -r .reasoning <<<"$verdict")
+    held_back=$(jq -r '.held_back[] | "- \(.name): \(.reason)"' <<<"$verdict")
+
+    if ! jq -e '(.keep | length > 0) and (.held_back | length > 0)
+            and all(.keep[]; (.name | test("^[A-Za-z0-9@/._-]+$")) and (.version | test("^[A-Za-z0-9.+_-]+$")))' \
+            <<<"$verdict" >/dev/null; then
+        flag review "split requested but its package list is invalid" "$reasoning" ""
+        return
+    fi
+    keep_list=$(jq -r '.keep[] | "- \(.name) \(.version)"' <<<"$verdict")
+
+    if [ "$DRY_RUN" = true ] || [ -z "$required" ]; then
+        local not_split="Would split"
+        [ -z "$required" ] && not_split="Not splitting, as there are no required CI checks"
+        flag review "held back from split: $(jq -r '[.held_back[].name] | join(", ")' <<<"$verdict")" \
+            "$not_split. Bumps to keep:"$'\n'"$keep_list"$'\n\n'"Held back:"$'\n'"$held_back"$'\n\n'"$reasoning" ""
+        return
+    fi
+
+    git -C "$cache_repo" worktree add --quiet --detach "$split_checkout" "refs/remotes/origin/$base_ref"
+    local split_sandbox="$bin_dir/sandbox-split"
+    write_sandbox "$split_checkout" "$split_sandbox"
+    split_verdict=$(run_claude "$split_checkout" "$split_sandbox" \
+        "$(render_prompt "$script_dir/prompts/split.md" "$split_sandbox" "KEEP_LIST=$keep_list")" \
+        "$context_dir/split-result.json")
+    if [ -z "$split_verdict" ]; then
+        flag broken "could not prepare the split" "$reasoning" \
+            "$(session_failure_reason "$context_dir/split-result.json")"
+        return
+    fi
+    if [ "$(jq -r .outcome <<<"$split_verdict")" != merge ]; then
+        flag broken "could not prepare the split" "$reasoning" "$(jq -r .reason <<<"$split_verdict")"
+        return
+    fi
+    problem=$(check_split_diff "$split_checkout")
+    if [ -n "$problem" ]; then
+        flag broken "split not allowed: $problem" "$reasoning" ""
+        return
+    fi
+
+    split_branch="dependabot-review/split-$number"
+    git -C "$split_checkout" commit --quiet -m "Bump $(jq -r '[.keep[].name] | join(", ")' <<<"$verdict") (split from #$number)"
+    git "${GIT_AUTH[@]}" -C "$split_checkout" push --quiet --force origin "HEAD:refs/heads/$split_branch"
+    split_sha=$(git -C "$split_checkout" rev-parse HEAD)
+    split_url=$(gh pr create -R "$repo" --base "$base_ref" --head "$split_branch" \
+        --title "Bump $(jq -r '[.keep[].name] | join(", ")' <<<"$verdict") (split from #$number)" \
+        --body "The updates from #$number that passed review:"$'\n\n'"$keep_list"$'\n\n'"Held back:"$'\n'"$held_back")
+    log "$repo#$number: opened split $split_url, waiting for CI"
+
+    ci=$(wait_for_ci "$split_sha")
+    local split_number="${split_url##*/}"
+    if [ "$ci" = passing ] && merge_pr "$split_number" "$split_sha"; then
+        log "$repo#$number: merged split $split_url"
+        flag review "held back from split: $(jq -r '[.held_back[].name] | join(", ")' <<<"$verdict")" \
+            "$reasoning"$'\n\n'"Merged the rest in $split_url. Held back:"$'\n'"$held_back" ""
+    else
+        flag broken "split PR CI is $ci" "$reasoning"$'\n\n'"Split PR: $split_url. Held back:"$'\n'"$held_back" ""
+    fi
+}
+
+# Main
+
+mkdir -p "$context_dir" "$bin_dir"
+log "$repo#$number: reviewing \"$title\" ($ecosystem)"
+
+mergeable=$(jq -r .mergeable <<<"$pr")
+for _ in 1 2 3; do
+    [ "$mergeable" = UNKNOWN ] || break
+    sleep 10
+    mergeable=$(gh pr view "$number" -R "$repo" --json mergeable --jq .mergeable)
+done
+if [ "$mergeable" = CONFLICTING ]; then
+    flag broken "merge conflicts" "The PR conflicts with $base_ref. Ask Dependabot to rebase, or resolve by hand." ""
+    exit 0
+fi
+
+ci=$(wait_for_ci "$head_sha")
+if [ "$ci" = timeout ]; then
+    flag broken "CI did not finish within $CI_TIMEOUT_MINUTES minutes" "Required checks were still pending." ""
+    exit 0
+fi
+
+jq '{title, body, files: [.files[] | {path, additions, deletions}]}' <<<"$pr" >"$context_dir/pr.json"
+gh pr diff "$number" -R "$repo" >"$context_dir/pr.diff"
+write_ci_context "$head_sha" "$ci"
+
+prepare_cache_repo
+git -C "$cache_repo" worktree add --quiet --detach "$checkout" "$head_sha"
+sandbox="$bin_dir/sandbox"
+write_sandbox "$checkout" "$sandbox"
+
+verdict=$(run_claude "$checkout" "$sandbox" \
+    "$(render_prompt "$script_dir/prompts/review.md" "$sandbox" "CI_STATE=$ci")" \
+    "$context_dir/result.json")
+if [ -z "$verdict" ]; then
+    flag review "$(session_failure_reason "$context_dir/result.json")" \
+        "The review did not finish, so nothing was merged." ""
+    exit 0
+fi
+
+outcome=$(jq -r .outcome <<<"$verdict")
+flag_kind=$(jq -r .flag_kind <<<"$verdict")
+log "$repo#$number: verdict $outcome ($flag_kind): $(jq -r .reason <<<"$verdict")"
+
+case "$outcome" in
+    merge) do_merge "$ci" "$verdict" ;;
+    fix) do_fix "$verdict" ;;
+    split) do_split "$verdict" ;;
+    flag)
+        case "$flag_kind" in
+            urgent | broken | review) ;;
+            *) flag_kind=review ;;
+        esac
+        flag "$flag_kind" "$(jq -r .reason <<<"$verdict")" "$(jq -r .reasoning <<<"$verdict")" \
+            "$(jq -r .tried <<<"$verdict")"
+        ;;
+    *) die "unexpected outcome: $outcome" ;;
+esac

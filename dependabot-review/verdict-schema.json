@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outcome", "flag_kind", "reason", "reasoning", "tried", "keep", "held_back"],
+  "properties": {
+    "outcome": {"enum": ["merge", "fix", "split", "flag"]},
+    "flag_kind": {
+      "enum": ["none", "urgent", "broken", "review"],
+      "description": "none unless outcome is flag. urgent: likely malicious or compromised release. broken: failing CI that could not be fixed. review: risky or unclear."
+    },
+    "reason": {"type": "string", "maxLength": 120, "description": "One line, no trailing full stop."},
+    "reasoning": {"type": "string", "maxLength": 2000, "description": "A few lines explaining the verdict."},
+    "tried": {"type": "string", "maxLength": 1000, "description": "What you already tried, or an empty string."},
+    "keep": {
+      "type": "array",
+      "description": "Split only: the bumps to keep.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version"],
+        "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+      }
+    },
+    "held_back": {
+      "type": "array",
+      "description": "Split only: the bumps to hold back, with why.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "reason"],
+        "properties": {"name": {"type": "string"}, "reason": {"type": "string"}}
+      }
+    }
+  }
+}

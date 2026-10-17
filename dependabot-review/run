@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Scheduler entry point, triggered hourly and at login. Exits quietly unless a run is
+# due (none has succeeded since the most recent Friday 20:00), GitHub is reachable and
+# no other run holds the lock. Alerts Todoist if no run has succeeded for too long.
+#
+# Usage: run [--force]   --force skips the weekly check, for running by hand.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$script_dir/lib.sh"
+
+force=false
+case "${1:-}" in
+    --force) force=true ;;
+    "") ;;
+    *) die "usage: run [--force]" ;;
+esac
+
+require_commands gh git jq curl claude colima docker
+
+mkdir -p "$STATE_DIR/logs" "$WORK_DIR" "$STATE_DIR/docker"
+[ -f "$STATE_DIR/docker/config.json" ] || echo '{}' >"$STATE_DIR/docker/config.json"
+export DOCKER_CONFIG="$STATE_DIR/docker"
+
+lock_dir="$STATE_DIR/lock"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+    holder=$(cat "$lock_dir/pid" 2>/dev/null || true)
+    if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+        exit 0
+    fi
+    log "Removing stale lock from pid ${holder:-unknown}"
+    rm -rf "$lock_dir"
+    mkdir "$lock_dir" 2>/dev/null || exit 0
+fi
+echo $$ >"$lock_dir/pid"
+
+started_colima=false
+on_exit() {
+    if [ "$started_colima" = true ]; then
+        colima stop --profile "$COLIMA_PROFILE" >/dev/null 2>&1 || log "Failed to stop colima"
+    fi
+    rm -rf "$lock_dir"
+}
+trap on_exit EXIT
+
+curl -fsS --max-time 10 -o /dev/null https://api.github.com/zen || exit 0
+
+now=$(date +%s)
+[ -f "$STATE_DIR/installed-at" ] || echo "$now" >"$STATE_DIR/installed-at"
+last_success=$(cat "$STATE_DIR/last-success" 2>/dev/null || echo 0)
+[[ "$last_success" =~ ^[0-9]+$ ]] || die "corrupt $STATE_DIR/last-success"
+
+TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+export TODOIST_TOKEN
+
+reference="$last_success"
+[ "$reference" -gt 0 ] || reference=$(cat "$STATE_DIR/installed-at")
+if [ $((now - reference)) -gt $((STALE_AFTER_DAYS * 86400)) ]; then
+    days=$(((now - reference) / 86400))
+    last_success_text=never
+    [ "$last_success" -gt 0 ] && last_success_text=$(epoch_to_utc_rfc3339 "$last_success")
+    todoist_flag unhealthy "dependabot-review: no successful run for $days days" \
+        "Last success: $last_success_text. Logs are in $STATE_DIR/logs." \
+        "dependabot-review: no successful run"
+fi
+
+if [ "$force" = false ] && [ "$last_success" -ge "$(last_friday_20_epoch)" ]; then
+    exit 0
+fi
+
+GH_TOKEN=$(read_secret "$GITHUB_TOKEN_SECRET")
+export GH_TOKEN
+
+log_file="$STATE_DIR/logs/run-$(date +%Y%m%d-%H%M%S).log"
+log "Run starting, logging to $log_file"
+{
+    if ! colima status --profile "$COLIMA_PROFILE" >/dev/null 2>&1; then
+        colima start --profile "$COLIMA_PROFILE" --cpu 4 --memory 8 --disk 60 \
+            --vm-type vz --mount-type virtiofs --mount "$WORK_DIR:w"
+        started_colima=true
+    fi
+    "$script_dir/review-all"
+} >>"$log_file" 2>&1
+
+date +%s >"$STATE_DIR/last-success"
+log "Run succeeded"
+find "$STATE_DIR/logs" -name 'run-*.log' -mtime +"$LOG_RETENTION_DAYS" -delete

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Phase 0: close open Dependabot PRs on archived personal repos. Run by hand with
+# your normal gh login, since unarchive/archive need admin rights.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$script_dir/lib.sh"
+
+require_commands gh jq
+
+owner=$(github_owner)
+
+log "Finding archived repos owned by $owner with open Dependabot PRs..."
+declare -a targets=()
+declare -A prs_by_repo=()
+while IFS= read -r repo; do
+    prs=$(list_dependabot_prs "$repo")
+    if [ "$(jq length <<<"$prs")" -gt 0 ]; then
+        targets+=("$repo")
+        prs_by_repo["$repo"]="$prs"
+    fi
+done < <(list_owned_repos "$owner" archived)
+
+if [ "${#targets[@]}" -eq 0 ]; then
+    echo "No archived repos have open Dependabot PRs."
+    exit 0
+fi
+
+for repo in "${targets[@]}"; do
+    echo "$repo"
+    jq -r '.[] | "  #\(.number) \(.title)"' <<<"${prs_by_repo[$repo]}"
+done
+echo
+read -rp "Close these PRs? Each repo is unarchived, then re-archived. [y/N] " answer
+[ "$answer" = "y" ] || [ "$answer" = "Y" ] || { echo "Aborted."; exit 1; }
+
+declare -a problems=()
+for repo in "${targets[@]}"; do
+    log "$repo: unarchiving"
+    if ! gh repo unarchive "$repo" --yes; then
+        problems+=("$repo: unarchive failed, PRs left open (still archived)")
+        continue
+    fi
+
+    while IFS= read -r number; do
+        if gh pr close "$number" -R "$repo" --comment "Closing: repo is archived"; then
+            log "$repo: closed #$number"
+        else
+            problems+=("$repo: failed to close #$number")
+        fi
+    done < <(jq -r '.[].number' <<<"${prs_by_repo[$repo]}")
+
+    log "$repo: re-archiving"
+    if ! gh repo archive "$repo" --yes; then
+        problems+=("$repo: RE-ARCHIVE FAILED, repo is now unarchived")
+    fi
+done
+
+for repo in "${targets[@]}"; do
+    archived=$(gh repo view "$repo" --json isArchived --jq .isArchived)
+    [ "$archived" = "true" ] || problems+=("$repo: not archived at end of run")
+done
+
+if [ "${#problems[@]}" -gt 0 ]; then
+    echo
+    echo "Problems:" >&2
+    printf '  %s\n' "${problems[@]}" >&2
+    exit 1
+fi
+echo "Done. All repos re-archived."

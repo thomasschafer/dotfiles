@@ -1,0 +1,8 @@
+# State, logs and secrets live in ~/.local/state/dependabot-review, outside the repo.
+# These catch anything written here by mistake.
+*.log
+*.token
+.env*
+state/
+logs/
+work/

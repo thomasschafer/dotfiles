@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# Phase 1: open one PR per in-scope repo bringing its Dependabot config in line with
+# the baseline in templates/. Run by hand with your normal gh login: adding a
+# workflow file needs the `workflow` scope, which the weekly job's token lacks.
+#
+# Usage: config-prs [--dry-run] [--no-todoist] [owner/repo...]
+#   --no-todoist  open PRs without creating Todoist tasks; prints the URLs to flag by hand
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$script_dir/lib.sh"
+
+BRANCH="dependabot-baseline"
+WORKFLOW_PATH=".github/workflows/dependabot.yml"
+
+dry_run=false
+use_todoist=true
+declare -a repos=()
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) dry_run=true ;;
+        --no-todoist) use_todoist=false ;;
+        -*) die "unknown option: $arg" ;;
+        *) repos+=("$arg") ;;
+    esac
+done
+
+require_commands gh git jq yq curl
+
+if [ "$dry_run" = false ] && [ "$use_todoist" = true ]; then
+    TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+    export TODOIST_TOKEN
+    todoist_check_labels
+fi
+
+if [ "${#repos[@]}" -eq 0 ]; then
+    repo_list=$(list_in_scope_repos)
+    mapfile -t repos < <(sed '/^$/d' <<<"$repo_list")
+fi
+[ "${#repos[@]}" -gt 0 ] || die "no in-scope repos found"
+
+tmp_root=$(mktemp -d)
+trap 'rm -rf "$tmp_root"' EXIT
+
+declare -a problems=()
+
+# Usage: other_auto_merge_workflows <checkout>
+# Prints workflows other than ours that already use fetch-metadata.
+other_auto_merge_workflows() {
+    local checkout="$1"
+    [ -d "$checkout/.github/workflows" ] || return 0
+    (cd "$checkout" && git grep -l 'dependabot/fetch-metadata' -- .github/workflows || true) |
+        grep -vx "$WORKFLOW_PATH" || true
+}
+
+# Usage: pr_body <repo> <branch> -> markdown on stdout
+pr_body() {
+    local repo="$1" branch="$2" checks auto_merge notes=""
+    checks=$(required_checks "$repo" "$branch")
+    auto_merge=$(gh api "repos/$repo" --jq .allow_auto_merge)
+
+    if [ -z "$checks" ]; then
+        notes+="- $branch has no required status checks, so auto-merge would merge without waiting for CI. Add required checks before merging this, and the weekly review job will not merge anything here until then."$'\n'
+    fi
+    if [ "$auto_merge" != "true" ]; then
+        notes+="- Auto-merge is disabled in this repo's settings, so the workflow will fail until it is enabled."$'\n'
+    fi
+
+    cat <<EOF
+Brings Dependabot in line with the shared baseline:
+
+- Patch and minor updates are grouped into one PR per ecosystem; majors stay as separate PRs.
+- Updates are proposed weekly on Monday, and only once a release is at least $COOLDOWN_DAYS days old.
+- Patch and minor PRs merge automatically once required checks pass. Majors wait for review.
+
+Existing ecosystems, directories and ignore rules are unchanged.
+EOF
+    if [ -n "$notes" ]; then
+        printf '\n%s\n\n%s' "Before merging:" "$notes"
+    fi
+}
+
+for repo in "${repos[@]}"; do
+    log "$repo: checking"
+    existing=$(gh pr list -R "$repo" --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
+    if [ -n "$existing" ]; then
+        log "$repo: config PR already open at $existing, skipping"
+        continue
+    fi
+
+    checkout="$tmp_root/${repo//\//__}"
+    gh repo clone "$repo" "$checkout" -- --quiet --depth 1
+    base=$(git -C "$checkout" rev-parse --abbrev-ref HEAD)
+
+    others=$(other_auto_merge_workflows "$checkout")
+    if [ -n "$others" ]; then
+        problems+=("$repo: other workflows already use fetch-metadata ($others); resolve by hand")
+        continue
+    fi
+    if [ -f "$checkout/$WORKFLOW_PATH" ] && ! grep -q 'dependabot/fetch-metadata' "$checkout/$WORKFLOW_PATH"; then
+        problems+=("$repo: $WORKFLOW_PATH exists and is not an auto-merge workflow; resolve by hand")
+        continue
+    fi
+
+    COOLDOWN_DAYS="$COOLDOWN_DAYS" yq -i --from-file "$script_dir/templates/dependabot-baseline.yq" \
+        "$checkout/.github/dependabot.yml"
+    mkdir -p "$checkout/.github/workflows"
+    cp "$script_dir/templates/auto-merge-workflow.yml" "$checkout/$WORKFLOW_PATH"
+
+    if [ -z "$(git -C "$checkout" status --porcelain)" ]; then
+        log "$repo: already matches the baseline"
+        continue
+    fi
+
+    body=$(pr_body "$repo" "$base")
+    if [ "$dry_run" = true ]; then
+        echo "===== $repo"
+        git -C "$checkout" --no-pager diff
+        git -C "$checkout" status --short
+        printf '%s\n' "$body"
+        continue
+    fi
+
+    git -C "$checkout" checkout --quiet -b "$BRANCH"
+    git -C "$checkout" add .github/dependabot.yml "$WORKFLOW_PATH"
+    git -C "$checkout" commit --quiet -m "Align Dependabot config with baseline"
+    git -C "$checkout" push --quiet -u origin "$BRANCH"
+
+    url=$(gh pr create -R "$repo" --base "$base" --head "$BRANCH" \
+        --title "Align Dependabot config with baseline" --body "$body")
+    log "$repo: opened $url"
+
+    if [ "$use_todoist" = false ]; then
+        echo "Flag by hand: $url"
+        continue
+    fi
+    todoist_flag config "${repo#*/}: Dependabot config PR - review and merge" \
+        "$url"$'\n\n'"Brings the Dependabot config in line with the baseline: grouping, Monday schedule, ${COOLDOWN_DAYS}-day cooldown and the auto-merge workflow." \
+        "$url"
+done
+
+if [ "${#problems[@]}" -gt 0 ]; then
+    echo "Problems:" >&2
+    printf '  %s\n' "${problems[@]}" >&2
+    exit 1
+fi

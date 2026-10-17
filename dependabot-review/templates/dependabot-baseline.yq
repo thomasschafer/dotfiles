@@ -1,0 +1,15 @@
+# Applied to each repo's .github/dependabot.yml by config-prs. Keeps ecosystems,
+# directories, ignore rules and other settings; replaces schedule, cooldown and groups.
+.updates[] |= (
+  .schedule.interval = "weekly"
+  | .schedule.day = "monday"
+  | .cooldown = {"default-days": (strenv(COOLDOWN_DAYS) | tonumber)}
+  | .groups = {}
+  | .groups[.["package-ecosystem"] + "-minor-and-patch"] = {
+      "applies-to": "version-updates",
+      "patterns": ["*"],
+      "update-types": ["minor", "patch"]
+    }
+  | .groups[].patterns[] style="double"
+  | (.groups[] | key) style=""
+)

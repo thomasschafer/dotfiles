@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Reviews every open Dependabot PR across the in-scope repos, one at a time.
+# Expects GH_TOKEN and TODOIST_TOKEN in the environment and the colima profile running.
+# A PR whose review errors is flagged to Todoist and the run carries on.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$script_dir/lib.sh"
+
+require_commands gh jq
+[ -n "${GH_TOKEN:-}" ] || die "GH_TOKEN is not set"
+[ -n "${TODOIST_TOKEN:-}" ] || die "TODOIST_TOKEN is not set"
+todoist_check_labels
+
+log "Starting review (dry run: $DRY_RUN, model: $CLAUDE_MODEL)"
+repos=$(list_in_scope_repos)
+[ -n "$repos" ] || die "no in-scope repos found"
+
+reviewed=0
+errored=0
+while IFS= read -r repo; do
+    prs=$(list_dependabot_prs "$repo")
+    while IFS=$'\t' read -r number url title; do
+        [ -n "$number" ] || continue
+        reviewed=$((reviewed + 1))
+        if ! "$script_dir/review-pr" "$repo" "$number"; then
+            errored=$((errored + 1))
+            log "$repo#$number: review errored"
+            todoist_flag review "${repo#*/}: $(summarise_dependabot_title "$title") - review job errored" \
+                "$url"$'\n\n'"review-pr exited with an error; see the run log in $STATE_DIR/logs." "$url"
+        fi
+    done < <(jq -r '.[] | [.number, .url, .title] | @tsv' <<<"$prs")
+done <<<"$repos"
+
+log "Finished: $reviewed PRs, $errored errored"
