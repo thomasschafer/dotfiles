@@ -462,6 +462,9 @@ in
         $DRY_RUN_CMD "${cargoBin}/herdr" plugin link \
           ${../herdr/plugins/caffeinate} >/dev/null
       '';
+    }
+    // lib.optionalAttrs hostConfig.enableHealthTracking {
+      cloneHealthTracking = cloneRepo { repo = "health-tracking"; };
     };
   };
 
@@ -482,9 +485,6 @@ in
 
     kakoune = {
       enable = true;
-    }
-    // lib.optionalAttrs hostConfig.enableHealthTracking {
-      cloneHealthTracking = cloneRepo { repo = "health-tracking"; };
       extraConfig = builtins.readFile ../kakoune/kakrc;
     };
 
