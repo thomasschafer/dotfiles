@@ -222,9 +222,11 @@ let
 
 in
 {
-  imports = lib.optionals hostConfig.enableDependabotReview [
-    ../dependabot-review/nix/home.nix
-  ];
+  imports =
+    lib.optionals hostConfig.enableDependabotReview [
+      ../dependabot-review/nix/home.nix
+    ]
+    ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ];
 
   home = {
     stateVersion = "23.05";
@@ -480,6 +482,9 @@ in
 
     kakoune = {
       enable = true;
+    }
+    // lib.optionalAttrs hostConfig.enableHealthTracking {
+      cloneHealthTracking = cloneRepo { repo = "health-tracking"; };
       extraConfig = builtins.readFile ../kakoune/kakrc;
     };
 

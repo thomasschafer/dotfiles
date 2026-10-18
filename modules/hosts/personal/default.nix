@@ -5,4 +5,5 @@
   enablePython = true;
   enableTailscale = true;
   enableDependabotReview = true;
+  enableHealthTracking = true;
 }

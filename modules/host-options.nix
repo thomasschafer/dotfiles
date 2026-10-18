@@ -39,5 +39,10 @@ in
       type = types.bool;
       description = "Whether to install the weekly Dependabot review job (see dependabot-review/README.md).";
     };
+
+    enableHealthTracking = mkOption {
+      type = types.bool;
+      description = "Whether to run the health-tracking app and its backups (see modules/health-tracking.nix).";
+    };
   };
 }

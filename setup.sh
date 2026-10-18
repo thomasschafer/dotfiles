@@ -45,3 +45,7 @@ fi
 if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableDependabotReview")" = true ]; then
     "$script_dir/dependabot-review/setup-secrets"
 fi
+
+if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableHealthTracking")" = true ]; then
+    "$HOME/Development/Personal/health-tracking/scripts/setup-machine.sh"
+fi
