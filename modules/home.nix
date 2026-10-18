@@ -76,8 +76,8 @@ let
     { bin, package }:
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -x "${config.home.homeDirectory}/.local/bin/${bin}" ]; then
-        export PATH="${pkgs.nodejs_22}/bin:$PATH"
-        $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" ${package}
+        export PATH="${pkgs.nodejs}/bin:$PATH"
+        $DRY_RUN_CMD ${pkgs.nodejs}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" ${package}
       fi
     '';
 
@@ -241,13 +241,30 @@ in
     packages =
       with pkgs;
       [
-        atuin
+        # TODO: drop the override once nixpkgs-unstable includes
+        # https://github.com/NixOS/nixpkgs/pull/574509, which it mirrors. In unsandboxed
+        # macOS builds the e2e tests' bash sources /etc/bashrc, whose PATH runs the
+        # installed atuin rather than the one being built, so the tests fail and there's
+        # no cached binary to fall back on.
+        (atuin.overrideAttrs (old: {
+          env = (old.env or { }) // {
+            ATUIN_E2E_BASH = lib.getExe (
+              writeShellScriptBin "bash" ''
+                NOSYSBASHRC=1 exec ${lib.getExe bashInteractive} "$@"
+              ''
+            );
+          };
+        }))
         biome
+        black
         delta
+        delve
         deno
         direnv
         fd
+        ffmpegthumbnailer
         fzf
+        git-filter-repo
         go
         golangci-lint
         golangci-lint-langserver
@@ -263,6 +280,12 @@ in
         jq
         lazygit
         mise
+        # Runs the npm-installed CLIs (Codex, Gemini, OpenCode)
+        nodejs
+        pgformatter
+        poppler-utils
+        pre-commit
+        pyright
       ]
       ++ lib.optionals hostConfig.enablePython [
         (python314.withPackages (
@@ -279,11 +302,19 @@ in
         rust-analyzer
         # scooter  # Building from source manually
         sd
+        shared-mime-info
+        shellcheck
+        sqlfluff
         taplo
         terraform-docs
         tree
         typescript-language-server
+        unar
+        uv
         vscode-langservers-extracted
+        watchman
+        wget
+        yamllint
         yazi
         zellij
         zig
@@ -301,6 +332,8 @@ in
         haskellPackages.hoogle
 
         # Scripts/tools
+        # GNU sed under the Homebrew name, leaving `sed` as the macOS one
+        (writeShellScriptBin "gsed" ''exec ${gnused}/bin/sed "$@"'')
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
         (writeShellScriptBin "golangci-lint-wrapper" (builtins.readFile ../tools/golangci-lint-wrapper.sh))
         (writeShellScriptBin "mux-new-window" (builtins.readFile ../tools/mux-new-window.sh))

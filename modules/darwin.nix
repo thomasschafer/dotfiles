@@ -125,33 +125,13 @@
     ]
     ++ lib.optionals hostConfig.enableTailscale [ "tailscale-app" ];
 
-    # TODO: move more of these to home.nix
+    # CLI tools belong in home.nix; these stay in Homebrew because nixpkgs can't
+    # replace them. gnupg: nixpkgs ships 2.4, and ~/.gnupg was created by 2.5.
+    # minimal-racket: nixpkgs' racket-minimal doesn't support macOS. zig@0.16: see
+    # zigForHerdr in home.nix.
     brews = [
-      "bash-completion"
-      "black"
-      "delve"
-      "ffmpegthumbnailer"
-      "git-filter-repo"
-      "gnu-sed"
       "gnupg"
       "minimal-racket"
-      "node"
-      "nvm"
-      "opencode"
-      "pgformatter"
-      "poppler"
-      "pre-commit"
-      "pyenv"
-      "pyright"
-      "shared-mime-info"
-      "shellcheck"
-      "sqlfluff"
-      "unar"
-      "uv"
-      "virtualenv"
-      "watchman"
-      "wget"
-      "yamllint"
       "zig@0.16"
     ];
   };
