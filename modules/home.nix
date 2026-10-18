@@ -31,6 +31,56 @@ let
       export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
     '';
 
+  devDir = "${config.home.homeDirectory}/Development/Personal";
+  cargoBin = "${config.home.homeDirectory}/.cargo/bin";
+
+  # Clones one of my repos into devDir if it isn't there yet. Existing clones are left
+  # alone so local work isn't disturbed.
+  cloneRepo =
+    {
+      repo,
+      branch ? null,
+    }:
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -d "${devDir}/${repo}" ]; then
+        $DRY_RUN_CMD mkdir -p "${devDir}"
+        $DRY_RUN_CMD ${pkgs.git}/bin/git clone ${
+          lib.optionalString (branch != null) "--branch ${branch} "
+        }https://github.com/thomasschafer/${repo}.git "${devDir}/${repo}"
+      fi
+    '';
+
+  # Builds and installs a crate from a repo cloned with cloneRepo, if its binary isn't
+  # installed yet. preBuild runs first, for build-specific environment and checks.
+  cargoInstallFromRepo =
+    {
+      repo,
+      cratePath,
+      bin,
+      after,
+      preBuild ? "",
+    }:
+    lib.hm.dag.entryAfter after ''
+      if [ ! -x "${cargoBin}/${bin}" ]; then
+        ${preBuild}
+        cd "${devDir}/${repo}"
+        $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
+        ${cargoBuildEnv ""}
+        $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path ${cratePath} --locked
+      fi
+    '';
+
+  # Installs an npm package globally into ~/.local, if its binary isn't installed yet.
+  # Later updates are left to the tool's own updater.
+  npmInstall =
+    { bin, package }:
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -x "${config.home.homeDirectory}/.local/bin/${bin}" ]; then
+        export PATH="${pkgs.nodejs_22}/bin:$PATH"
+        $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" ${package}
+      fi
+    '';
+
   # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
   # crates/ghostty-vt/build.rs in herdr). nixpkgs' Zig can't link against the
   # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula,
@@ -197,7 +247,7 @@ in
         fd
         fzf
         go
-        # golangci-lint  # Manually installing v1 for now - see `installGolangciLint`
+        golangci-lint
         golangci-lint-langserver
         gopls
         gh
@@ -269,30 +319,26 @@ in
         fi
       '';
 
-      installHelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        helix_dir="${config.home.homeDirectory}/Development/Personal/helix"
-        if [ ! -d "$helix_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone --branch steel-event-system-plus https://github.com/thomasschafer/helix.git "$helix_dir"
-        fi
-        if [ ! -x "${config.home.homeDirectory}/.cargo/bin/hx" ]; then
-          cd "$helix_dir"
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path helix-term --locked
-        fi
-      '';
+      cloneHelix = cloneRepo {
+        repo = "helix";
+        branch = "steel-event-system-plus";
+      };
+
+      installHelix = cargoInstallFromRepo {
+        repo = "helix";
+        cratePath = "helix-term";
+        bin = "hx";
+        after = [ "cloneHelix" ];
+      };
 
       linkHelixRuntime = lib.hm.dag.entryAfter [ "installHelix" ] ''
-        ln -sfn "${config.home.homeDirectory}/Development/Personal/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
+        ln -sfn "${devDir}/helix/runtime" "${config.home.homeDirectory}/.config/helix/runtime"
       '';
 
-      installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/codex" ]; then
-          export PATH="${pkgs.nodejs_22}/bin:$PATH"
-          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" @openai/codex
-        fi
-      '';
+      installCodex = npmInstall {
+        bin = "codex";
+        package = "@openai/codex";
+      };
 
       installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/claude" ]; then
@@ -324,122 +370,70 @@ in
         ${pkgs.coreutils}/bin/rm -f "$base"
       '';
 
-      installOpenCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/opencode" ]; then
-          export PATH="${pkgs.nodejs_22}/bin:$PATH"
-          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" opencode-ai
-        fi
-      '';
+      installOpenCode = npmInstall {
+        bin = "opencode";
+        package = "opencode-ai";
+      };
 
-      installGeminiCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/gemini" ]; then
-          export PATH="${pkgs.nodejs_22}/bin:$PATH"
-          $DRY_RUN_CMD ${pkgs.nodejs_22}/bin/npm install -g --prefix "${config.home.homeDirectory}/.local" @google/gemini-cli
-        fi
-      '';
+      installGeminiCli = npmInstall {
+        bin = "gemini";
+        package = "@google/gemini-cli";
+      };
 
-      cloneZshelix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -d "${config.home.homeDirectory}/Development/Personal/zshelix" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/zshelix.git \
-            "${config.home.homeDirectory}/Development/Personal/zshelix"
-        fi
-      '';
+      cloneZshelix = cloneRepo { repo = "zshelix"; };
 
-      cloneScooter = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        scooter_dir="${config.home.homeDirectory}/Development/Personal/scooter"
-        if [ ! -d "$scooter_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.git \
-            "$scooter_dir"
-        fi
-      '';
+      cloneScooter = cloneRepo { repo = "scooter"; };
 
-      installScooter = lib.hm.dag.entryAfter [ "cloneScooter" ] ''
-        scooter_dir="${config.home.homeDirectory}/Development/Personal/scooter"
-        scooter_bin="${config.home.homeDirectory}/.cargo/bin/scooter"
-        if [ ! -x "$scooter_bin" ]; then
-          cd "$scooter_dir"
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path scooter --locked
-        fi
-      '';
+      installScooter = cargoInstallFromRepo {
+        repo = "scooter";
+        cratePath = "scooter";
+        bin = "scooter";
+        after = [ "cloneScooter" ];
+      };
 
-      cloneHerdr = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        herdr_dir="${config.home.homeDirectory}/Development/Personal/herdr"
-        if [ ! -d "$herdr_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/herdr.git \
-            "$herdr_dir"
-        fi
-      '';
+      cloneHerdr = cloneRepo { repo = "herdr"; };
 
-      installHerdr = lib.hm.dag.entryAfter [ "cloneHerdr" ] ''
-        herdr_dir="${config.home.homeDirectory}/Development/Personal/herdr"
-        herdr_bin="${config.home.homeDirectory}/.cargo/bin/herdr"
-        if [ ! -x "$herdr_bin" ]; then
+      installHerdr = cargoInstallFromRepo {
+        repo = "herdr";
+        cratePath = ".";
+        bin = "herdr";
+        after = [ "cloneHerdr" ];
+        preBuild = ''
           export ZIG="${zigForHerdr}"
           if [ ! -x "$ZIG" ]; then
             echo "installHerdr: Zig not found at $ZIG" >&2
             exit 1
           fi
-          cd "$herdr_dir"
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path . --locked
-        fi
-      '';
+        '';
+      };
 
-      cloneHerdrKiosk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        herdr_kiosk_dir="${config.home.homeDirectory}/Development/Personal/herdr-kiosk"
-        if [ ! -d "$herdr_kiosk_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/herdr-kiosk.git \
-            "$herdr_kiosk_dir"
-        fi
-      '';
+      cloneHerdrKiosk = cloneRepo { repo = "herdr-kiosk"; };
 
       # Linking runs the plugin's build step, which downloads a release binary
       # (or builds from source), so only link when the plugin is missing.
       linkHerdrKiosk = lib.hm.dag.entryAfter [ "installHerdr" "cloneHerdrKiosk" ] ''
-        herdr_bin="${config.home.homeDirectory}/.cargo/bin/herdr"
+        herdr_bin="${cargoBin}/herdr"
         kiosk_plugins=$("$herdr_bin" plugin list --plugin thomasschafer.herdr-kiosk --json)
         if ! printf '%s' "$kiosk_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
           export PATH="${pkgs.curl}/bin:${pkgs.gawk}/bin:${pkgs.gnused}/bin:${pkgs.cargo}/bin:$PATH"
           ${cargoBuildEnv ""}
-          $DRY_RUN_CMD "$herdr_bin" plugin link \
-            "${config.home.homeDirectory}/Development/Personal/herdr-kiosk" >/dev/null
+          $DRY_RUN_CMD "$herdr_bin" plugin link "${devDir}/herdr-kiosk" >/dev/null
         fi
       '';
 
-      cloneScooterHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        scooter_hx_dir="${config.home.homeDirectory}/Development/Personal/scooter.hx"
-        if [ ! -d "$scooter_hx_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/scooter.hx.git \
-            "$scooter_hx_dir"
-        fi
-      '';
+      cloneScooterHx = cloneRepo { repo = "scooter.hx"; };
 
-      cloneSmoothScrollHx = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        smooth_scroll_dir="${config.home.homeDirectory}/Development/Personal/smooth-scroll.hx"
-        if [ ! -d "$smooth_scroll_dir" ]; then
-          $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/Development/Personal"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/thomasschafer/smooth-scroll.hx.git \
-            "$smooth_scroll_dir"
-        fi
-      '';
+      cloneSmoothScrollHx = cloneRepo { repo = "smooth-scroll.hx"; };
 
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.cargo/bin/cargo-steel-lib" ]; then
+        if [ ! -x "${cargoBin}/cargo-steel-lib" ]; then
           ${cargoBuildEnv ""}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
         fi
       '';
 
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
-        scooter_hx_dir="${config.home.homeDirectory}/Development/Personal/scooter.hx"
+        scooter_hx_dir="${devDir}/scooter.hx"
         steel_home="${config.home.homeDirectory}/.steel"
         scooter_hx_lib="$steel_home/native/libscooter_hx.dylib"
         scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
@@ -447,7 +441,7 @@ in
         stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
           cd "$scooter_hx_dir"
-          ${cargoBuildEnv "${config.home.homeDirectory}/.cargo/bin:${pkgs.cargo}/bin"}
+          ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
           $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
           echo "$current_hash" > "$scooter_hx_hash_file"
         fi
@@ -460,18 +454,10 @@ in
         fi
       '';
 
-      installGolangciLint = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if ! command -v golangci-lint &>/dev/null || ! golangci-lint version 2>/dev/null | grep -q "1.64"; then
-          export CC="/usr/bin/clang"
-          export CXX="/usr/bin/clang++"
-          $DRY_RUN_CMD ${pkgs.go}/bin/go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.0
-        fi
-      '';
-
       # herdr snapshots the manifest and resolved store path when linking, so
       # relink on every switch to pick up changes before old paths are GC'd.
       linkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
-        $DRY_RUN_CMD "${config.home.homeDirectory}/.cargo/bin/herdr" plugin link \
+        $DRY_RUN_CMD "${cargoBin}/herdr" plugin link \
           ${../herdr/plugins/caffeinate} >/dev/null
       '';
     };
