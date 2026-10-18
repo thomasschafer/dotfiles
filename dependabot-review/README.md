@@ -13,11 +13,11 @@ In scope: repos owned by my account, not forks, not archived, with a `.github/de
 - `review-pr`: reviews one PR and carries out the outcome.
 - `prompts/`, `verdict-schema.json`: what Claude is asked and must return.
 - `config.sh`: dry-run flag, model, caps, cooldown and Todoist IDs.
-- `nix/home.nix`: tools, plus the hourly launchd agent or systemd timer.
+- `nix/home.nix`: tools, plus the hourly launchd agent.
 
 ## Setup
 
-`./setup.sh personal` or `dp` installs the tools and the hourly trigger, then runs `setup-secrets`. That script prompts you to log in to the Claude CLI and for any token not yet in the keychain; run it again any time to finish anything you skipped. Create the tokens first:
+Enabling `enableDependabotReview` for a host, then running `./setup.sh <host>` or `dp`, installs the tools and the hourly trigger, then runs `setup-secrets`. That script prompts you to log in to the Claude CLI and for any token not yet in the keychain; run it again any time to finish anything you skipped. Create the tokens first:
 
 - GitHub: a fine-grained token. Set the resource owner to your account and give it access to all repos, with these permissions:
   - Contents, Pull requests: read and write
@@ -26,7 +26,7 @@ In scope: repos owned by my account, not forks, not archived, with a `.github/de
   Don't grant Administration or Workflows.
 - Todoist: your API token, from Settings, Integrations, Developer.
 
-They're stored as `dependabot-review-github` and `dependabot-review-todoist`, in the keychain on macOS or `secret-tool` on Linux.
+They're stored as `dependabot-review-github` and `dependabot-review-todoist`, in the keychain.
 
 The dotfiles install the `claude` CLI at `~/.local/bin/claude`, which is the path the job uses.
 

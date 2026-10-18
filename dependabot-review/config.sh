@@ -24,7 +24,7 @@ WORK_DIR="$STATE_DIR/work"
 COLIMA_PROFILE="dependabot-review"
 DOCKER_CONTEXT="colima-$COLIMA_PROFILE"
 
-# Keychain (macOS) or secret-tool (Linux) service names.
+# Keychain service names.
 GITHUB_TOKEN_SECRET="dependabot-review-github"
 TODOIST_TOKEN_SECRET="dependabot-review-todoist"
 

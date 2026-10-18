@@ -2,20 +2,12 @@
   config,
   pkgs,
   lib,
-  host,
   hostConfig,
-  nix-openclaw ? null,
   ...
 }:
 
 let
-  isDarwin = pkgs.stdenv.isDarwin;
-  isServer = hostConfig.isServer or false;
-  enableVSCode = hostConfig.enableVSCode or false;
-  enableOpenClaw = (hostConfig.enableOpenClaw or false) && nix-openclaw != null;
-
-  configHome = if isDarwin then "Library/Application Support" else ".config";
-  steelHome = if isDarwin then ".steel" else ".local/share/steel";
+  configHome = "Library/Application Support";
 
   ghosttyConfig =
     pkgs.runCommand "ghostty-config"
@@ -33,23 +25,17 @@ let
     let
       prefix = if extraPathPrefix != "" then "${extraPathPrefix}:" else "";
     in
-    if isDarwin then
-      ''
-        export PATH="${prefix}${pkgs.git}/bin:/usr/bin:$PATH"
-        export CC="/usr/bin/cc"
-        export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
-      ''
-    else
-      ''
-        export PATH="${prefix}${pkgs.stdenv.cc}/bin:${pkgs.git}/bin:$PATH"
-        export CC="${pkgs.stdenv.cc}/bin/cc"
-      '';
+    ''
+      export PATH="${prefix}${pkgs.git}/bin:/usr/bin:$PATH"
+      export CC="/usr/bin/cc"
+      export SDKROOT="$("/usr/bin/xcrun" --sdk macosx --show-sdk-path)"
+    '';
 
   # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
-  # crates/ghostty-vt/build.rs in herdr). On macOS nixpkgs' Zig can't link
-  # against the system SDK outside the Nix sandbox, so use Homebrew's versioned
-  # formula, matching the ZIG export in zsh/.zshrc.
-  zigForHerdr = if isDarwin then "/opt/homebrew/opt/zig@0.16/bin/zig" else "${pkgs.zig_0_16}/bin/zig";
+  # crates/ghostty-vt/build.rs in herdr). nixpkgs' Zig can't link against the
+  # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula,
+  # matching the ZIG export in zsh/.zshrc.
+  zigForHerdr = "/opt/homebrew/opt/zig@0.16/bin/zig";
 
   helixConfig =
     pkgs.runCommand "helix-config"
@@ -58,9 +44,7 @@ let
       }
       ''
         cp ${../helix/process_config.py} process_config.py
-        python3 process_config.py ${../helix/config.template.toml} ${
-          if isDarwin then "--darwin" else ""
-        } > $out
+        python3 process_config.py ${../helix/config.template.toml} > $out
       '';
 
   hxUtils = pkgs.rustPlatform.buildRustPackage {
@@ -84,7 +68,7 @@ let
     sha256 = "sha256-EQCQ9lW5cOVp2C+zeAwWF2m1m6I0wpDQA5wejEm7WgY=";
   };
 
-  sharedFiles = {
+  files = {
     ".claude/CLAUDE.md".source = ../agents/shared.md;
     ".codex/AGENTS.md".source = ../agents/shared.md;
     ".claude/skills/review-loop".source = ../skills/review-loop;
@@ -164,9 +148,7 @@ let
     ".config/direnv/direnv.toml".text = ''
       hide_env_diff = true
     '';
-  };
 
-  darwinOnlyFiles = {
     # Aerospace
     # Scripts keep their executable bit from git
     ".config/aerospace" = {
@@ -190,13 +172,9 @@ let
 
 in
 {
-  imports =
-    lib.optionals enableOpenClaw [
-      nix-openclaw.homeManagerModules.openclaw
-    ]
-    ++ lib.optionals (host == "personal") [
-      ../dependabot-review/nix/home.nix
-    ];
+  imports = lib.optionals hostConfig.enableDependabotReview [
+    ../dependabot-review/nix/home.nix
+  ];
 
   home = {
     stateVersion = "23.05";
@@ -206,7 +184,7 @@ in
       pkgs.findutils
     ];
 
-    file = sharedFiles // (if isDarwin && !isServer then darwinOnlyFiles else { });
+    file = files;
 
     packages =
       with pkgs;
@@ -234,7 +212,7 @@ in
         lazygit
         mise
       ]
-      ++ lib.optionals (host == "personal") [
+      ++ lib.optionals hostConfig.enablePython [
         (python314.withPackages (
           ps: with ps; [
             pip
@@ -258,15 +236,6 @@ in
         zellij
         zig
         zls
-      ]
-      ++ lib.optionals isServer [
-        # OSC 52 asks the local terminal (via herdr, over SSH) to set the
-        # system clipboard. Write to the controlling terminal rather than
-        # stdout, which callers such as Helix's `:sh` capture.
-        (writeShellScriptBin "pbcopy" ''
-          set -euo pipefail
-          printf '\033]52;c;%s\a' "$(${pkgs.coreutils}/bin/base64 -w0)" > /dev/tty
-        '')
       ]
       ++ [
         # Building from source
@@ -471,8 +440,8 @@ in
 
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
         scooter_hx_dir="${config.home.homeDirectory}/Development/Personal/scooter.hx"
-        steel_home="${config.home.homeDirectory}/${steelHome}"
-        scooter_hx_lib="$steel_home/native/libscooter_hx${if isDarwin then ".dylib" else ".so"}"
+        steel_home="${config.home.homeDirectory}/.steel"
+        scooter_hx_lib="$steel_home/native/libscooter_hx.dylib"
         scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
         current_hash=$(${pkgs.coreutils}/bin/md5sum "$scooter_hx_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
         stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
@@ -483,59 +452,8 @@ in
           echo "$current_hash" > "$scooter_hx_hash_file"
         fi
       '';
-    }
-    // lib.optionalAttrs enableOpenClaw {
-      cloneOpenClawWorkspace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        DEV_DIR="${config.home.homeDirectory}/Development/Personal/openclaw-workspace"
-        SYMLINK="${config.home.homeDirectory}/.openclaw/workspace"
-        if [ ! -d "$DEV_DIR/.git" ]; then
-          if ! ${pkgs.openssh}/bin/ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-            echo "ERROR: GitHub SSH auth failed. Connect with 'ssh -A' to forward your agent."
-            exit 1
-          fi
-          echo "Cloning openclaw-workspace..."
-          $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$(dirname "$DEV_DIR")"
-          $DRY_RUN_CMD ${pkgs.git}/bin/git clone git@github.com:thomasschafer/openclaw-workspace.git "$DEV_DIR"
-        fi
-        # Symlink workspace into ~/.openclaw
-        if [ ! -L "$SYMLINK" ]; then
-          $DRY_RUN_CMD rm -rf "$SYMLINK"
-          $DRY_RUN_CMD ln -sfn "$DEV_DIR" "$SYMLINK"
-        fi
-      '';
-      setupOpenClaw = lib.hm.dag.entryAfter [ "cloneOpenClawWorkspace" ] ''
-        OPENCLAW_DIR="${config.home.homeDirectory}/.openclaw"
-        WORKSPACE="$OPENCLAW_DIR/workspace"
-        TOKEN_FILE="$OPENCLAW_DIR/gateway-token.env"
-        CRON_DIR="$OPENCLAW_DIR/cron"
 
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$OPENCLAW_DIR"
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR"
-
-        # Symlink cron jobs to workspace-managed copy
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "$CRON_DIR"
-        if [ -f "$WORKSPACE/config/cron-jobs.json" ]; then
-          if [ -e "$CRON_DIR/jobs.json" ] && [ ! -L "$CRON_DIR/jobs.json" ]; then
-            $DRY_RUN_CMD rm -f "$CRON_DIR/jobs.json"
-          fi
-          $DRY_RUN_CMD ln -sfn "$WORKSPACE/config/cron-jobs.json" "$CRON_DIR/jobs.json"
-        fi
-
-        if [ ! -f "$TOKEN_FILE" ]; then
-          TOKEN=$(${pkgs.openssl}/bin/openssl rand -hex 32)
-          $DRY_RUN_CMD ${pkgs.bash}/bin/bash -c "echo 'OPENCLAW_GATEWAY_TOKEN='\"$TOKEN\" > '$TOKEN_FILE' && chmod 600 '$TOKEN_FILE'"
-          echo "Generated OpenClaw gateway token: $TOKEN"
-          echo "Save this token - you'll need it to access the dashboard."
-        fi
-
-        if [ -d "$OPENCLAW_DIR/credentials" ]; then
-          $DRY_RUN_CMD ${pkgs.coreutils}/bin/chmod 700 "$OPENCLAW_DIR/credentials"
-          $DRY_RUN_CMD ${pkgs.findutils}/bin/find "$OPENCLAW_DIR/credentials" -type f -exec chmod 600 {} \; 2>/dev/null || true
-        fi
-      '';
-    }
-    // lib.optionalAttrs (isDarwin && !isServer) {
-      # TODO: currently relies on raco from homebrew, should move to platform-agnostic setup
+      # TODO: currently relies on raco from homebrew, should move to Nix
       installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if ! $DRY_RUN_CMD /opt/homebrew/bin/raco fmt --help &>/dev/null; then
           $DRY_RUN_CMD /opt/homebrew/bin/raco pkg install --auto fmt
@@ -588,91 +506,6 @@ in
           sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
         };
       };
-    };
-
-    vscode = lib.mkIf enableVSCode {
-      enable = true;
-
-      profiles.default.extensions = with pkgs.vscode-extensions; [
-        catppuccin.catppuccin-vsc
-        # eamodio.gitlens  # Temporarily disabled - build failing in nixpkgs
-        esbenp.prettier-vscode
-        golang.go
-        hashicorp.terraform
-        haskell.haskell
-        justusadam.language-haskell
-        matangover.mypy
-        ms-python.black-formatter
-        ms-python.debugpy
-        ms-python.python
-        ms-python.vscode-pylance
-        ms-toolsai.jupyter
-        ms-vscode.makefile-tools
-        redhat.vscode-yaml
-        rust-lang.rust-analyzer
-        streetsidesoftware.code-spell-checker
-        tamasfe.even-better-toml
-        usernamehw.errorlens
-        vscodevim.vim
-      ];
-    };
-
-  }
-  // lib.optionalAttrs enableOpenClaw {
-    openclaw = {
-      enable = true;
-      instances.default = {
-        enable = true;
-        systemd.enable = true;
-        config = {
-          agents.defaults = {
-            compaction.mode = "safeguard";
-            maxConcurrent = 4;
-            model.primary = "openai/gpt-5.5";
-            subagents.maxConcurrent = 8;
-          };
-          channels.telegram = {
-            dmPolicy = "pairing";
-            groupPolicy = "allowlist";
-            streamMode = "partial";
-          };
-          commands = {
-            native = "auto";
-            nativeSkills = "auto";
-          };
-          discovery.mdns.mode = "off";
-          gateway = {
-            mode = "local";
-            bind = "loopback";
-            auth.mode = "token";
-          };
-          messages.ackReactionScope = "group-mentions";
-          plugins.entries.telegram.enabled = true;
-          browser = {
-            defaultProfile = "openclaw";
-            headless = true;
-            executablePath = "/run/current-system/sw/bin/chromium";
-          };
-        };
-      };
-    };
-  };
-
-  systemd.user.services = lib.mkIf enableOpenClaw {
-    openclaw-gateway = {
-      Install.WantedBy = [ "default.target" ];
-      Service.EnvironmentFile = "${config.home.homeDirectory}/.openclaw/gateway-token.env";
-      # TODO: remove when https://github.com/openclaw/nix-openclaw/issues/45 is fixed
-      Service.ExecStart =
-        let
-          openclaw = config.programs.openclaw.package;
-          gateway = pkgs.openclaw-gateway;
-          hasownPath = "${gateway}/lib/openclaw/node_modules/.pnpm/hasown@2.0.2/node_modules";
-        in
-        lib.mkForce "${pkgs.writeShellScript "openclaw-gateway-wrapper" ''
-          export NODE_PATH="${hasownPath}"
-          exec ${openclaw}/bin/openclaw gateway --port 18789
-        ''}";
     };
   };
 }

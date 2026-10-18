@@ -32,21 +32,11 @@ require_commands() {
     done
 }
 
-is_macos() {
-    [ "$(uname)" = "Darwin" ]
-}
-
 # Usage: read_secret <service>
 read_secret() {
     local service="$1" value
-    if is_macos; then
-        value=$(security find-generic-password -s "$service" -w 2>/dev/null) ||
-            die "no keychain item for service '$service' (see README)"
-    else
-        require_commands secret-tool
-        value=$(secret-tool lookup service "$service" 2>/dev/null) ||
-            die "no secret-tool entry for service '$service' (see README)"
-    fi
+    value=$(security find-generic-password -s "$service" -w 2>/dev/null) ||
+        die "no keychain item for service '$service' (see README)"
     [ -n "$value" ] || die "secret '$service' is empty"
     printf '%s' "$value"
 }

@@ -11,10 +11,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-openclaw = {
-      url = "github:openclaw/nix-openclaw";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -23,67 +19,55 @@
       nix-darwin,
       nixpkgs,
       home-manager,
-      nix-openclaw,
     }:
     let
-      mkHomeManagerConfig =
-        hostConfig: host: extraArgs:
-        {
-          home-manager = {
-            backupFileExtension = "bak";
-            overwriteBackup = true;
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = { inherit hostConfig; host = host; } // extraArgs;
-            users.${hostConfig.username} = import ./modules/home.nix;
-          };
-        };
+      inherit (nixpkgs) lib;
+
+      hosts = lib.attrNames (
+        lib.filterAttrs (_: type: type == "directory") (builtins.readDir ./modules/hosts)
+      );
+
+      # Evaluated against the declared options so that a missing, misspelt or
+      # wrongly typed setting fails the build rather than falling back to a default.
+      loadHostConfig =
+        host:
+        (lib.evalModules {
+          modules = [
+            ./modules/host-options.nix
+            ./modules/hosts/${host}
+          ];
+        }).config;
 
       mkDarwinSystem =
         host:
         let
-          hostConfig = import ./modules/hosts/${host};
+          hostConfig = loadHostConfig host;
         in
         nix-darwin.lib.darwinSystem {
           specialArgs = {
             inherit self hostConfig;
-            host = host;
           };
           modules = [
             ./modules/darwin.nix
             home-manager.darwinModules.home-manager
             { users.users.${hostConfig.username}.home = /Users/${hostConfig.username}; }
-            (mkHomeManagerConfig hostConfig host { })
-          ];
-        };
-
-      mkNixosSystem =
-        host:
-        let
-          hostConfig = import ./modules/hosts/${host};
-        in
-        nixpkgs.lib.nixosSystem {
-          system = hostConfig.system;
-          specialArgs = {
-            inherit self hostConfig;
-            host = host;
-          };
-          modules = [
-            ./modules/nixos.nix
-            home-manager.nixosModules.home-manager
-            (mkHomeManagerConfig hostConfig host { inherit nix-openclaw; })
-            { nixpkgs.overlays = [ nix-openclaw.overlays.default ]; }
+            {
+              home-manager = {
+                backupFileExtension = "bak";
+                overwriteBackup = true;
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = { inherit hostConfig; };
+                users.${hostConfig.username} = import ./modules/home.nix;
+              };
+            }
           ];
         };
     in
     {
-      darwinConfigurations = {
-        personal = mkDarwinSystem "personal";
-        work = mkDarwinSystem "work";
-      };
+      darwinConfigurations = lib.genAttrs hosts mkDarwinSystem;
 
-      nixosConfigurations = {
-        nix-server = mkNixosSystem "nix-server";
-      };
+      # Read by setup.sh to decide which steps to run outside of Nix.
+      hostConfigs = lib.genAttrs hosts loadHostConfig;
     };
 }

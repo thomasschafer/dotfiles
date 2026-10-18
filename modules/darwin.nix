@@ -3,7 +3,6 @@
   pkgs,
   lib,
   hostConfig,
-  host,
   ...
 }:
 {
@@ -124,9 +123,7 @@
       "rancher"
       "zed"
     ]
-    # TODO: we shouldn't need this - manage using home.nix
-    ++ lib.optionals (hostConfig.enableVSCode or false) [ "visual-studio-code" ]
-    ++ lib.optionals (host == "personal") [ "tailscale-app" ];
+    ++ lib.optionals hostConfig.enableTailscale [ "tailscale-app" ];
 
     # TODO: move more of these to home.nix
     brews = [
@@ -156,7 +153,6 @@
       "wget"
       "yamllint"
       "zig@0.16"
-    ]
-    ++ lib.optionals (host == "work") [ "python" ];
+    ];
   };
 }
