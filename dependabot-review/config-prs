@@ -138,8 +138,9 @@ for repo in "${repos[@]}"; do
     if [ -n "$existing" ]; then
         git -C "$checkout" commit --quiet -m "Update Dependabot config to the latest baseline"
         git -C "$checkout" push --quiet origin "HEAD:refs/heads/$BRANCH"
-        url="$existing"
-        log "$repo: updated $url"
+        log "$repo: updated $existing"
+        # The PR was flagged when it was opened; don't flag it again.
+        continue
     else
         git -C "$checkout" checkout --quiet -b "$BRANCH"
         git -C "$checkout" commit --quiet -m "Align Dependabot config with baseline"
