@@ -73,7 +73,7 @@ Brings Dependabot in line with the shared baseline:
 
 - Patch and minor updates are grouped into one PR per ecosystem; majors stay as separate PRs.
 - Updates are proposed weekly on Monday, and only once a release is at least $COOLDOWN_DAYS days old.
-- Patch and minor PRs merge automatically once required checks pass. Majors wait for review.
+- Patch updates, and minor updates from 1.0 up, merge automatically once required checks pass. Majors, and minor bumps below 1.0 (breaking under semver), wait for the weekly review.
 
 Existing ecosystems, directories and ignore rules are unchanged.
 EOF
@@ -84,15 +84,26 @@ EOF
 
 for repo in "${repos[@]}"; do
     log "$repo: checking"
-    existing=$(gh pr list -R "$repo" --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
-    if [ -n "$existing" ]; then
-        log "$repo: config PR already open at $existing, skipping"
-        continue
-    fi
-
     checkout="$tmp_root/${repo//\//__}"
-    gh repo clone "$repo" "$checkout" -- --quiet --depth 1
-    base=$(git -C "$checkout" rev-parse --abbrev-ref HEAD)
+    existing=$(gh pr list -R "$repo" --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
+
+    if [ -n "$existing" ]; then
+        # Bring the open config PR up to date rather than opening another.
+        gh repo clone "$repo" "$checkout" -- --quiet --depth 1 --branch "$BRANCH"
+        base=$(gh pr view "$existing" --json baseRefName --jq .baseRefName)
+    else
+        if gh api "repos/$repo/branches/$BRANCH" --silent 2>/dev/null; then
+            # No open PR uses it, so it's left over from a merged or closed config PR.
+            if [ "$dry_run" = true ]; then
+                log "$repo: would delete leftover branch $BRANCH"
+            else
+                gh api -X DELETE "repos/$repo/git/refs/heads/$BRANCH" --silent
+                log "$repo: deleted leftover branch $BRANCH"
+            fi
+        fi
+        gh repo clone "$repo" "$checkout" -- --quiet --depth 1
+        base=$(git -C "$checkout" rev-parse --abbrev-ref HEAD)
+    fi
 
     others=$(other_auto_merge_workflows "$checkout")
     if [ -n "$others" ]; then
@@ -116,21 +127,27 @@ for repo in "${repos[@]}"; do
 
     body=$(pr_body "$repo" "$base")
     if [ "$dry_run" = true ]; then
-        echo "===== $repo"
+        echo "===== $repo${existing:+ (updating $existing)}"
         git -C "$checkout" --no-pager diff
         git -C "$checkout" status --short
-        printf '%s\n' "$body"
+        [ -n "$existing" ] || printf '%s\n' "$body"
         continue
     fi
 
-    git -C "$checkout" checkout --quiet -b "$BRANCH"
     git -C "$checkout" add .github/dependabot.yml "$WORKFLOW_PATH"
-    git -C "$checkout" commit --quiet -m "Align Dependabot config with baseline"
-    git -C "$checkout" push --quiet -u origin "$BRANCH"
-
-    url=$(gh pr create -R "$repo" --base "$base" --head "$BRANCH" \
-        --title "Align Dependabot config with baseline" --body "$body")
-    log "$repo: opened $url"
+    if [ -n "$existing" ]; then
+        git -C "$checkout" commit --quiet -m "Update Dependabot config to the latest baseline"
+        git -C "$checkout" push --quiet origin "HEAD:refs/heads/$BRANCH"
+        url="$existing"
+        log "$repo: updated $url"
+    else
+        git -C "$checkout" checkout --quiet -b "$BRANCH"
+        git -C "$checkout" commit --quiet -m "Align Dependabot config with baseline"
+        git -C "$checkout" push --quiet -u origin "$BRANCH"
+        url=$(gh pr create -R "$repo" --base "$base" --head "$BRANCH" \
+            --title "Align Dependabot config with baseline" --body "$body")
+        log "$repo: opened $url"
+    fi
 
     if [ "$use_todoist" = false ]; then
         echo "Flag by hand: $url"

@@ -4,7 +4,7 @@
 
 # While true, the weekly job only comments its verdict and creates Todoist tasks:
 # it never merges, pushes or opens PRs.
-DRY_RUN=true
+DRY_RUN=false
 
 # Pinned explicitly so the job never silently changes model.
 CLAUDE_MODEL="claude-opus-5-5"
