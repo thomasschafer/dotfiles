@@ -6,8 +6,15 @@ lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$lib_dir/config.sh"
 
 DEPENDABOT_AUTHOR="app/dependabot"
-# Hidden marker on every comment this job posts, so a PR revision is reviewed once.
-REVIEW_MARKER_PREFIX="<!-- dependabot-review:sha="
+
+# Usage: review_marker <sha>
+# Hidden marker on every comment this job posts, so a PR revision is reviewed once per
+# mode. Dry-run reviews have their own marker, so going live re-reviews those revisions.
+review_marker() {
+    local mode=live
+    [ "$DRY_RUN" = true ] && mode=dry-run
+    printf '<!-- dependabot-review:%s:sha=%s -->' "$mode" "$1"
+}
 
 die() {
     echo "Error: $*" >&2
@@ -124,6 +131,28 @@ summarise_dependabot_title() {
         title="${title#Bump }"
         printf '%s\n' "${title#bump }"
     fi
+}
+
+# Container VM. Only WORK_DIR is mounted, so containers can't see the rest of $HOME.
+
+use_job_docker_config() {
+    mkdir -p "$STATE_DIR/docker"
+    [ -f "$STATE_DIR/docker/config.json" ] || echo '{}' >"$STATE_DIR/docker/config.json"
+    export DOCKER_CONFIG="$STATE_DIR/docker"
+}
+
+colima_running() {
+    colima status --profile "$COLIMA_PROFILE" >/dev/null 2>&1
+}
+
+start_colima() {
+    mkdir -p "$WORK_DIR"
+    colima start --profile "$COLIMA_PROFILE" --cpu 4 --memory 8 --disk 60 \
+        --vm-type vz --mount-type virtiofs --mount "$WORK_DIR:w"
+}
+
+stop_colima() {
+    colima stop --profile "$COLIMA_PROFILE" >/dev/null 2>&1 || log "Failed to stop colima"
 }
 
 # Date helpers. Support both BSD (macOS) and GNU date.

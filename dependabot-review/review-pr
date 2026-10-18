@@ -4,11 +4,12 @@
 # it only returns a verdict and, for fixes and splits, leaves changes in the working tree.
 # This script checks those changes against fixed rules before pushing or merging anything.
 #
-# Usage: review-pr [--preview] <owner/repo> <number>
+# Usage: review-pr [--preview | --live] <owner/repo> <number>
 #   --preview  review as in dry-run mode, but print comments, labels and Todoist tasks
 #              instead of creating them. Uses your normal gh login if GH_TOKEN is unset.
-# Expects GH_TOKEN and TODOIST_TOKEN in the environment and the colima profile running.
-# Called by review-all; can also be run by hand.
+#   --live     act for real on this PR, whatever DRY_RUN is set to.
+# Reads GH_TOKEN and TODOIST_TOKEN from the keychain unless they're already set, and
+# starts the colima VM if it isn't running. Called by review-all; can be run by hand.
 
 set -euo pipefail
 
@@ -17,21 +18,43 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/lib.sh"
 
 preview=false
-if [ "${1:-}" = --preview ]; then
-    preview=true
-    DRY_RUN=true
-    shift
-fi
-[ $# -eq 2 ] || die "usage: review-pr [--preview] <owner/repo> <number>"
+case "${1:-}" in
+    --preview)
+        preview=true
+        DRY_RUN=true
+        shift
+        ;;
+    --live)
+        DRY_RUN=false
+        shift
+        ;;
+esac
+[ $# -eq 2 ] || die "usage: review-pr [--preview | --live] <owner/repo> <number>"
 repo="$1"
 number="$2"
 [[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "invalid repo: $repo"
 [[ "$number" =~ ^[0-9]+$ ]] || die "invalid PR number: $number"
 
-require_commands gh git jq docker claude curl
+require_commands gh git jq docker colima claude curl
 if [ "$preview" = false ]; then
-    [ -n "${GH_TOKEN:-}" ] || die "GH_TOKEN is not set"
-    [ -n "${TODOIST_TOKEN:-}" ] || die "TODOIST_TOKEN is not set"
+    if [ -z "${GH_TOKEN:-}" ]; then
+        GH_TOKEN=$(read_secret "$GITHUB_TOKEN_SECRET")
+        export GH_TOKEN
+    fi
+    if [ -z "${TODOIST_TOKEN:-}" ]; then
+        TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+        export TODOIST_TOKEN
+    fi
+fi
+use_job_docker_config
+
+# A run sets this for the review-pr processes it starts. By hand, don't overlap with a
+# run: one could stop the VM the other is using.
+if [ -z "${DEPENDABOT_REVIEW_RUN_PID:-}" ]; then
+    holder=$(cat "$STATE_DIR/lock/pid" 2>/dev/null || true)
+    if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+        die "a scheduled run (pid $holder) is in progress; try again when it finishes"
+    fi
 fi
 
 # Manifests and lockfiles. Fixes may not touch these; splits may touch only these.
@@ -67,7 +90,7 @@ head_sha=$(jq -r .headRefOid <<<"$pr")
 base_ref=$(jq -r .baseRefName <<<"$pr")
 summary=$(summarise_dependabot_title "$title")
 repo_short="${repo#*/}"
-marker="$REVIEW_MARKER_PREFIX$head_sha -->"
+marker=$(review_marker "$head_sha")
 
 if jq -e --arg m "$marker" 'any(.comments[]; .body | contains($m))' <<<"$pr" >/dev/null; then
     log "$repo#$number: head $head_sha already reviewed, skipping"
@@ -102,7 +125,11 @@ cleanup() {
     done
     git -C "$cache_repo" worktree prune 2>/dev/null || true
     rm -rf "$context_dir" "$bin_dir"
+    if [ "$started_colima" = true ]; then
+        stop_colima
+    fi
 }
+started_colima=false
 trap cleanup EXIT
 
 dry_label=""
@@ -495,7 +522,7 @@ do_fix() {
         return
     fi
     new_sha=$(git -C "$checkout" rev-parse HEAD)
-    marker="$REVIEW_MARKER_PREFIX$new_sha -->"
+    marker=$(review_marker "$new_sha")
     log "$repo#$number: pushed fix $new_sha, waiting for CI"
     ci=$(wait_for_ci "$new_sha")
     if [ "$ci" != passing ]; then
@@ -600,6 +627,10 @@ jq '{title, body, files: [.files[] | {path, additions, deletions}]}' <<<"$pr" >"
 gh pr diff "$number" -R "$repo" >"$context_dir/pr.diff"
 write_ci_context "$head_sha" "$ci"
 
+if ! colima_running; then
+    start_colima >&2
+    started_colima=true
+fi
 prepare_cache_repo
 git -C "$cache_repo" worktree add --quiet --detach "$checkout" "$head_sha"
 sandbox="$bin_dir/sandbox"

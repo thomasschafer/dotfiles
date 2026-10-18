@@ -50,13 +50,15 @@ State, logs (kept for 28 days) and checkouts live in `~/.local/state/dependabot-
 
 ```sh
 ./review-pr --preview owner/repo 123  # review one PR; print actions instead of taking them
+./review-pr owner/repo 123            # review one PR, honouring DRY_RUN
+./review-pr --live owner/repo 123     # review one PR and act on it, even while DRY_RUN is on
 ./run --force                         # full run now, ignoring the weekly guard
 ```
 
-`review-pr` without `--preview` and `run` need the tokens from setup. `run` reads them itself. For `review-pr`, export `GH_TOKEN` and `TODOIST_TOKEN` first.
+These read the tokens from the keychain and start the VM if needed. `review-pr` refuses to run while a scheduled run is in progress.
 
 `cleanup-archived` and `config-prs` use your normal `gh` login, since they need admin rights or the `workflow` scope. `config-prs --dry-run` prints the diffs without opening PRs.
 
 ## Dry run
 
-`DRY_RUN=true` in `config.sh` makes the job comment its verdict, label flagged PRs and create Todoist tasks, but never merge, push or open PRs. Set it to `false` and rebuild to go live, since the job runs from the Nix store copy.
+`DRY_RUN=true` in `config.sh` makes the job comment its verdict, label flagged PRs and create Todoist tasks, but never merge, push or open PRs. Set it to `false` and rebuild to go live, since the job runs from the Nix store copy. Dry-run and live reviews leave different markers, so going live re-reviews PRs that only had a dry-run verdict.

@@ -20,9 +20,8 @@ esac
 
 require_commands gh git jq curl claude colima docker
 
-mkdir -p "$STATE_DIR/logs" "$WORK_DIR" "$STATE_DIR/docker"
-[ -f "$STATE_DIR/docker/config.json" ] || echo '{}' >"$STATE_DIR/docker/config.json"
-export DOCKER_CONFIG="$STATE_DIR/docker"
+mkdir -p "$STATE_DIR/logs" "$WORK_DIR"
+use_job_docker_config
 
 lock_dir="$STATE_DIR/lock"
 if ! mkdir "$lock_dir" 2>/dev/null; then
@@ -35,11 +34,12 @@ if ! mkdir "$lock_dir" 2>/dev/null; then
     mkdir "$lock_dir" 2>/dev/null || exit 0
 fi
 echo $$ >"$lock_dir/pid"
+export DEPENDABOT_REVIEW_RUN_PID=$$
 
 started_colima=false
 on_exit() {
     if [ "$started_colima" = true ]; then
-        colima stop --profile "$COLIMA_PROFILE" >/dev/null 2>&1 || log "Failed to stop colima"
+        stop_colima
     fi
     rm -rf "$lock_dir"
 }
@@ -76,9 +76,8 @@ export GH_TOKEN
 log_file="$STATE_DIR/logs/run-$(date +%Y%m%d-%H%M%S).log"
 log "Run starting, logging to $log_file"
 {
-    if ! colima status --profile "$COLIMA_PROFILE" >/dev/null 2>&1; then
-        colima start --profile "$COLIMA_PROFILE" --cpu 4 --memory 8 --disk 60 \
-            --vm-type vz --mount-type virtiofs --mount "$WORK_DIR:w"
+    if ! colima_running; then
+        start_colima
         started_colima=true
     fi
     "$script_dir/review-all"
