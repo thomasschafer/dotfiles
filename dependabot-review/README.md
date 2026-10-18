@@ -17,7 +17,7 @@ In scope: repos owned by my account, not forks, not archived, with a `.github/de
 
 ## Setup
 
-`./setup.sh personal` or `dp` installs the tools and the hourly trigger, then runs `setup-secrets`. That script prompts for any token not yet in the keychain; run it again any time to add one you skipped. Create the tokens first:
+`./setup.sh personal` or `dp` installs the tools and the hourly trigger, then runs `setup-secrets`. That script prompts you to log in to the Claude CLI and for any token not yet in the keychain; run it again any time to finish anything you skipped. Create the tokens first:
 
 - GitHub: a fine-grained token. Set the resource owner to your account and give it access to all repos, with these permissions:
   - Contents, Pull requests: read and write
@@ -28,7 +28,7 @@ In scope: repos owned by my account, not forks, not archived, with a `.github/de
 
 They're stored as `dependabot-review-github` and `dependabot-review-todoist`, in the keychain on macOS or `secret-tool` on Linux.
 
-The `claude` CLI must be installed and logged in at `~/.local/bin/claude`.
+The dotfiles install the `claude` CLI at `~/.local/bin/claude`, which is the path the job uses.
 
 ## How it runs
 

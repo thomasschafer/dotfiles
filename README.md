@@ -8,7 +8,7 @@ cd ~/Development/Personal/dotfiles
 ./setup.sh personal  # or ./setup.sh work
 ```
 
-On `personal`, setup (and `dp`) also installs the weekly Dependabot review job and prompts for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
+On `personal`, setup (and `dp`) also installs the weekly Dependabot review job and prompts you to log in to the Claude CLI and for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
 
 ## NixOS server
 
