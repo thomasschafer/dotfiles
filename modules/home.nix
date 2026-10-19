@@ -257,13 +257,12 @@ in
           };
         }))
         biome
-        black
         delta
         delve
         deno
         direnv
         fd
-        ffmpegthumbnailer
+        ffmpeg
         fzf
         git-filter-repo
         go
@@ -277,16 +276,14 @@ in
         neovim
         nixfmt
         nushell
-        p7zip
         jq
         lazygit
         mise
-        # Runs the npm-installed CLIs (Codex, Gemini, OpenCode)
+        # Runs the npm-installed CLIs (Codex, OpenCode)
         nodejs
         pgformatter
         poppler-utils
         pre-commit
-        pyright
       ]
       ++ lib.optionals hostConfig.enablePython [
         (python314.withPackages (
@@ -296,28 +293,22 @@ in
         ))
       ]
       ++ [
+        _7zz
         ripgrep
         ruff
-        cargo
-        rustc
-        rust-analyzer
         # scooter  # Building from source manually
         sd
-        shared-mime-info
         shellcheck
         sqlfluff
         taplo
         terraform-docs
         tree
         typescript-language-server
-        unar
         uv
         vscode-langservers-extracted
-        watchman
         wget
         yamllint
         yazi
-        zellij
         zig
         zls
       ]
@@ -330,7 +321,6 @@ in
         cabal-install
         stack
         haskell-language-server
-        haskellPackages.hoogle
 
         # Scripts/tools
         # GNU sed under the Homebrew name, leaving `sed` as the macOS one
@@ -409,11 +399,6 @@ in
       installOpenCode = npmInstall {
         bin = "opencode";
         package = "opencode-ai";
-      };
-
-      installGeminiCli = npmInstall {
-        bin = "gemini";
-        package = "@google/gemini-cli";
       };
 
       cloneZshelix = cloneRepo { repo = "zshelix"; };
