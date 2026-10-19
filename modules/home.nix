@@ -226,7 +226,8 @@ in
     lib.optionals hostConfig.enableDependabotReview [
       ../dependabot-review/nix/home.nix
     ]
-    ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ];
+    ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ]
+    ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ];
 
   home = {
     stateVersion = "23.05";
@@ -498,6 +499,9 @@ in
     }
     // lib.optionalAttrs hostConfig.enableHealthTracking {
       cloneHealthTracking = cloneRepo { repo = "health-tracking"; };
+    }
+    // lib.optionalAttrs hostConfig.enableWorkshop {
+      cloneWorkshop = cloneRepo { repo = "workshop"; };
     };
   };
 

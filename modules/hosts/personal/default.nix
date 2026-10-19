@@ -6,4 +6,5 @@
   enableTailscale = true;
   enableDependabotReview = true;
   enableHealthTracking = true;
+  enableWorkshop = true;
 }

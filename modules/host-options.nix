@@ -44,5 +44,10 @@ in
       type = types.bool;
       description = "Whether to run the health-tracking app and its backups (see modules/health-tracking.nix).";
     };
+
+    enableWorkshop = mkOption {
+      type = types.bool;
+      description = "Whether to run the Workshop server in the background (see modules/workshop.nix).";
+    };
   };
 }
