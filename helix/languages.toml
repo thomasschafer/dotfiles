@@ -64,25 +64,25 @@ args = ["server"]
 name = "typescript"
 language-servers = ["typescript-language-server"]
 auto-format = true
-formatter = { command = "prettier", args = ["--parser", "typescript"] }
+formatter = { command = "biome", args = ["format", "--stdin-file-path=file.ts"] }
 
 [[language]]
 name = "javascript"
 language-servers = ["typescript-language-server"]
 auto-format = true
-formatter = { command = "prettier", args = ["--parser", "javascript"] }
+formatter = { command = "biome", args = ["format", "--stdin-file-path=file.js"] }
 
 [[language]]
 name = "tsx"
 language-servers = ["typescript-language-server"]
 auto-format = true
-formatter = { command = "prettier", args = ["--parser", "typescript"] }
+formatter = { command = "biome", args = ["format", "--stdin-file-path=file.tsx"] }
 
 [[language]]
 name = "jsx"
 language-servers = ["typescript-language-server"]
 auto-format = true
-formatter = { command = "prettier", args = ["--parser", "javascript"] }
+formatter = { command = "biome", args = ["format", "--stdin-file-path=file.jsx"] }
 
 # ----- Json -----
 [[language]]
@@ -110,19 +110,19 @@ language-servers = ["gopls", "golangci-lint-lsp"]
 auto-format = true
 
 [language-server.golangci-lint-lsp.config]
-command = ["golangci-lint-wrapper"]
+command = [
+  "golangci-lint",
+  "run",
+  "--output.json.path=stdout",
+  "--show-stats=false",
+  "--issues-exit-code=1",
+]
 
 # ----- Nix -----
 [[language]]
 name = "nix"
 auto-format = true
 formatter = { command = "nixfmt" }
-
-# ----- Terraform -----
-[[language]]
-name = "hcl"
-auto-format = true
-formatter = { command = "terraform", args = ["fmt", "-"] }
 
 
 # ----- Scheme -----
