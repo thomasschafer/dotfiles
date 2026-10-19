@@ -60,3 +60,31 @@ if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")"
         printf '\nworkshop: still building; the link will be in ~/.local/state/workshop/dev.log\n'
     fi
 fi
+
+# Reports on each agent that should keep running, so one that has stopped doesn't go unnoticed.
+username="$("$nix_exec" eval --raw "$script_dir#hostConfigs.$host.username")"
+# One line per agent: its name, launchd label and log file.
+# shellcheck disable=SC2016 # Nix, not shell, interpolation
+list_agents='agents:
+  let
+    kept = builtins.filter (name: agents.${name}.enable && agents.${name}.config.KeepAlive != null)
+      (builtins.attrNames agents);
+    line = name: with agents.${name}.config; "${name}\t${Label}\t${StandardOutPath}\n";
+  in
+  builtins.concatStringsSep "" (map line kept)'
+agents="$("$nix_exec" eval --raw "$script_dir#darwinConfigurations.$host.config.home-manager.users.$username.launchd.agents" --apply "$list_agents")"
+stopped=0
+home_dir="~"
+while IFS=$'\t' read -r name label log; do
+    [ -n "$name" ] || continue
+    info="$(launchctl print "gui/$(id -u)/$label" 2>/dev/null || true)"
+    if grep -q '^\s*state = running' <<<"$info"; then
+        printf '%s: running · log %s\n' "$name" "${log/#"$HOME"/$home_dir}"
+    else
+        stopped=1
+        exit_code="$(grep -m1 'last exit code' <<<"$info" | sed 's/.*= //' || true)"
+        printf '%s: not running (last exit code %s); the end of %s:\n' "$name" "${exit_code:-unknown}" "${log/#"$HOME"/$home_dir}" >&2
+        tail -n 10 "$log" 2>/dev/null | sed 's/^/    /' >&2 || true
+    fi
+done <<<"$agents"
+[ "$stopped" = 0 ] || exit 1
