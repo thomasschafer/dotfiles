@@ -34,23 +34,23 @@ Secrets: the OAuth credentials are stored as one Keychain item, `todoist-backup`
 
 ## Setup
 
-Enabling `enableTodoistBackup` for a host and running `./setup.sh <host>` (or `dp`) installs the `todoist-backup` command and the launchd agent, then warns about anything missing. On a new machine you need to do two things by hand.
+Enabling `enableTodoistBackup` for a host and running `./setup.sh <host>` (or `dp`) installs the `todoist-backup` command and the launchd agent, then runs `todoist-backup setup`. On a new machine, that offers to set up the two things that can't come from the dotfiles. Run it again any time to finish anything you skipped.
 
-### Credentials
+- Todoist credentials. Reuse the existing app, called "backup", in the [App Management Console](https://app.todoist.com/app/settings/integrations/app-management) (Todoist rejects app names containing "todoist"). Its OAuth redirect URL must be `http://localhost:8723/callback`. `setup` asks for the client ID and secret (the secret prompt is hidden), opens Todoist so you can approve read-only access, and stores the credentials as the Keychain item `todoist-backup`. It refuses to store a token with any scope beyond `data:read`. `todoist-backup setup-token` does just this step.
+- The deploy key. `setup` creates `~/.ssh/todoist-backup_ed25519` and adds it to the data repo with your `gh` login, so log in with `gh auth login` first. To do it by hand:
 
-1. Open the [App Management Console](https://app.todoist.com/app/settings/integrations/app-management) and create an app (any name, e.g. "todoist-backup"). Set its OAuth redirect URL to `http://localhost:8723/callback`.
-2. Run `todoist-backup setup-token`. It asks for the client ID and secret (the secret prompt is hidden), opens Todoist so you can approve read-only access, and stores the credentials in the Keychain. It refuses to store a token with any scope beyond `data:read`.
+  ```sh
+  ssh-keygen -t ed25519 -N '' -C "todoist-backup@$(scutil --get LocalHostName)" -f ~/.ssh/todoist-backup_ed25519
+  gh repo deploy-key add ~/.ssh/todoist-backup_ed25519.pub -R thomasschafer/todoist-backup --allow-write --title "todoist-backup ($(scutil --get LocalHostName))"
+  ```
 
-Run it again whenever the job alerts that you need to re-authorise. Todoist's tokens last an hour and the job refreshes them itself. Refresh tokens change on every refresh, so if a refresh is ever lost (for example the Mac crashed mid-refresh) you'll need to authorise again.
+The first run clones the data repo into `~/.local/share/todoist-backup`, with the full history. macOS asks whether terminal-notifier may send notifications the first time it alerts; allow it, and set its style to Persistent in System Settings, Notifications if you want banners to stay until dismissed.
 
-### Deploy key
+Todoist access tokens last an hour and the job refreshes them itself. Refresh tokens change on every refresh, so if one is ever lost (for example the Mac crashed mid-refresh) the job alerts and you'll need to run `todoist-backup setup-token` again.
 
-```sh
-ssh-keygen -t ed25519 -N '' -C "todoist-backup@$(scutil --get LocalHostName)" -f ~/.ssh/todoist-backup_ed25519
-gh repo deploy-key add ~/.ssh/todoist-backup_ed25519.pub -R thomasschafer/todoist-backup --allow-write --title "todoist-backup ($(scutil --get LocalHostName))"
-```
+### Replacing a machine
 
-The first run clones the data repo into `~/.local/share/todoist-backup`.
+Only run the backup on one machine at a time. If two push, the second sees commits it didn't make and stops pushing, with an alert. When you retire a machine, remove its deploy key with `gh repo deploy-key list -R thomasschafer/todoist-backup` then `gh repo deploy-key delete <id> -R thomasschafer/todoist-backup`. Don't revoke the "backup" app in Todoist to cut the old machine off: that would likely revoke the new machine's token too. Wiping the old machine's Keychain is enough.
 
 ## Running by hand
 

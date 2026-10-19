@@ -12,7 +12,14 @@ from datetime import datetime, timedelta, timezone
 from . import fetch, restore_plan, snapshot
 from .api import TodoistClient
 from .auth import CredentialsMissing, KeychainTokenSource
-from .config import LOG_BACKUPS, LOG_MAX_BYTES, OAUTH_REDIRECT_URI, STALE_AFTER_SECONDS, Config
+from .config import (
+    LOG_BACKUPS,
+    LOG_MAX_BYTES,
+    OAUTH_REDIRECT_URI,
+    REPO_SLUG,
+    STALE_AFTER_SECONDS,
+    Config,
+)
 from .keychain import MacKeychain
 from .notify import MacNotifier
 from .repo import Repo
@@ -150,22 +157,77 @@ def cmd_setup_token(config: Config, args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_check_setup(config: Config, args: argparse.Namespace) -> int:
-    """Run by setup.sh: reports anything a fresh machine is missing."""
-    missing = []
-    if MacKeychain().read(config.keychain_service) is None:
-        missing.append(
-            "Todoist credentials: register an app at "
-            "https://app.todoist.com/app/settings/integrations/app-management with OAuth "
-            f"redirect URL {OAUTH_REDIRECT_URI}, then run `todoist-backup setup-token`"
-        )
-    if not config.deploy_key.exists():
-        missing.append(
-            f"deploy key {config.deploy_key}: create it with `ssh-keygen -t ed25519 -N '' -f "
-            f"{config.deploy_key}` and add the .pub as a write deploy key on the data repo"
-        )
-    for item in missing:
-        print(f"Warning: todoist-backup: missing {item}", file=sys.stderr)
+def _offer(missing: str, instructions: str) -> bool:
+    """Explains what's missing and asks whether to set it up now. Warns instead when
+    there's no terminal to prompt in."""
+    if not sys.stdin.isatty():
+        print(f"Warning: todoist-backup: {missing}; run `todoist-backup setup`", file=sys.stderr)
+        return False
+    print(f"\ntodoist-backup: {missing}.\n{instructions}")
+    if input("Set it up now? [y/N] ").strip().lower() == "y":
+        return True
+    print(
+        "Skipped. Run `todoist-backup setup` later; backups fail until it's done.", file=sys.stderr
+    )
+    return False
+
+
+def _create_deploy_key(config: Config) -> None:
+    host = subprocess.run(
+        ["/usr/sbin/scutil", "--get", "LocalHostName"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    subprocess.run(
+        [
+            "ssh-keygen",
+            "-q",
+            "-t",
+            "ed25519",
+            "-N",
+            "",
+            "-C",
+            f"todoist-backup@{host}",
+            "-f",
+            str(config.deploy_key),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "gh",
+            "repo",
+            "deploy-key",
+            "add",
+            f"{config.deploy_key}.pub",
+            "-R",
+            REPO_SLUG,
+            "--allow-write",
+            "--title",
+            f"todoist-backup launchd job ({host})",
+        ],
+        check=True,
+    )
+    print(
+        f"Added the deploy key for {host}. Remove keys for machines you no longer use with:\n"
+        f"  gh repo deploy-key list -R {REPO_SLUG}\n"
+        f"  gh repo deploy-key delete <id> -R {REPO_SLUG}"
+    )
+
+
+def cmd_setup(config: Config, args: argparse.Namespace) -> int:
+    """Run by setup.sh. Offers to set up whatever this machine is missing; safe to re-run."""
+    if MacKeychain().read(config.keychain_service) is None and _offer(
+        "Todoist credentials are missing",
+        "Open https://app.todoist.com/app/settings/integrations/app-management and use the\n"
+        'existing "backup" app (or create one; Todoist rejects names containing "todoist").\n'
+        f"Its OAuth redirect URL must be {OAUTH_REDIRECT_URI}. Have its client ID and\n"
+        "secret ready.",
+    ):
+        cmd_setup_token(config, args)
+    if not config.deploy_key.exists() and _offer(
+        f"the deploy key {config.deploy_key} is missing",
+        f"This creates it and adds it to {REPO_SLUG} with your gh login (needs `gh auth login`).",
+    ):
+        _create_deploy_key(config)
     return 0
 
 
@@ -181,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
     plan.add_argument("--json", action="store_true", help="machine-readable output")
     sub.add_parser("status", help="show whether backups are healthy")
     sub.add_parser("setup-token", help="authorise read-only access and store it in the keychain")
-    sub.add_parser("check-setup", help="warn about missing credentials or deploy key")
+    sub.add_parser("setup", help="set up credentials and deploy key on a new machine")
     args = parser.parse_args(argv)
 
     config = Config.default()
@@ -192,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         "restore-plan": cmd_restore_plan,
         "status": cmd_status,
         "setup-token": cmd_setup_token,
-        "check-setup": cmd_check_setup,
+        "setup": cmd_setup,
     }
     return handlers[args.command](config, args)
 

@@ -10,7 +10,8 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 SOURCE_DIR = PACKAGE_DIR.parent
 
 KEYCHAIN_SERVICE = "todoist-backup"
-REMOTE_URL = "git@github.com:thomasschafer/todoist-backup.git"
+REPO_SLUG = "thomasschafer/todoist-backup"
+REMOTE_URL = f"git@github.com:{REPO_SLUG}.git"
 BRANCH = "main"
 
 # Must match a redirect URL registered on the Todoist app (see README).

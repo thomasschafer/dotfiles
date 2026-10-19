@@ -32,13 +32,16 @@ VOLATILE_SYNC_KEYS = frozenset(
         "stats",
         "user_plan_limits",
         "day_orders",
+        # Sync protocol bookkeeping, not data.
+        "sync_status",
+        "temp_id_mapping",
+        # Todoist's permission matrix: the same every sync but in a random order.
+        "role_actions",
     }
 )
 # Per-object fields with the same problem, by sync resource.
 VOLATILE_FIELDS: Mapping[str, frozenset[str]] = {
-    "user": frozenset(
-        {"karma", "karma_trend", "completed_count", "completed_today", "days_item_limit"}
-    ),
+    "user": frozenset({"karma", "karma_trend"}),
 }
 
 Files = dict[str, Any]

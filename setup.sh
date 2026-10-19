@@ -47,8 +47,7 @@ if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableDependabotR
 fi
 
 if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableTodoistBackup")" = true ]; then
-    # Only warns: the credentials and deploy key are set up by hand (see todoist-backup/README.md).
-    "/etc/profiles/per-user/$USER/bin/todoist-backup" check-setup
+    "/etc/profiles/per-user/$USER/bin/todoist-backup" setup
 fi
 
 if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableHealthTracking")" = true ]; then

@@ -10,7 +10,7 @@ cd ~/Development/Personal/dotfiles
 
 Re-run `setup.sh` (or `dp`) to apply changes. On hosts with `enableDependabotReview`, it also installs the weekly Dependabot review job and prompts you to log in to the Claude CLI and for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
 
-On hosts with `enableTodoistBackup`, it installs the Todoist backup job and warns if its credentials or deploy key are missing; see [todoist-backup/README.md](todoist-backup/README.md#setup).
+On hosts with `enableTodoistBackup`, it installs the Todoist backup job and prompts you to set up its Todoist credentials and deploy key if they're missing; see [todoist-backup/README.md](todoist-backup/README.md#setup).
 
 ## Adding a host
 
