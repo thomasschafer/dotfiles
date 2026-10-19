@@ -49,3 +49,14 @@ fi
 if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableHealthTracking")" = true ]; then
     "$HOME/Development/Personal/health-tracking/scripts/setup-machine.sh"
 fi
+
+if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")" = true ]; then
+    # Built by the Workshop agent on its first run, so it may not be there yet.
+    workshop="$HOME/Development/Personal/workshop/target/debug/workshop"
+    if [ -x "$workshop" ]; then
+        url="$("$workshop" token --tailscale | grep -o 'https://[^ ]*token=[^ ]*')"
+        printf '\nworkshop: open %s on your phone\n' "$url"
+    else
+        printf '\nworkshop: still building; the link will be in ~/.local/state/workshop/dev.log\n'
+    fi
+fi
