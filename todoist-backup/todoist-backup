@@ -1,0 +1,12 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.13"
+# dependencies = []
+# ///
+"""Read-only Todoist backup. See README.md next to this file."""
+
+import sys
+
+from todoist_backup.cli import main
+
+sys.exit(main())

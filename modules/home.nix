@@ -227,7 +227,8 @@ in
       ../dependabot-review/nix/home.nix
     ]
     ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ]
-    ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ];
+    ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ]
+    ++ lib.optionals hostConfig.enableTodoistBackup [ ../todoist-backup/nix/home.nix ];
 
   home = {
     stateVersion = "23.05";

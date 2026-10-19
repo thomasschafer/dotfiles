@@ -49,5 +49,10 @@ in
       type = types.bool;
       description = "Whether to run the Workshop server in the background (see modules/workshop.nix).";
     };
+
+    enableTodoistBackup = mkOption {
+      type = types.bool;
+      description = "Whether to back up Todoist every few hours (see todoist-backup/README.md).";
+    };
   };
 }

@@ -7,4 +7,5 @@
   enableDependabotReview = true;
   enableHealthTracking = true;
   enableWorkshop = true;
+  enableTodoistBackup = true;
 }

@@ -1,3 +1,14 @@
 {
-  "cleanupPeriodDays": 999999999
+  "cleanupPeriodDays": 999999999,
+  "permissions": {
+    "deny": [
+      "Read(~/.local/share/todoist-backup/**)",
+      "Edit(~/.local/share/todoist-backup/**)",
+      "Read(~/.ssh/todoist-backup_ed25519)",
+      "Edit(~/.ssh/todoist-backup_ed25519)",
+      "Bash(*.local/share/todoist-backup*)",
+      "Bash(*todoist-backup_ed25519*)",
+      "Bash(*security*todoist-backup*)"
+    ]
+  }
 }
