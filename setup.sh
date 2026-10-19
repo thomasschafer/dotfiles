@@ -61,6 +61,25 @@ if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")"
     fi
 fi
 
+# Uninstalling a formula leaves its `brew services` plist behind, so launchd keeps trying to
+# start a program that no longer exists. Warns about any such plist rather than removing it.
+for plist in "$HOME"/Library/LaunchAgents/homebrew.mxcl.*.plist /Library/LaunchDaemons/homebrew.mxcl.*.plist; do
+    [ -e "$plist" ] || continue
+    label="$(basename "$plist" .plist)"
+    program="$(plutil -extract ProgramArguments.0 raw "$plist" 2>/dev/null \
+        || plutil -extract Program raw "$plist" 2>/dev/null || true)"
+    if [ -z "$program" ]; then
+        printf 'warning: could not read the program %s runs\n' "$plist" >&2
+    elif [ ! -x "$program" ]; then
+        case "$plist" in
+            /Library/*) domain=system sudo='sudo ' ;;
+            *) domain="gui/$(id -u)" sudo='' ;;
+        esac
+        printf 'warning: %s runs %s, which is not installed; to remove it:\n' "$plist" "$program" >&2
+        printf '    %slaunchctl bootout %s/%s; %srm %s\n' "$sudo" "$domain" "$label" "$sudo" "$plist" >&2
+    fi
+done
+
 # Reports on each agent that should keep running, so one that has stopped doesn't go unnoticed.
 username="$("$nix_exec" eval --raw "$script_dir#hostConfigs.$host.username")"
 # One line per agent: its name, launchd label and log file.
