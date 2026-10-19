@@ -22,6 +22,11 @@ from .config import OAUTH_SCOPE
 from .keychain import Keychain
 
 REFRESH_MARGIN_SECONDS = 300
+REFRESH_TIMEOUT_SECONDS = 10
+# Todoist treats a repeat of a just-used refresh token within 60s as a retry; later, as
+# a replay attack that revokes every token for the app.
+REFRESH_RETRY_WINDOW_SECONDS = 35
+REFRESH_RETRY_DELAY_SECONDS = 3
 STORE_ATTEMPTS = 3
 
 
@@ -81,6 +86,8 @@ def credentials_from_token_response(
     if response.get("token_type", "Bearer") != "Bearer":
         raise api.ApiError(200, f"unexpected token_type {response.get('token_type')!r}")
     scope = response.get("scope")
+    if scope is not None and not isinstance(scope, str):
+        raise api.ApiError(200, "token response scope is not a string")
     if scope is not None and set(scope.replace(" ", ",").split(",")) - {""} != {OAUTH_SCOPE}:
         raise ScopeError(f"Todoist granted scope {scope!r}, expected only {OAUTH_SCOPE!r}")
     expires_in = response.get("expires_in")
@@ -117,12 +124,16 @@ class KeychainTokenSource:
         lock_path: Path,
         transport: api.Transport = api.urllib_transport,
         clock: Callable[[], float] = time.time,
+        sleep: Callable[[float], None] = time.sleep,
+        monotonic: Callable[[], float] = time.monotonic,
     ):
         self._keychain = keychain
         self._service = service
         self._lock_path = lock_path
         self._transport = transport
         self._clock = clock
+        self._sleep = sleep
+        self._monotonic = monotonic
         self._cached: Credentials | None = None
 
     def load(self) -> Credentials:
@@ -150,6 +161,50 @@ class KeychainTokenSource:
     def secrets(self) -> list[str]:
         return self._cached.secrets() if self._cached else []
 
+    def _refresh(self, stored: Credentials, refresh_token: str) -> Any:
+        """Exchanges the refresh token, retrying only within Todoist's 60s replay window.
+
+        If the request may have reached Todoist but no response arrived, the refresh token
+        may already be used up. Retrying within the window either succeeds or proves it
+        was used; retrying later would revoke every token, so give up and ask for
+        re-authorisation instead."""
+        form = {
+            "grant_type": "refresh_token",
+            "client_id": stored.client_id,
+            "client_secret": stored.client_secret,
+            "refresh_token": refresh_token,
+        }
+        started = self._monotonic()
+        maybe_used = False
+        while True:
+            try:
+                return api.send(
+                    self._transport,
+                    "POST",
+                    api.OAUTH_TOKEN_PATH,
+                    form=form,
+                    timeout=REFRESH_TIMEOUT_SECONDS,
+                    max_attempts=1,
+                )
+            except api.OfflineError:
+                if not maybe_used:
+                    raise  # never reached Todoist, so the token is untouched
+                error: Exception | None = None
+            except api.ConnectionLost as e:
+                maybe_used, error = True, e
+            except api.ApiError as e:
+                if e.status != 429 and e.status < 500:
+                    raise ReauthorizeNeeded(f"token refresh refused: {e}") from e
+                maybe_used, error = maybe_used or e.status >= 500, e
+            if self._monotonic() - started > REFRESH_RETRY_WINDOW_SECONDS:
+                if maybe_used:
+                    raise ReauthorizeNeeded(
+                        "token refresh got no usable response, so the stored refresh token "
+                        "may be used up"
+                    ) from error
+                raise error or api.OfflineError("token refresh failed")
+            self._sleep(REFRESH_RETRY_DELAY_SECONDS)
+
     def _fresh(self, credentials: Credentials) -> bool:
         return (
             credentials.expires_at is None
@@ -172,22 +227,7 @@ class KeychainTokenSource:
                 raise ReauthorizeNeeded(
                     "access token rejected or expired and there's no refresh token"
                 )
-            try:
-                response = api.send(
-                    self._transport,
-                    "POST",
-                    api.OAUTH_TOKEN_PATH,
-                    form={
-                        "grant_type": "refresh_token",
-                        "client_id": stored.client_id,
-                        "client_secret": stored.client_secret,
-                        "refresh_token": stored.refresh_token,
-                    },
-                )
-            except api.ApiError as e:
-                if 400 <= e.status < 500:
-                    raise ReauthorizeNeeded(f"token refresh refused: {e}") from e
-                raise
+            response = self._refresh(stored, stored.refresh_token)
             new = credentials_from_token_response(
                 response,
                 client_id=stored.client_id,
@@ -195,6 +235,7 @@ class KeychainTokenSource:
                 now=self._clock(),
             )
             if new.refresh_token is None:
+                # Also what Todoist sends when a just-used refresh token is presented again.
                 raise ReauthorizeNeeded("token refresh returned no new refresh token")
             self.store(new)
             return new.access_token

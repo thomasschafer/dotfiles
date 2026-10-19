@@ -4,6 +4,8 @@
     "deny": [
       "Read(~/.local/share/todoist-backup/**)",
       "Edit(~/.local/share/todoist-backup/**)",
+      "Edit(~/.local/state/todoist-backup/**)",
+      "Read(~/.local/state/todoist-backup/**)",
       "Read(~/.ssh/todoist-backup_ed25519)",
       "Edit(~/.ssh/todoist-backup_ed25519)",
       "Bash(*.local/share/todoist-backup*)",

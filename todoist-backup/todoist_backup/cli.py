@@ -7,7 +7,9 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from . import fetch, restore_plan, snapshot
 from .api import TodoistClient
@@ -22,9 +24,10 @@ from .config import (
 )
 from .keychain import MacKeychain
 from .notify import MacNotifier
-from .repo import Repo
+from .oauth_setup import SetupError
+from .repo import GitError, GitOffline, Repo
 from .run import Deps, run
-from .state import State
+from .state import State, StateCorrupt
 
 LAUNCHD_LABEL = "org.nix-community.home.todoist-backup"
 
@@ -59,6 +62,7 @@ def cmd_run(config: Config, args: argparse.Namespace) -> int:
         secrets=tokens.secrets,
         notifier=MacNotifier(),
         clock=time.time,
+        sleep=time.sleep,
     )
     return run(deps)
 
@@ -69,6 +73,9 @@ def cmd_restore_plan(config: Config, args: argparse.Namespace) -> int:
         print(f"No data repo at {config.data_dir}", file=sys.stderr)
         return 1
     ref = repo.commit_before(args.before) if args.before else repo.resolve(args.ref)
+    if ref is None:
+        print(f"No snapshot before {args.before}", file=sys.stderr)
+        return 1
     snapshot_time = repo.commit_time(ref)
     snap = repo.read_files_at(ref, ["sync/", "archived/"])
     client = TodoistClient(_tokens(config))
@@ -112,12 +119,17 @@ def _ago(timestamp: float | None) -> str:
 
 def cmd_status(config: Config, args: argparse.Namespace) -> int:
     healthy = True
-    state = State.load(config.state_file, time.time()) if config.state_file.exists() else None
     print(f"Data repo:      {config.data_dir}")
     print(f"Logs:           {config.log_file}")
     print(f"launchd agent:  {_launchd_status()}")
+    try:
+        state = State.load(config.state_file, time.time()) if config.state_file.exists() else None
+    except StateCorrupt as e:
+        print(f"State:          CORRUPT ({e}); the next run resets it")
+        state, healthy = None, False
     if state is None:
-        print("State:          no runs yet")
+        if healthy:
+            print("State:          no runs yet")
         healthy = False
     else:
         print(f"Last success:   {_ago(state.last_success)}")
@@ -172,26 +184,45 @@ def _offer(missing: str, instructions: str) -> bool:
     return False
 
 
-def _create_deploy_key(config: Config) -> None:
+def _deploy_key_works(config: Config) -> bool | None:
+    """Whether GitHub accepts the deploy key for the data repo; None if offline."""
+    try:
+        Repo(config).git("ls-remote", "--heads", config.remote_url, cwd=Path.home())
+        return True
+    except GitOffline:
+        return None
+    except GitError:
+        return False
+
+
+def _setup_deploy_key(config: Config) -> None:
+    """Creates the deploy key if needed and adds it to the data repo with the gh login."""
+    if subprocess.run(["gh", "auth", "status"], capture_output=True, check=False).returncode:
+        raise SetupError("gh isn't logged in; run `gh auth login`, then `todoist-backup setup`")
     host = subprocess.run(
         ["/usr/sbin/scutil", "--get", "LocalHostName"], capture_output=True, text=True, check=True
     ).stdout.strip()
-    subprocess.run(
-        [
-            "ssh-keygen",
-            "-q",
-            "-t",
-            "ed25519",
-            "-N",
-            "",
-            "-C",
-            f"todoist-backup@{host}",
-            "-f",
-            str(config.deploy_key),
-        ],
-        check=True,
-    )
-    subprocess.run(
+    created = False
+    if not config.deploy_key.exists():
+        config.deploy_key.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        subprocess.run(
+            [
+                "ssh-keygen",
+                "-q",
+                "-t",
+                "ed25519",
+                "-N",
+                "",
+                "-C",
+                f"todoist-backup@{host}",
+                "-f",
+                str(config.deploy_key),
+            ],
+            check=True,
+        )
+        created = True
+    title = f"todoist-backup ({host})"
+    added = subprocess.run(
         [
             "gh",
             "repo",
@@ -202,32 +233,62 @@ def _create_deploy_key(config: Config) -> None:
             REPO_SLUG,
             "--allow-write",
             "--title",
-            f"todoist-backup launchd job ({host})",
+            title,
         ],
-        check=True,
+        check=False,
     )
+    if added.returncode:
+        if created:
+            # Otherwise a re-run would find the key and assume it was added.
+            config.deploy_key.unlink()
+            config.deploy_key.with_name(config.deploy_key.name + ".pub").unlink()
+        raise SetupError("couldn't add the deploy key to GitHub (see gh's error above)")
+    if _deploy_key_works(config) is False:
+        raise SetupError("added the deploy key, but GitHub still rejects it")
     print(
-        f"Added the deploy key for {host}. Remove keys for machines you no longer use with:\n"
+        f"Added deploy key '{title}'. Remove keys for machines you no longer use with:\n"
         f"  gh repo deploy-key list -R {REPO_SLUG}\n"
         f"  gh repo deploy-key delete <id> -R {REPO_SLUG}"
     )
 
 
+def _step(name: str, action: Callable[[], object]) -> None:
+    """Runs a setup step, warning rather than failing, so setup.sh carries on."""
+    try:
+        action()
+    except (Exception, KeyboardInterrupt) as e:
+        print(
+            f"Warning: todoist-backup: {name} failed: {e}. Run `todoist-backup setup` to retry.",
+            file=sys.stderr,
+        )
+
+
 def cmd_setup(config: Config, args: argparse.Namespace) -> int:
-    """Run by setup.sh. Offers to set up whatever this machine is missing; safe to re-run."""
-    if MacKeychain().read(config.keychain_service) is None and _offer(
-        "Todoist credentials are missing",
-        "Open https://app.todoist.com/app/settings/integrations/app-management and use the\n"
-        'existing "backup" app (or create one; Todoist rejects names containing "todoist").\n'
-        f"Its OAuth redirect URL must be {OAUTH_REDIRECT_URI}. Have its client ID and\n"
-        "secret ready.",
-    ):
-        cmd_setup_token(config, args)
-    if not config.deploy_key.exists() and _offer(
-        f"the deploy key {config.deploy_key} is missing",
-        f"This creates it and adds it to {REPO_SLUG} with your gh login (needs `gh auth login`).",
-    ):
-        _create_deploy_key(config)
+    """Run by setup.sh. Offers to set up whatever this machine is missing; safe to re-run.
+    Never exits non-zero, so the rest of setup.sh still runs."""
+
+    def credentials() -> None:
+        if MacKeychain().read(config.keychain_service) is None and _offer(
+            "Todoist credentials are missing",
+            "Open https://app.todoist.com/app/settings/integrations/app-management and use the\n"
+            'existing "backup" app (or create one; Todoist rejects names containing "todoist").\n'
+            f"Its OAuth redirect URL must be {OAUTH_REDIRECT_URI}. Have its client ID and\n"
+            "secret ready.",
+        ):
+            cmd_setup_token(config, args)
+
+    def deploy_key() -> None:
+        if not config.deploy_key.exists():
+            missing = f"the deploy key {config.deploy_key} is missing"
+        elif _deploy_key_works(config) is False:
+            missing = f"GitHub rejects the deploy key {config.deploy_key}"
+        else:
+            return
+        if _offer(missing, f"This adds it to {REPO_SLUG} with your gh login."):
+            _setup_deploy_key(config)
+
+    _step("setting up Todoist credentials", credentials)
+    _step("setting up the deploy key", deploy_key)
     return 0
 
 

@@ -112,7 +112,7 @@ def test_completing_tasks_is_not_a_deletion(env):
     env.clock.now += 4 * HOUR
     done = env.server.sync["items"][:15]
     env.server.sync["items"] = env.server.sync["items"][15:]
-    env.server.completed += [completed(t["id"], "2026-10-19T11:30:00.000000Z") for t in done]
+    env.server.completed += [completed(t["id"], "2026-10-19T14:00:00.000000Z") for t in done]
     _run(env)
     assert env.notifier.alerts == []
 
@@ -177,8 +177,8 @@ def test_deleted_remote_branch_is_restored(env):
     _run(env)
     git("update-ref", "-d", "refs/heads/main", cwd=env.remote)
     env.clock.now += 4 * HOUR
-    _run(env)
-    assert Alert.HISTORY in env.notifier.kinds()
+    assert _run(env) == 0
+    assert env.notifier.kinds() == [Alert.REPAIRED]
     assert len(env.remote_log()) == 1
 
 
@@ -188,7 +188,7 @@ def test_missing_local_repo_is_recloned(env):
     env.clock.now += 4 * HOUR
     env.server.sync["items"].append(task("t99", "New task"))
     _run(env)
-    assert env.notifier.kinds() == [Alert.HISTORY]
+    assert env.notifier.kinds() == [Alert.REPAIRED]
     assert len(env.remote_log()) == 2
 
 

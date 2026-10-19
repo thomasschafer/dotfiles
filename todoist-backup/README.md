@@ -8,9 +8,9 @@ It is strictly read-only against Todoist. It authenticates with its own OAuth ap
 
 The data lives in `~/.local/share/todoist-backup`, a clone of the private repo `thomasschafer/todoist-backup`. That's outside `~/Development`, where agents usually work, and outside the folders macOS privacy settings block for background jobs.
 
-- `sync/`: everything a full sync returns (projects, sections, tasks, labels, filters, comments, reminders, collaborators, settings and so on), one file per resource type. Fields that change on every sync, like sync tokens and karma stats, are left out so commits only happen when something changed.
+- `sync/`: everything a full sync returns (projects, sections, tasks, labels, filters, comments, reminders, collaborators, settings and so on), one file per resource type. Fields that change on every sync, like sync tokens and karma stats, are left out so commits only happen when something changed. So is the websocket URL, which embeds a token. If the account data ever gains another credential-like field, the run refuses to save the snapshot and alerts rather than committing it.
 - `archived/`: archived projects, with their sections, tasks and comments, which a sync doesn't return.
-- `completed/`: completed tasks by completion month. The first run fetches the full history; later runs fetch the last two weeks and merge, so completed tasks stay in the backup even if they're deleted later.
+- `completed/`: completed tasks by completion month. The first run fetches the full history; later runs fetch the last two weeks and merge them into the history from the last commit. That history only ever grows, so completed tasks stay in the backup even if they're deleted later.
 
 Files are pretty-printed with sorted keys and sorted by id, so `git log -p` shows what changed. Attachments are recorded (name, type, URL) but the files themselves aren't downloaded.
 
@@ -19,25 +19,25 @@ Files are pretty-printed with sorted keys and sorted by id, so `git log -p` show
 1. Fetches everything and writes the snapshot.
 2. Re-reads the written files and checks they parse and match what was fetched. If not, nothing is committed.
 3. Fetches the live data again and compares ids per resource type. If they differ, probably because of edits during the run, it retries once, then alerts.
-4. Compares active tasks and projects with the previous snapshot. If more than 20, or more than 10%, disappeared (at least 3, not counting completed or archived ones), it still commits but raises an alert that stays on screen.
+4. Compares active tasks and projects with the previous snapshot, and with the snapshot from a day earlier so deletions spread over several runs are caught too. If more than 20, or more than 10%, disappeared (at least 3, not counting archived ones or tasks completed since), it still commits but raises an alert that stays on screen. Each deletion is reported once. Alerts give counts only; `restore-plan` shows what's gone.
 5. Commits if anything changed and pushes to GitHub.
 
-Offline runs exit quietly. Alerts other than deletions repeat at most once a day.
+A run that finds no network waits up to two minutes for it, since runs that fire on wake often start before Wi-Fi is back, then exits quietly. Alerts other than deletions repeat at most once a day.
 
 ## Protecting the backup
 
-The job pushes with a deploy key (`~/.ssh/todoist-backup_ed25519`) that only works for the data repo, using pinned GitHub host keys and none of your other git or SSH config. It never force-pushes. Before pushing, it checks that GitHub's history and the local clone's history are consistent. If either was rewritten, or GitHub's branch was deleted, it alerts and stops pushing (or restores the branch), so destroying the backup means destroying both copies before the next run. If the local clone goes missing, it's re-cloned from GitHub.
+The job pushes with a deploy key (`~/.ssh/todoist-backup_ed25519`) that only works for the data repo, using pinned GitHub host keys and none of your other git or SSH config. It never force-pushes. Before pushing, it checks that GitHub's history and the local clone's history are consistent. If either was rewritten, it alerts and stops pushing. If GitHub's branch was deleted or reset to an older commit, it pushes the full history back and tells you, so destroying the backup means destroying both copies before the next run. If the local clone goes missing, it's re-cloned from GitHub.
 
-Claude Code is denied access to the data repo and deploy key (`claude/settings-overrides.json`). That only stops accidents: anything running as your user can read them, and your `gh` login can push to the repo. GitHub branch protection would stop force-pushes, but needs a paid plan for private repos. A dedicated GitHub machine account owning the repo would stop the `gh` login reaching it.
+Claude Code is denied access to the data repo, the logs and the deploy key (`claude/settings-overrides.json`). That only stops accidents: anything running as your user can read them, and your `gh` login can push to the repo. GitHub branch protection would stop force-pushes, but needs a paid plan for private repos. A dedicated GitHub machine account owning the repo would stop the `gh` login reaching it.
 
-Secrets: the OAuth credentials are stored as one Keychain item, `todoist-backup`, and never printed, logged or written to disk. Before each commit the job refuses to proceed if a credential or private key appears in the data. The dotfiles have gitleaks as a pre-commit hook and TruffleHog in CI.
+Secrets: the OAuth credentials are stored as one Keychain item, `todoist-backup`, and never printed, logged or written to disk. Before each commit the job refuses to proceed if a credential or private key appears in the data, or if anything other than the snapshot files would be committed. The dotfiles have gitleaks as a pre-commit hook and TruffleHog in CI.
 
 ## Setup
 
 Enabling `enableTodoistBackup` for a host and running `./setup.sh <host>` (or `dp`) installs the `todoist-backup` command and the launchd agent, then runs `todoist-backup setup`. On a new machine, that offers to set up the two things that can't come from the dotfiles. Run it again any time to finish anything you skipped.
 
 - Todoist credentials. Reuse the existing app, called "backup", in the [App Management Console](https://app.todoist.com/app/settings/integrations/app-management) (Todoist rejects app names containing "todoist"). Its OAuth redirect URL must be `http://localhost:8723/callback`. `setup` asks for the client ID and secret (the secret prompt is hidden), opens Todoist so you can approve read-only access, and stores the credentials as the Keychain item `todoist-backup`. It refuses to store a token with any scope beyond `data:read`. `todoist-backup setup-token` does just this step.
-- The deploy key. `setup` creates `~/.ssh/todoist-backup_ed25519` and adds it to the data repo with your `gh` login, so log in with `gh auth login` first. To do it by hand:
+- The deploy key. `setup` creates `~/.ssh/todoist-backup_ed25519` and adds it to the data repo with your `gh` login, so log in with `gh auth login` first. It also checks GitHub accepts an existing key, and offers to add it if not. Failures here only warn, so the rest of `setup.sh` still runs. To do it by hand:
 
   ```sh
   ssh-keygen -t ed25519 -N '' -C "todoist-backup@$(scutil --get LocalHostName)" -f ~/.ssh/todoist-backup_ed25519
@@ -46,7 +46,7 @@ Enabling `enableTodoistBackup` for a host and running `./setup.sh <host>` (or `d
 
 The first run clones the data repo into `~/.local/share/todoist-backup`, with the full history. macOS asks whether terminal-notifier may send notifications the first time it alerts; allow it, and set its style to Persistent in System Settings, Notifications if you want banners to stay until dismissed.
 
-Todoist access tokens last an hour and the job refreshes them itself. Refresh tokens change on every refresh, so if one is ever lost (for example the Mac crashed mid-refresh) the job alerts and you'll need to run `todoist-backup setup-token` again.
+Todoist access tokens last an hour and the job refreshes them itself. Refresh tokens change on every refresh, and Todoist revokes all of the app's tokens if a used one is presented more than 60 seconds later. If a refresh is sent but its response is lost (the network drops at the wrong moment), the job retries only within that window, then alerts that you need to run `todoist-backup setup-token` again.
 
 ### Replacing a machine
 
@@ -64,7 +64,7 @@ todoist-backup restore-plan    # compare the latest snapshot with your account
 
 `todoist-backup status` shows the last successful run, the last attempt and its result, whether the launchd agent is loaded, whether credentials are present, the latest commit and the stored counts. It ends with `Healthy: yes` (and exit code 0) only if a backup succeeded in the last 24 hours. Logs are in `~/.local/state/todoist-backup/todoist-backup.log` (rotated at 1 MB, 5 kept); `launchd.log` next to it only catches crashes before logging starts.
 
-You'll also get a notification if a run fails, verification fails, deletions are detected, the backup history looks tampered with, credentials need re-authorising, or there's been no successful backup for 24 hours.
+You'll also get a notification if a run fails, verification fails, deletions are detected, the backup history looks tampered with or was repaired, the state file was corrupt and had to be reset, credentials need re-authorising, or there's been no successful backup for 24 hours.
 
 ## Restoring
 

@@ -16,7 +16,9 @@ checks this.
 
 from __future__ import annotations
 
+import http.client
 import json
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -48,6 +50,7 @@ OAUTH_GRANT_FIELDS: Mapping[str, frozenset[str]] = {
 }
 
 PAGE_LIMIT = 200
+MAX_PAGES = 10_000
 TIMEOUT_SECONDS = 60
 MAX_ATTEMPTS = 4
 MAX_RETRY_WAIT_SECONDS = 60
@@ -59,7 +62,15 @@ class ReadOnlyViolation(Exception):
 
 
 class OfflineError(Exception):
-    """Todoist couldn't be reached at all, e.g. no network."""
+    """Todoist couldn't be reached, e.g. no network. The request wasn't sent."""
+
+
+class ConnectionLost(Exception):
+    """The request was sent but no response arrived, so it may have taken effect."""
+
+
+class TransportSecurityError(Exception):
+    """TLS failed, e.g. an untrusted certificate. Never treated as being offline."""
 
 
 class ApiError(Exception):
@@ -78,6 +89,7 @@ class HttpRequest:
     url: str
     headers: Mapping[str, str]
     body: bytes | None
+    timeout: float = TIMEOUT_SECONDS
 
 
 @dataclass(frozen=True)
@@ -114,19 +126,37 @@ def check_read_only(method: str, path: str, form: Mapping[str, str] | None) -> N
     raise ReadOnlyViolation(f"{method} {path} is not a read operation")
 
 
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    """A redirect comes back as a non-2xx response instead of being followed, so the
+    Authorization header is never sent to another host."""
+
+    def redirect_request(self, *args: Any, **kwargs: Any) -> None:
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirects)
+
+
 def urllib_transport(request: HttpRequest) -> HttpResponse:
     req = urllib.request.Request(
         request.url, data=request.body, headers=dict(request.headers), method=request.method
     )
+    host = urllib.parse.urlsplit(request.url).netloc
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
+        with _OPENER.open(req, timeout=request.timeout) as resp:
             return HttpResponse(resp.status, resp.read(), dict(resp.headers))
     except urllib.error.HTTPError as e:
         return HttpResponse(e.code, e.read(), dict(e.headers or {}))
-    except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
-        raise OfflineError(
-            f"could not reach {urllib.parse.urlsplit(request.url).netloc}: {e}"
-        ) from e
+    except urllib.error.URLError as e:
+        # urllib wraps failures while connecting and sending in URLError; failures while
+        # waiting for the response are raised unwrapped and handled below.
+        if isinstance(e.reason, ssl.SSLError):
+            raise TransportSecurityError(f"TLS error talking to {host}: {e.reason}") from e
+        raise OfflineError(f"could not reach {host}: {e.reason}") from e
+    except ssl.SSLError as e:
+        raise TransportSecurityError(f"TLS error talking to {host}: {e}") from e
+    except (OSError, http.client.HTTPException) as e:
+        raise ConnectionLost(f"no response from {host}: {e!r}") from e
 
 
 def redact(text: str, secrets: Iterable[str]) -> str:
@@ -145,6 +175,8 @@ def send(
     form: Mapping[str, str] | None = None,
     bearer: str | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    timeout: float = TIMEOUT_SECONDS,
+    max_attempts: int = MAX_ATTEMPTS,
 ) -> Any:
     """Sends one request, retrying rate limits and server errors, and returns the JSON body."""
     check_read_only(method, path, form)
@@ -163,10 +195,10 @@ def send(
         (form or {}).get(k, "") for k in ("client_secret", "code", "refresh_token")
     ]
 
-    for attempt in range(1, MAX_ATTEMPTS + 1):
-        response = transport(HttpRequest(method, url, headers, body))
+    for attempt in range(1, max_attempts + 1):
+        response = transport(HttpRequest(method, url, headers, body, timeout))
         if response.status == 429 or response.status >= 500:
-            if attempt == MAX_ATTEMPTS:
+            if attempt == max_attempts:
                 break
             sleep(_retry_wait(response, attempt))
             continue
@@ -252,6 +284,7 @@ class TodoistClient:
         """Follows cursor pagination and returns every result."""
         results: list[dict] = []
         cursor: str | None = None
+        seen: set[str] = set()
         while True:
             query = {**(params or {}), "limit": str(PAGE_LIMIT)}
             if cursor:
@@ -263,3 +296,6 @@ class TodoistClient:
             cursor = page.get("next_cursor")
             if not cursor:
                 return results
+            if cursor in seen or len(seen) >= MAX_PAGES:
+                raise ApiError(200, f"GET {path}: pagination isn't advancing")
+            seen.add(cursor)

@@ -12,6 +12,7 @@ import os
 import subprocess
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
@@ -100,12 +101,16 @@ class Repo:
         }
 
     def git(
-        self, *args: str, cwd: Path | None = None, check: bool = True
+        self,
+        *args: str,
+        cwd: Path | None = None,
+        check: bool = True,
+        env: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         result = subprocess.run(
             ["git", *args],
             cwd=cwd or self.path,
-            env=self._env(),
+            env={**self._env(), **(env or {})},
             capture_output=True,
             text=True,
             check=False,
@@ -142,27 +147,32 @@ class Repo:
         result = self.git("rev-parse", "--verify", "--quiet", "HEAD", check=False)
         return result.stdout.strip() or None
 
+    def remote_head(self) -> str | None:
+        """The remote branch as of the last fetch."""
+        result = self.git(
+            "rev-parse", "--verify", "--quiet", f"refs/remotes/origin/{BRANCH}", check=False
+        )
+        return result.stdout.strip() or None
+
     def fetch_remote(self) -> RemoteState:
         self.git("fetch", "--quiet", "--prune", "origin")
-        remote = self.git(
-            "rev-parse", "--verify", "--quiet", f"refs/remotes/origin/{BRANCH}", check=False
-        ).stdout.strip()
+        remote = self.remote_head()
         if not remote:
             return RemoteState.EMPTY
         local = self.head()
         if local is None:
             return RemoteState.AHEAD
-        if self._is_ancestor(remote, local):
+        if self.is_ancestor(remote, local):
             return RemoteState.IN_SYNC
-        if self._is_ancestor(local, remote):
+        if self.is_ancestor(local, remote):
             return RemoteState.AHEAD
         return RemoteState.DIVERGED
 
     def contains(self, commit: str) -> bool:
         local = self.head()
-        return local is not None and self._is_ancestor(commit, local)
+        return local is not None and self.is_ancestor(commit, local)
 
-    def _is_ancestor(self, ancestor: str, descendant: str) -> bool:
+    def is_ancestor(self, ancestor: str, descendant: str) -> bool:
         result = self.git("merge-base", "--is-ancestor", ancestor, descendant, check=False)
         if result.returncode not in (0, 1):
             raise GitError(f"git merge-base failed: {result.stderr.strip()}")
@@ -171,13 +181,28 @@ class Repo:
     def fast_forward(self) -> None:
         self.git("merge", "--ff-only", "--quiet", f"origin/{BRANCH}")
 
-    def commit_if_changed(self, message: str, secrets: Iterable[str]) -> str | None:
-        """Commits all changes and returns the new commit, or None if nothing changed."""
-        self.git("add", "--all")
+    def commit_if_changed(self, message: str, secrets: Iterable[str], when: datetime) -> str | None:
+        """Commits changes to the snapshot and returns the new commit, or None if nothing
+        changed. Anything else in the repo directory is left out."""
+        self.git("add", "--all", "--", *snapshot.MANAGED_DIRS, "README.md")
         if self.git("diff", "--cached", "--quiet", check=False).returncode == 0:
             return None
+        staged = self.git("diff", "--cached", "--name-only", "-z").stdout.split("\0")
+        for name in filter(None, staged):
+            if name != "README.md" and not snapshot.MANAGED_FILE.fullmatch(name):
+                self.git("reset", "--quiet")
+                raise GitError(f"refusing to commit unexpected file {name}")
         self._check_no_secrets(secrets)
-        self.git("commit", "--quiet", "--no-verify", "-m", message)
+        # Dated by the run, so snapshots can be found by when they were taken.
+        date = f"@{int(when.timestamp())} +0000"
+        self.git(
+            "commit",
+            "--quiet",
+            "--no-verify",
+            "-m",
+            message,
+            env={"GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date},
+        )
         return self.head()
 
     def _check_no_secrets(self, secrets: Iterable[str]) -> None:
@@ -191,11 +216,8 @@ class Repo:
                 raise GitError(f"refusing to commit: {name} contains a secret")
 
     def unpushed(self) -> bool:
-        remote = self.git(
-            "rev-parse", "--verify", "--quiet", f"refs/remotes/origin/{BRANCH}", check=False
-        ).stdout.strip()
         local = self.head()
-        return local is not None and remote != local
+        return local is not None and self.remote_head() != local
 
     def push(self) -> None:
         self.git("push", "--quiet", "origin", f"HEAD:refs/heads/{BRANCH}")
@@ -212,11 +234,9 @@ class Repo:
     def resolve(self, ref: str) -> str:
         return self.git("rev-parse", "--verify", f"{ref}^{{commit}}").stdout.strip()
 
-    def commit_before(self, moment: str) -> str:
-        result = self.git("rev-list", "-1", f"--before={moment}", "HEAD").stdout.strip()
-        if not result:
-            raise GitError(f"no snapshot before {moment}")
-        return result
+    def commit_before(self, moment: str) -> str | None:
+        """The latest snapshot committed before `moment`, if any."""
+        return self.git("rev-list", "-1", f"--before={moment}", "HEAD").stdout.strip() or None
 
     def commit_time(self, ref: str) -> str:
         return self.git("show", "-s", "--format=%cI", ref).stdout.strip()

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any
 
 from . import snapshot
@@ -75,10 +74,11 @@ def completed_since(sync: dict[str, Any], existing: list[Any]) -> datetime:
     return newest - timedelta(days=COMPLETED_OVERLAP_DAYS)
 
 
-def fetch_all(client: TodoistClient, data_dir: Path, now: datetime) -> Fetched:
+def fetch_all(client: TodoistClient, existing: list[Any], now: datetime) -> Fetched:
+    """Fetches a full snapshot. `existing` is the completed-task history from the last
+    commit, which this run's completions are merged into."""
     sync = client.sync_read()
     archived = fetch_archived(client)
-    existing = snapshot.existing_completed(data_dir)
     fetched_completed = fetch_completed(client, completed_since(sync, existing), now)
     files = {
         **snapshot.sync_files(sync),

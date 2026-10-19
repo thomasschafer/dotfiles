@@ -20,6 +20,7 @@ class Alert(Enum):
     DELETIONS = "deletions"
     STALE = "stale"
     HISTORY = "history"
+    REPAIRED = "repaired"
     REAUTHORIZE = "reauthorize"
 
     @property

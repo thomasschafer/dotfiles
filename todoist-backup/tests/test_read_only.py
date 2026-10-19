@@ -119,7 +119,7 @@ def test_reads_reach_the_transport(method, path, form):
 def test_everything_the_backup_does_is_a_read(tmp_path):
     server = FakeTodoist()
     client = TodoistClient(StaticTokens(), server)
-    fetch.fetch_all(client, tmp_path, datetime.now(timezone.utc))
+    fetch.fetch_all(client, [], datetime.now(timezone.utc))
     fetch.fetch_live_view(client)
     assert server.requests
     for request in server.requests:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 
 import pytest
 from conftest import completed, task
@@ -15,6 +16,8 @@ from todoist_backup.auth import (
 )
 
 # Deletion detector
+
+EPOCH = datetime.fromisoformat("2026-10-01T00:00:00+00:00")
 
 
 @pytest.mark.parametrize(
@@ -48,9 +51,9 @@ def _files(items, projects=None, archived_tasks=(), archived_projects=(), done=(
 def test_detects_deleted_tasks_with_names():
     before = _files([task(f"t{i}", f"Task {i}") for i in range(10)])
     after = _files([task(f"t{i}", f"Task {i}") for i in range(5)])
-    [drop] = verify.detect_deletions(before, after)
+    [drop] = verify.detect_deletions(before, after, EPOCH, "x")
     assert drop.kind == "tasks" and drop.missing == {f"t{i}" for i in range(5, 10)}
-    assert drop.names == tuple(f"Task {i}" for i in range(5, 10))
+    assert drop.describe() == "5 of 10 active tasks disappeared (50%) since x"
 
 
 def test_archiving_a_project_is_not_a_deletion():
@@ -58,12 +61,12 @@ def test_archiving_a_project_is_not_a_deletion():
     projects = [{"id": "p1", "name": "Inbox"}, {"id": "p2", "name": "Big"}]
     before = _files(tasks, projects)
     after = _files([], projects[:1], archived_tasks=tasks, archived_projects=projects[1:])
-    assert verify.detect_deletions(before, after) == []
+    assert verify.detect_deletions(before, after, EPOCH, "x") == []
 
 
 def test_deleted_projects_alert():
     projects = [{"id": f"p{i}", "name": f"P{i}"} for i in range(6)]
-    [drop] = verify.detect_deletions(_files([], projects), _files([], projects[:3]))
+    [drop] = verify.detect_deletions(_files([], projects), _files([], projects[:3]), EPOCH, "x")
     assert drop.kind == "projects"
 
 

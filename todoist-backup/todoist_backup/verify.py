@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -79,16 +80,28 @@ def check_completed(written: snapshot.Files, live_completed: Iterable[Any]) -> l
     )
 
 
+def lost_completions(existing: Iterable[Any], files: snapshot.Files) -> str | None:
+    """The completed history only ever grows; returns a problem if anything was dropped."""
+    stored = set(map(snapshot.completed_key, snapshot.completed_items(files)))
+    lost = set(map(snapshot.completed_key, existing)) - stored
+    if not lost:
+        return None
+    return f"{len(lost)} stored completions would be dropped: {_sample(i for i, _ in lost)}"
+
+
 @dataclass(frozen=True)
 class Drop:
     kind: str
     before: int
     missing: frozenset[str]
-    names: tuple[str, ...]
+    baseline: str
 
     def describe(self) -> str:
         pct = 100 * len(self.missing) / self.before if self.before else 100
-        return f"{len(self.missing)} of {self.before} active {self.kind} disappeared ({pct:.0f}%)"
+        return (
+            f"{len(self.missing)} of {self.before} active {self.kind} disappeared ({pct:.0f}%) "
+            f"since {self.baseline}"
+        )
 
 
 def is_alarming(before: int, missing: int) -> bool:
@@ -97,32 +110,30 @@ def is_alarming(before: int, missing: int) -> bool:
     return missing > DELETION_MAX_ITEMS or missing > before * DELETION_MAX_FRACTION
 
 
-def _active(files: Mapping[str, Any], sync_path: str, archived_path: str) -> dict[str, Any]:
-    """Active objects, counting archived ones as still present."""
-    objects = [*files.get(sync_path, []), *files.get(archived_path, [])]
-    return {snapshot.identity(o): o for o in objects}
+ACTIVE_KINDS = (
+    ("tasks", ("sync/items.json", "archived/tasks.json")),
+    ("projects", ("sync/projects.json", "archived/projects.json")),
+)
 
 
-def detect_deletions(previous: snapshot.Files, current: snapshot.Files) -> list[Drop]:
-    """Active tasks or projects that vanished since the previous snapshot. Tasks that were
-    completed aren't counted."""
+def detect_deletions(
+    baseline: snapshot.Files, current: snapshot.Files, since: datetime, label: str
+) -> list[Drop]:
+    """Active tasks or projects in `baseline` that are gone from `current`. Archived ones
+    count as present, and tasks completed after `since` (the baseline's time) don't count.
+    Earlier completions are ignored, so deleting a recurring task still counts."""
     completed_ids = {
-        snapshot.completed_key(item)[0]
-        for path, value in current.items()
-        if path.startswith("completed/")
-        for item in value
+        task_id
+        for task_id, completed_at in map(snapshot.completed_key, snapshot.completed_items(current))
+        if snapshot.parse_time(completed_at) >= since
     }
     drops = []
-    for kind, sync_path, archived_path, name_field in (
-        ("tasks", "sync/items.json", "archived/tasks.json", "content"),
-        ("projects", "sync/projects.json", "archived/projects.json", "name"),
-    ):
-        before = _active(previous, sync_path, archived_path)
-        after = _active(current, sync_path, archived_path)
+    for kind, paths in ACTIVE_KINDS:
+        before = snapshot.objects_by_id(baseline, paths)
+        after = snapshot.objects_by_id(current, paths)
         missing = before.keys() - after.keys()
         if kind == "tasks":
             missing -= completed_ids
         if is_alarming(len(before), len(missing)):
-            names = tuple(sorted(str(before[i].get(name_field, "?")) for i in missing))
-            drops.append(Drop(kind, len(before), frozenset(missing), names))
+            drops.append(Drop(kind, len(before), frozenset(missing), label))
     return drops

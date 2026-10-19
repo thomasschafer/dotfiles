@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -41,10 +42,22 @@ VOLATILE_SYNC_KEYS = frozenset(
 )
 # Per-object fields with the same problem, by sync resource.
 VOLATILE_FIELDS: Mapping[str, frozenset[str]] = {
-    "user": frozenset({"karma", "karma_trend"}),
+    "user": frozenset({"karma", "karma_trend", "websocket_url"}),
 }
 
 Files = dict[str, Any]
+
+# Fields that hold credentials. A snapshot containing one is refused rather than stripped,
+# since it means Todoist's data has changed in a way worth looking at.
+SECRET_FIELDS = frozenset(
+    {"token", "api_token", "access_token", "refresh_token", "client_secret", "password"}
+)
+# Account metadata, as opposed to user-written content, where a token in a URL can only be
+# a credential. Content files aren't checked, since a pasted link could contain one.
+ACCOUNT_FILES = re.compile(
+    r"sync/(user|user_settings|collaborators|workspaces?|workspace_users)\.json"
+)
+URL_TOKEN = re.compile(r"[?&](?:[a-z_]*token|key|secret)=", re.IGNORECASE)
 
 
 def dumps(value: Any) -> str:
@@ -71,6 +84,36 @@ def _strip(resource: str, value: Any) -> Any:
     if isinstance(value, list):
         return [_strip(resource, v) for v in value]
     return value
+
+
+def _walk(value: Any, path: str) -> Iterator[tuple[str, str, Any]]:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield path, key, child
+            yield from _walk(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for i, child in enumerate(value):
+            yield from _walk(child, f"{path}[{i}]")
+
+
+def check_no_secrets(files: Files) -> None:
+    """Raises if a snapshot would store something that looks like a credential."""
+    for rel, value in files.items():
+        for where, key, child in _walk(value, rel):
+            if key.lower() in SECRET_FIELDS:
+                raise ValueError(f"{where}.{key} looks like a credential; refusing to save it")
+            if ACCOUNT_FILES.fullmatch(rel) and isinstance(child, str) and URL_TOKEN.search(child):
+                raise ValueError(f"{where}.{key} contains a URL with a token; refusing to save it")
+
+
+def objects_by_id(files: Mapping[str, Any], paths: Iterable[str]) -> dict[str, dict[str, Any]]:
+    """The objects with ids in the given files, keyed by id."""
+    objects: dict[str, dict[str, Any]] = {}
+    for path in paths:
+        for obj in files.get(path, []):
+            if isinstance(obj, dict) and "id" in obj:
+                objects[str(obj["id"])] = obj
+    return objects
 
 
 def sync_files(sync: Mapping[str, Any]) -> Files:
@@ -135,9 +178,9 @@ def read_files(data_dir: Path) -> Files:
     return files
 
 
-def existing_completed(data_dir: Path) -> list[Any]:
+def completed_items(files: Mapping[str, Any]) -> list[Any]:
     items: list[Any] = []
-    for path, value in read_files(data_dir).items():
+    for path, value in files.items():
         if path.startswith("completed/"):
             if not isinstance(value, list):
                 raise ValueError(f"{path} is not a list")
@@ -145,11 +188,19 @@ def existing_completed(data_dir: Path) -> list[Any]:
     return items
 
 
+MANAGED_FILE = re.compile(r"(sync|archived|completed)/[A-Za-z0-9_-]+\.json")
+
+
 def write_files(data_dir: Path, files: Files) -> None:
-    """Makes the managed directories hold exactly `files`."""
+    """Makes the managed directories hold exactly `files`, and nothing else."""
     for rel in files:
-        if rel.split("/")[0] not in MANAGED_DIRS or ".." in rel.split("/"):
+        if not MANAGED_FILE.fullmatch(rel):
             raise ValueError(f"refusing to write outside the managed directories: {rel}")
+    check_no_secrets(files)
+    for directory in MANAGED_DIRS:
+        # Temp files left by an interrupted write.
+        for stray in (data_dir / directory).glob(".*"):
+            stray.unlink()
     for rel, value in files.items():
         _atomic_write(data_dir / rel, dumps(value))
     for directory in MANAGED_DIRS:
@@ -166,6 +217,8 @@ def _atomic_write(path: Path, text: str) -> None:
     try:
         with os.fdopen(fd, "w") as f:
             f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)

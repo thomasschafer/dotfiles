@@ -96,6 +96,9 @@ class FakeTodoist:
     )
     requests: list[HttpRequest] = field(default_factory=list)
     offline: bool = False
+    # Fails this many requests as offline, then recovers.
+    offline_requests: int = 0
+    error: Exception | None = None
     fail_status: int | None = None
     on_sync: Any = None
 
@@ -103,6 +106,11 @@ class FakeTodoist:
         self.requests.append(request)
         if self.offline:
             raise api.OfflineError("no network")
+        if self.offline_requests:
+            self.offline_requests -= 1
+            raise api.OfflineError("no network yet")
+        if self.error:
+            raise self.error
         if self.fail_status:
             return HttpResponse(self.fail_status, b'{"error": "boom"}')
         if request.headers.get("Authorization") != f"Bearer {TOKEN}":
@@ -183,6 +191,9 @@ class Clock:
     def __call__(self) -> float:
         return self.now
 
+    def advance(self, seconds: float) -> None:
+        self.now += seconds
+
 
 def git(*args: str, cwd: Path) -> str:
     return subprocess.run(
@@ -219,6 +230,7 @@ class Env:
             secrets=lambda: [TOKEN],
             notifier=self.notifier,
             clock=self.clock,
+            sleep=self.clock.advance,
         )
 
     def remote_log(self) -> list[str]:

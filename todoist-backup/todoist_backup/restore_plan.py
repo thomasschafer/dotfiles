@@ -61,15 +61,6 @@ class Plan:
         return not any(d.missing or d.changed for d in self.diffs)
 
 
-def _objects(files: Mapping[str, Any], paths: tuple[str, ...]) -> dict[str, dict[str, Any]]:
-    objects: dict[str, dict[str, Any]] = {}
-    for path in paths:
-        for obj in files.get(path, []):
-            if isinstance(obj, dict) and "id" in obj:
-                objects[str(obj["id"])] = obj
-    return objects
-
-
 def _other_kinds(files: snapshot.Files) -> list[tuple[str, tuple[str, ...], str | None]]:
     """Any other sync resource that's a list of objects with ids, compared generically."""
     known = {p for _, paths, _ in KINDS for p in paths}
@@ -101,7 +92,7 @@ def build_plan(
 ) -> Plan:
     diffs = []
     for kind, paths, _ in (*KINDS, *_other_kinds(snap)):
-        before, after = _objects(snap, paths), _objects(live, paths)
+        before, after = snapshot.objects_by_id(snap, paths), snapshot.objects_by_id(live, paths)
         diff = KindDiff(kind)
         diff.missing = [before[i] for i in sorted(before.keys() - after.keys())]
         diff.new = [after[i] for i in sorted(after.keys() - before.keys())]
@@ -124,9 +115,9 @@ def _name(kind: str, obj: Mapping[str, Any]) -> str:
 
 
 def _task_location(plan: Plan, task: Mapping[str, Any]) -> str:
-    projects = _objects(plan.snapshot_files, KINDS[0][1])
-    sections = _objects(plan.snapshot_files, KINDS[1][1])
-    tasks = _objects(plan.snapshot_files, KINDS[2][1])
+    projects = snapshot.objects_by_id(plan.snapshot_files, KINDS[0][1])
+    sections = snapshot.objects_by_id(plan.snapshot_files, KINDS[1][1])
+    tasks = snapshot.objects_by_id(plan.snapshot_files, KINDS[2][1])
     parts = [str(projects.get(str(task.get("project_id")), {}).get("name", "?"))]
     if section := sections.get(str(task.get("section_id"))):
         parts.append(str(section.get("name")))
