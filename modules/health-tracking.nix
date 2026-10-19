@@ -10,52 +10,38 @@
 }:
 
 let
+  background = import ./background-app.nix { inherit config lib; };
   home = config.home.homeDirectory;
   repo = "${home}/Development/Personal/health-tracking";
   envFile = "${home}/.config/health-tracking/env";
-  stateDir = "${home}/.local/state/health-tracking";
-  path = lib.concatStringsSep ":" [
-    (lib.makeBinPath [
-      pkgs.nodejs_26
-      pkgs.litestream
-      pkgs.git
-    ])
-    "/usr/bin"
-    "/bin"
-    "/usr/sbin"
-    "/sbin"
+  binPath = lib.makeBinPath [
+    pkgs.nodejs_26
+    pkgs.litestream
+    pkgs.git
   ];
 
   agent =
     { script, log }:
-    {
-      enable = true;
-      config = {
-        ProgramArguments = [ "${repo}/scripts/${script}" ];
-        RunAtLoad = true;
-        # Runs, and restarts after any exit, only while the settings file exists. Nothing
-        # starts before setup-machine.sh has restored the database, so an empty database
-        # can't be replicated over the backup.
-        KeepAlive.PathState.${envFile} = true;
-        ThrottleInterval = 10;
-        StandardOutPath = "${stateDir}/${log}";
-        StandardErrorPath = "${stateDir}/${log}";
-        EnvironmentVariables.PATH = path;
-      };
+    background.agent {
+      app = "health-tracking";
+      inherit log;
+      path = [ binPath ];
+      programArguments = [ "${repo}/scripts/${script}" ];
+      # Runs, and restarts after any exit, only while the settings file exists. Nothing starts
+      # before setup-machine.sh has restored the database, so an empty database can't be
+      # replicated over the backup.
+      keepAlive.PathState.${envFile} = true;
     };
 in
 {
   home.activation = {
-    # launchd can't open its log files if the directory doesn't exist yet.
-    createHealthTrackingStateDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      $DRY_RUN_CMD mkdir -p ${lib.escapeShellArg stateDir}
-    '';
+    createHealthTrackingStateDir = background.createStateDir "health-tracking";
 
     # Builds the app after the first clone, before the agents load. Later builds go through
     # the repo's scripts/deploy.sh.
     buildHealthTracking = lib.hm.dag.entryBetween [ "setupLaunchAgents" ] [ "cloneHealthTracking" ] ''
       if [ ! -f "${repo}/dist/client/index.html" ]; then
-        export PATH="${path}:$PATH"
+        export PATH="${lib.concatStringsSep ":" ([ binPath ] ++ background.systemPath)}:$PATH"
         cd "${repo}"
         $DRY_RUN_CMD npm ci --no-audit --no-fund
         $DRY_RUN_CMD npm run build
