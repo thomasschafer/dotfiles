@@ -1,7 +1,7 @@
 # Runs Workshop (github.com/thomasschafer/workshop) in dev mode as a launchd agent, so the
 # server is always up on the tailnet and rebuilds and restarts as the checkout changes. home.nix
-# clones the repo; edits there go live once they build. Its output is in
-# ~/.local/state/workshop/dev.log.
+# clones the repo, and the advent-of-code repo it keeps solutions in; edits to Workshop go live
+# once they build. Its output is in ~/.local/state/workshop/dev.log.
 {
   config,
   pkgs,
@@ -16,6 +16,18 @@ in
 {
   # For dictation, which is more accurate with code than phones' own speech recognition.
   home.packages = [ pkgs.whisper-cpp ];
+
+  # Workshop only writes its config on first run, and keeps choices made in the app in
+  # settings.json instead, so it can be managed here. Anything not set has Workshop's default
+  # (see config.example.toml in its repo).
+  home.file."Library/Application Support/workshop/config.toml" = {
+    force = true;
+    text = ''
+      [solutions]
+      dir = "${home}/Development/Personal/advent-of-code"
+      commit_after_star = true
+    '';
+  };
 
   home.activation.createWorkshopStateDir = background.createStateDir "workshop";
 

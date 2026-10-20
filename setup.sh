@@ -84,6 +84,31 @@ for plist in "$HOME"/Library/LaunchAgents/homebrew.mxcl.*.plist /Library/LaunchD
     fi
 done
 
+# Logins and setup a script can check, each with how to fix it. On a fresh machine, these are
+# what's left to do by hand; README.md lists what can't be checked from here.
+todo=0
+to_do() {
+    printf 'to do: %s\n' "$1" >&2
+    todo=1
+}
+"/etc/profiles/per-user/$USER/bin/gh" auth status >/dev/null 2>&1 \
+    || to_do "log in to GitHub, for cloning and pushing: gh auth login"
+"$HOME/.local/bin/claude" auth status 2>/dev/null | grep -q '"loggedIn": true' \
+    || to_do "log in to Claude Code: run claude"
+if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableTailscale")" = true ]; then
+    tailscale status >/dev/null 2>&1 || to_do "log in to Tailscale in its app"
+fi
+if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")" = true ] \
+    && [ -x "$workshop" ]; then
+    # Shows only what isn't OK, such as the Advent of Code cookie or packages, with its fix.
+    # ~/.local/bin, where the model CLIs are, comes first as it does for the agent.
+    doctor="$(PATH="$HOME/.local/bin:$PATH" "$workshop" doctor 2>&1)" || todo=1
+    problems="$(awk '/^✓/ { show = 0; next } /^[^ ]/ { show = 1 } show { print "    " $0 }' <<<"$doctor")"
+    if [ -n "$problems" ]; then
+        printf 'workshop doctor:\n%s\n' "$problems" >&2
+    fi
+fi
+
 # Reports on each agent that should keep running, so one that has stopped doesn't go unnoticed.
 username="$("$nix_exec" eval --raw "$script_dir#hostConfigs.$host.username")"
 # One line per agent: its name, launchd label and log file.
@@ -110,4 +135,4 @@ while IFS=$'\t' read -r name label log; do
         tail -n 10 "$log" 2>/dev/null | sed 's/^/    /' >&2 || true
     fi
 done <<<"$agents"
-[ "$stopped" = 0 ] || exit 1
+[ "$stopped" = 0 ] && [ "$todo" = 0 ] || exit 1

@@ -487,6 +487,7 @@ in
     }
     // lib.optionalAttrs hostConfig.enableWorkshop {
       cloneWorkshop = cloneRepo { repo = "workshop"; };
+      cloneAdventOfCode = cloneRepo { repo = "advent-of-code"; };
     };
   };
 
