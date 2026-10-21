@@ -141,17 +141,14 @@
       "ghostty"
       "karabiner-elements"
       "nikitabobko/tap/aerospace"
-      "rancher"
       "zed"
     ]
     ++ lib.optionals hostConfig.enableTailscale [ "tailscale-app" ];
 
     # CLI tools belong in home.nix; these stay in Homebrew because nixpkgs can't
-    # replace them. gnupg: nixpkgs ships 2.4, and ~/.gnupg was created by 2.5.
-    # minimal-racket: nixpkgs' racket-minimal doesn't support macOS. zig@0.16: see
-    # zigForHerdr in home.nix.
+    # replace them. minimal-racket: nixpkgs' racket-minimal doesn't support macOS.
+    # zig@0.16: see zigForHerdr in home.nix.
     brews = [
-      "gnupg"
       "minimal-racket"
       "zig@0.16"
     ];

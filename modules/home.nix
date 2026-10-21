@@ -124,12 +124,6 @@ let
     ".claude/skills/review-loop".source = ../skills/review-loop;
     ".codex/skills/review-loop".source = ../skills/review-loop;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
-    ".stack/config.yaml".text = ''
-      system-ghc: true
-      install-ghc: false
-      nix:
-        enable: true
-    '';
 
     # Atuin
     ".config/atuin/config.toml".source = ../atuin/config.toml;
@@ -152,15 +146,6 @@ let
     ".config/herdr/plugins/config/thomasschafer.herdr-kiosk/config.toml".source =
       ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
-    # k9s
-    "${configHome}/k9s/config.yaml".source = ../k9s/config.yaml;
-
-    # Kakoune
-    ".config/kak/colors/catppuccin_macchiato.kak".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/kakoune/abb4e7c2939361825a69cf02bec9e6b782adf5cc/colors/catppuccin_macchiato.kak";
-      sha256 = "sha256-VqcYzb0U5RAS1pJVO/k/V04wMm5EFAh5r4SMKega5M8=";
-    };
-
     # Lazygit
     "${configHome}/lazygit/config.yml".source = ../lazygit/config.yml;
 
@@ -170,9 +155,6 @@ let
 
     # Neovim
     ".config/nvim".source = ../neovim/nvim;
-
-    # Nushell
-    "${configHome}/nushell/config.nu".source = ../nushell/config.nu;
 
     # Scooter
     ".config/scooter/config.toml".source = ../scooter/config.toml;
@@ -262,9 +244,12 @@ in
         }))
         biome
         delta
+        colima
         delve
-        deno
         direnv
+        docker-client
+        # Lets Docker use the keychain for registry logins (credsStore in ~/.docker/config.json)
+        docker-credential-helpers
         fd
         ffmpeg
         fzf
@@ -279,7 +264,6 @@ in
         jless
         neovim
         nixfmt
-        nushell
         jq
         lazygit
         mise
@@ -305,7 +289,6 @@ in
         shellcheck
         sqlfluff
         taplo
-        terraform-docs
         tree
         typescript-language-server
         uv
@@ -320,10 +303,9 @@ in
         # Building from source
         hxUtils
 
-        # Haskell tooling
+        # Haskell, for Advent of Code solutions in Workshop
         ghc
         cabal-install
-        stack
         haskell-language-server
 
         # Scripts/tools
@@ -509,20 +491,5 @@ in
       };
     };
 
-    kakoune = {
-      enable = true;
-      extraConfig = builtins.readFile ../kakoune/kakrc;
-    };
-
-    k9s = {
-      enable = true;
-
-      skins = {
-        catppuccin.source = pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/catppuccin/k9s/fdbec82284744a1fc2eb3e2d24cb92ef87ffb8b4/dist/catppuccin-macchiato-transparent.yaml";
-          sha256 = "sha256-mTMv9/6I3UVrGgRzacXMrXtWEQ6GkgQJiuLwlEg3vqY=";
-        };
-      };
-    };
   };
 }
