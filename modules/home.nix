@@ -459,6 +459,8 @@ in
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
           cd "$scooter_hx_dir"
           ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
+          # cargo steel-lib copies the library into native/, but doesn't create it.
+          $DRY_RUN_CMD mkdir -p "$steel_home/native"
           $DRY_RUN_CMD env STEEL_HOME="$steel_home" ${pkgs.cargo}/bin/cargo steel-lib
           echo "$current_hash" > "$scooter_hx_hash_file"
         fi
