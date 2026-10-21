@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from . import fetch, restore_plan, snapshot
@@ -81,7 +81,7 @@ def cmd_restore_plan(config: Config, args: argparse.Namespace) -> int:
     client = TodoistClient(_tokens(config))
     live = fetch.fetch_live_view(client)
     since = datetime.fromisoformat(snapshot_time) - timedelta(days=1)
-    completed = fetch.fetch_completed(client, since, datetime.now(timezone.utc))
+    completed = fetch.fetch_completed(client, since, datetime.now(UTC))
     plan = restore_plan.build_plan(
         ref,
         snapshot_time,

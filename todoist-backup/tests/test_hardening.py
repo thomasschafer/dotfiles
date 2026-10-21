@@ -6,6 +6,7 @@ import http.server
 import json
 import subprocess
 import threading
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -397,9 +398,9 @@ def test_restore_plan_reads_are_reads():
     server = FakeTodoist()
     client = TodoistClient(StaticTokens(), server)
     fetch.fetch_live_view(client)
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fetch.fetch_completed(client, now - timedelta(days=200), now)
     assert {r.method for r in server.requests} <= {"GET", "POST"}
     assert all(

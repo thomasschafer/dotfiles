@@ -18,9 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
       - run: uv run --python 3.14 --with pytest pytest tests
-      - run: uvx ruff check .
-      - run: uvx ruff format --check .
+      # Ruff and nixfmt come from the flake's nixpkgs, so CI agrees with the installed versions.
+      - run: nix run --inputs-from .. nixpkgs#ruff -- check .
+      - run: nix run --inputs-from .. nixpkgs#ruff -- format --check .
 
   shellcheck:
     runs-on: ubuntu-latest
@@ -36,4 +38,4 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
-      - run: git ls-files -z '*.nix' | xargs -0 nix run nixpkgs#nixfmt -- --check
+      - run: git ls-files -z '*.nix' | xargs -0 nix run --inputs-from . nixpkgs#nixfmt -- --check

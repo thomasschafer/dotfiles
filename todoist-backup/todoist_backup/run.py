@@ -6,7 +6,7 @@ import fcntl
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from . import fetch, snapshot, verify
 from .api import ApiError, AuthError, ConnectionLost, OfflineError, TodoistClient
@@ -158,7 +158,7 @@ def check_stale(deps: Deps, state: State) -> None:
     reference = state.last_success or state.installed_at
     if deps.clock() - reference > STALE_AFTER_SECONDS:
         when = (
-            datetime.fromtimestamp(state.last_success, timezone.utc).isoformat(timespec="minutes")
+            datetime.fromtimestamp(state.last_success, UTC).isoformat(timespec="minutes")
             if state.last_success
             else "never"
         )
@@ -247,7 +247,7 @@ def _detect_deletions(
     if day_old is not None and day_old != head:
         day_time = datetime.fromisoformat(repo.commit_time(day_old))
         baseline = repo.read_files_at(day_old, ["sync/", "archived/"])
-        label = f"the snapshot of {day_time.astimezone(timezone.utc):%Y-%m-%d %H:%M} UTC"
+        label = f"the snapshot of {day_time.astimezone(UTC):%Y-%m-%d %H:%M} UTC"
         candidates += verify.detect_deletions(baseline, current, day_time, label)
 
     timestamp = deps.clock()
@@ -282,7 +282,7 @@ def backup(deps: Deps, state: State) -> Report:
     existing_completed = snapshot.completed_items(previous)
 
     for attempt in range(1, LIVE_CHECK_ATTEMPTS + 1):
-        now = datetime.fromtimestamp(deps.clock(), timezone.utc)
+        now = datetime.fromtimestamp(deps.clock(), UTC)
         fetched = fetch.fetch_all(client, existing_completed, now)
         snapshot.write_files(config.data_dir, fetched.files)
         if problems := verify.verify_written(config.data_dir, fetched.files):
