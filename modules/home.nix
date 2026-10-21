@@ -83,9 +83,13 @@ let
 
   # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
   # crates/ghostty-vt/build.rs in herdr). nixpkgs' Zig can't link against the
-  # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula,
-  # matching the ZIG export in zsh/.zshrc.
-  zigForHerdr = "/opt/homebrew/opt/zig@0.16/bin/zig";
+  # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula, or
+  # the release unpacked into ~/.local/share/zig where Homebrew's isn't
+  # installed, matching the ZIG export in zsh/.zshrc.
+  zigForHerdrCandidates = [
+    "/opt/homebrew/opt/zig@0.16/bin/zig"
+    "${config.home.homeDirectory}/.local/share/zig/0.16.0/zig"
+  ];
 
   helixConfig =
     pkgs.runCommand "helix-config"
@@ -403,11 +407,18 @@ in
         bin = "herdr";
         after = [ "cloneHerdr" ];
         preBuild = ''
-          export ZIG="${zigForHerdr}"
-          if [ ! -x "$ZIG" ]; then
-            echo "installHerdr: Zig not found at $ZIG" >&2
+          ZIG=""
+          for candidate in ${lib.escapeShellArgs zigForHerdrCandidates}; do
+            if [ -x "$candidate" ]; then
+              ZIG="$candidate"
+              break
+            fi
+          done
+          if [ -z "$ZIG" ]; then
+            echo "installHerdr: Zig 0.16 not found at any of: ${lib.concatStringsSep " " zigForHerdrCandidates}" >&2
             exit 1
           fi
+          export ZIG
         '';
       };
 

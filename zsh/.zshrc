@@ -61,8 +61,11 @@ alias NIX_SYSTEM_CLEAN="NIX_CLEAN && NIX_ORPHANS && NIX_WIPE"
 # herdr vendors a Zig build that requires an exact toolchain version (see
 # crates/ghostty-vt/build.rs in herdr); brew's versioned zig is kept off PATH
 # so it doesn't shadow the newer default `zig`, so point ZIG at it directly.
+# Machines without it use the release unpacked into ~/.local/share/zig.
 if [[ -x /opt/homebrew/opt/zig@0.16/bin/zig ]]; then
     export ZIG=/opt/homebrew/opt/zig@0.16/bin/zig
+elif [[ -x "$HOME/.local/share/zig/0.16.0/zig" ]]; then
+    export ZIG="$HOME/.local/share/zig/0.16.0/zig"
 fi
 
 # Path
