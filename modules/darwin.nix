@@ -25,6 +25,10 @@
   # missed calendar job when the Mac next wakes.
   launchd.daemons.nix-gc = {
     command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 30d";
+    # Deletes through the Nix daemon, as root would otherwise delete store paths itself, and
+    # macOS's App Management protection stops a process that lacks it from deleting app bundles,
+    # such as an old terminal-notifier.app.
+    environment.NIX_REMOTE = "daemon";
     serviceConfig = {
       StartCalendarInterval = [
         {
