@@ -1,22 +1,43 @@
 {
   self,
-  pkgs,
   lib,
   hostConfig,
   ...
 }:
 {
-  nix = {
-    # Necessary because we are using the Determinate Systems installer
-    enable = false;
+  # Determinate Nix manages the daemon and /etc/nix/nix.conf, so nix-darwin's nix.* options
+  # (including nix.settings and nix.gc) have no effect. Settings go in nix.custom.conf, which
+  # nix.conf includes.
+  nix.enable = false;
 
-    settings.experimental-features = "nix-command flakes";
+  environment.etc."nix/nix.custom.conf" = {
+    text = ''
+      # Collects garbage during builds when free space drops below min-free, until max-free
+      # is free. Old generations are still roots; the nix-gc launchd job removes those.
+      min-free = ${toString (30 * 1024 * 1024 * 1024)}
+      max-free = ${toString (60 * 1024 * 1024 * 1024)}
+    '';
+    # The empty file the Determinate installer wrote, which nix-darwin may replace.
+    knownSha256Hashes = [ "3bd68ef979a42070a44f8d82c205cfd8e8cca425d91253ec2c10a88179bb34aa" ];
+  };
 
-    # Fix for https://github.com/NixOS/nix/issues/2982
-    nixPath = [
-      "nixpkgs=${pkgs.path}"
-      "/nix/var/nix/profiles/per-user/root/channels"
-    ];
+  # Deletes generations older than 30 days and the store paths only they used. launchd runs a
+  # missed calendar job when the Mac next wakes.
+  launchd.daemons.nix-gc = {
+    command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 30d";
+    serviceConfig = {
+      StartCalendarInterval = [
+        {
+          Weekday = 0;
+          Hour = 3;
+          Minute = 15;
+        }
+      ];
+      ProcessType = "Background";
+      LowPriorityIO = true;
+      StandardOutPath = "/var/log/nix-gc.log";
+      StandardErrorPath = "/var/log/nix-gc.log";
+    };
   };
 
   # Set Git commit hash for darwin-version
