@@ -12,3 +12,6 @@
 (keymap (global) (normal (C-u half-page-up-smooth)))
 (keymap (global) (normal (pageup page-up-smooth)))
 (keymap (global) (normal (pagedown page-down-smooth)))
+
+; Reopen files and splits when herdr restores this pane after a restart
+(require "../../Development/Personal/herdr-session.hx/herdr-session.scm")

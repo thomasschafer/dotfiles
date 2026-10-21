@@ -440,6 +440,8 @@ in
 
       cloneSmoothScrollHx = cloneRepo { repo = "smooth-scroll.hx"; };
 
+      cloneHerdrSessionHx = cloneRepo { repo = "herdr-session.hx"; };
+
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${cargoBin}/cargo-steel-lib" ]; then
           ${cargoBuildEnv ""}
