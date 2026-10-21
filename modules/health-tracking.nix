@@ -1,5 +1,6 @@
 # Runs the health-tracking app (github.com/thomasschafer/health-tracking) and its Litestream
-# replication to Cloudflare R2 as launchd agents. home.nix clones the repo, and setup.sh runs
+# replication to Cloudflare R2 as launchd agents, from the release deployed with
+# `deploy health-tracking [ref]` (see deploy.nix). home.nix clones the repo, and setup.sh runs
 # its scripts/setup-machine.sh, which restores the database and writes the settings file the
 # agents wait for. See docs/operations.md in that repo.
 {
@@ -14,6 +15,7 @@ let
   home = config.home.homeDirectory;
   repo = "${home}/Development/Personal/health-tracking";
   envFile = "${home}/.config/health-tracking/env";
+  inherit (config.deploy.apps.health-tracking) current;
   binPath = lib.makeBinPath [
     pkgs.nodejs_26
     pkgs.litestream
@@ -26,7 +28,7 @@ let
       app = "health-tracking";
       inherit log;
       path = [ binPath ];
-      programArguments = [ "${repo}/scripts/${script}" ];
+      programArguments = [ "${current}/scripts/${script}" ];
       # Runs, and restarts after any exit, only while the settings file exists. Nothing starts
       # before setup-machine.sh has restored the database, so an empty database can't be
       # replicated over the backup.
@@ -34,19 +36,20 @@ let
     };
 in
 {
-  home.activation = {
-    createHealthTrackingStateDir = background.createStateDir "health-tracking";
+  home.activation.createHealthTrackingStateDir = background.createStateDir "health-tracking";
 
-    # Builds the app after the first clone, before the agents load. Later builds go through
-    # the repo's scripts/deploy.sh.
-    buildHealthTracking = lib.hm.dag.entryBetween [ "setupLaunchAgents" ] [ "cloneHealthTracking" ] ''
-      if [ ! -f "${repo}/dist/client/index.html" ]; then
-        export PATH="${lib.concatStringsSep ":" ([ binPath ] ++ background.systemPath)}:$PATH"
-        cd "${repo}"
-        $DRY_RUN_CMD npm ci --no-audit --no-fund
-        $DRY_RUN_CMD npm run build
-      fi
+  deploy.apps.health-tracking = {
+    inherit repo;
+    after = [ "cloneHealthTracking" ];
+    path = [ binPath ];
+    build = ''
+      npm ci --no-audit --no-fund
+      npm run build
     '';
+    agents = [
+      "health-tracking-server"
+      "health-tracking-litestream"
+    ];
   };
 
   launchd.agents = {

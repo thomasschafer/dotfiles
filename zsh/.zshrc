@@ -90,3 +90,8 @@ fi
 if command -v atuin &>/dev/null; then
     eval "$(atuin init zsh)"
 fi
+
+# Background apps that have stopped (Workshop, health-tracking)
+if command -v agents-status &>/dev/null; then
+    agents-status --quiet || true
+fi

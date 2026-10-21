@@ -35,6 +35,13 @@ if [ ! -x "$nix_exec" ]; then
       sh -s -- install
 fi
 
+# The host's settings (see modules/host-options.nix), for deciding which steps to run.
+host_config="$("$nix_exec" eval --json "$script_dir#hostConfigs.$host")"
+enabled() {
+    jq -e --arg option "$1" '.[$option] == true' <<<"$host_config" >/dev/null
+}
+bin="/etc/profiles/per-user/$USER/bin"
+
 flake="$script_dir#$host"
 if command -v darwin-rebuild &>/dev/null; then
     sudo darwin-rebuild switch --flake "$flake"
@@ -42,26 +49,24 @@ else
     sudo "$nix_exec" run nix-darwin/master#darwin-rebuild -- switch --flake "$flake"
 fi
 
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableDependabotReview")" = true ]; then
+if enabled enableDependabotReview; then
     "$script_dir/dependabot-review/setup-secrets"
 fi
 
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableTodoistBackup")" = true ]; then
-    "/etc/profiles/per-user/$USER/bin/todoist-backup" setup
+if enabled enableTodoistBackup; then
+    "$bin/todoist-backup" setup
 fi
 
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableHealthTracking")" = true ]; then
+if enabled enableHealthTracking; then
     "$HOME/Development/Personal/health-tracking/scripts/setup-machine.sh"
 fi
 
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")" = true ]; then
-    # Built by the Workshop agent on its first run, so it may not be there yet.
-    workshop="$HOME/Development/Personal/workshop/target/debug/workshop"
-    if [ -x "$workshop" ]; then
-        url="$("$workshop" token --tailscale | grep -o 'https://[^ ]*token=[^ ]*')"
+if enabled enableWorkshop; then
+    # The first switch deploys Workshop, but only warns if that fails.
+    if url="$("$bin/workshop" token --tailscale 2>/dev/null | grep -o 'https://[^ ]*token=[^ ]*')"; then
         printf '\nworkshop: open %s on your phone\n' "$url"
     else
-        printf '\nworkshop: still building; the link will be in ~/.local/state/workshop/dev.log\n'
+        printf '\nworkshop: not deployed; run: deploy workshop\n' >&2
     fi
 fi
 
@@ -91,48 +96,23 @@ to_do() {
     printf 'to do: %s\n' "$1" >&2
     todo=1
 }
-"/etc/profiles/per-user/$USER/bin/gh" auth status >/dev/null 2>&1 \
+"$bin/gh" auth status >/dev/null 2>&1 \
     || to_do "log in to GitHub, for cloning and pushing: gh auth login"
-"$HOME/.local/bin/claude" auth status 2>/dev/null | grep -q '"loggedIn": true' \
+"$HOME/.local/bin/claude" auth status --json 2>/dev/null | jq -e '.loggedIn == true' >/dev/null 2>&1 \
     || to_do "log in to Claude Code: run claude"
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableTailscale")" = true ]; then
+if enabled enableTailscale; then
     tailscale status >/dev/null 2>&1 || to_do "log in to Tailscale in its app"
 fi
-if [ "$("$nix_exec" eval --json "$script_dir#hostConfigs.$host.enableWorkshop")" = true ] \
-    && [ -x "$workshop" ]; then
+if enabled enableWorkshop && [ -n "${url:-}" ]; then
     # Shows only what isn't OK, such as the Advent of Code cookie or packages, with its fix.
     # ~/.local/bin, where the model CLIs are, comes first as it does for the agent.
-    doctor="$(PATH="$HOME/.local/bin:$PATH" "$workshop" doctor 2>&1)" || todo=1
+    doctor="$(PATH="$HOME/.local/bin:$PATH" "$bin/workshop" doctor 2>&1)" || todo=1
     problems="$(awk '/^✓/ { show = 0; next } /^[^ ]/ { show = 1 } show { print "    " $0 }' <<<"$doctor")"
     if [ -n "$problems" ]; then
         printf 'workshop doctor:\n%s\n' "$problems" >&2
     fi
 fi
 
-# Reports on each agent that should keep running, so one that has stopped doesn't go unnoticed.
-username="$("$nix_exec" eval --raw "$script_dir#hostConfigs.$host.username")"
-# One line per agent: its name, launchd label and log file.
-# shellcheck disable=SC2016 # Nix, not shell, interpolation
-list_agents='agents:
-  let
-    kept = builtins.filter (name: agents.${name}.enable && agents.${name}.config.KeepAlive != null)
-      (builtins.attrNames agents);
-    line = name: with agents.${name}.config; "${name}\t${Label}\t${StandardOutPath}\n";
-  in
-  builtins.concatStringsSep "" (map line kept)'
-agents="$("$nix_exec" eval --raw "$script_dir#darwinConfigurations.$host.config.home-manager.users.$username.launchd.agents" --apply "$list_agents")"
 stopped=0
-home_dir="~"
-while IFS=$'\t' read -r name label log; do
-    [ -n "$name" ] || continue
-    info="$(launchctl print "gui/$(id -u)/$label" 2>/dev/null || true)"
-    if grep -q '^\s*state = running' <<<"$info"; then
-        printf '%s: running · log %s\n' "$name" "${log/#"$HOME"/$home_dir}"
-    else
-        stopped=1
-        exit_code="$(grep -m1 'last exit code' <<<"$info" | sed 's/.*= //' || true)"
-        printf '%s: not running (last exit code %s); the end of %s:\n' "$name" "${exit_code:-unknown}" "${log/#"$HOME"/$home_dir}" >&2
-        tail -n 10 "$log" 2>/dev/null | sed 's/^/    /' >&2 || true
-    fi
-done <<<"$agents"
+"$bin/agents-status" || stopped=1
 [ "$stopped" = 0 ] && [ "$todo" = 0 ] || exit 1
