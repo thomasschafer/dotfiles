@@ -79,6 +79,11 @@ in
       cp "$CARGO_TARGET_DIR/release/workshop" workshop
     '';
     agents = [ "workshop" ];
+    agentNotes = ''
+      - The deployed server listens on 127.0.0.1:7878 and keeps its state in
+        `~/Library/Application Support/workshop`. `mise run dev` runs a separate copy on 7879, with
+        its state in `.dev`.
+    '';
   };
 
   launchd.agents.workshop = background.agent {

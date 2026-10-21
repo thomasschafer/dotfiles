@@ -496,7 +496,10 @@ in
     # `git config --global`, such as `gh auth setup-git`. Git reads both.
     git = {
       enable = true;
-      ignores = [ "**/.claude/settings.local.json" ];
+      ignores = [
+        "**/.claude/settings.local.json"
+        "CLAUDE.local.md"
+      ];
       signing = {
         format = "ssh";
         key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub";

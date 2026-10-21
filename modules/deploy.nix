@@ -1,7 +1,8 @@
 # `deploy <app> [ref]` for apps that run from a committed revision rather than their checkout
 # (see tools/deploy.sh). Each app's module declares it under deploy.apps and points its launchd
 # agents at deploy.apps.<app>.current. The first switch after enabling an app deploys it, before
-# its agents load.
+# its agents load. Each checkout also gets a CLAUDE.local.md telling agents how this machine runs
+# the app, which only applies here, so it stays out of the repo.
 {
   config,
   pkgs,
@@ -24,6 +25,28 @@ let
     path = lib.concatStringsSep ":" (app.path ++ background.systemPath);
     labels = map (agent: config.launchd.agents.${agent}.config.Label) app.agents;
   }) apps;
+
+  agentInstructions =
+    name: app:
+    pkgs.writeText "${name}-CLAUDE.local.md" ''
+      # This machine
+
+      <!-- Written by the dotfiles (modules/deploy.nix), which replace it on every switch. -->
+
+      This Mac runs a deployed copy of ${name} in the background, built from a commit rather than
+      from this checkout, as the launchd agents ${
+        lib.concatMapStringsSep " and " (label: "`${label}`") appConfig.${name}.labels
+      }.
+
+      - After pushing changes to `main`, deploy them with `deploy ${name}`. It builds `main` in its
+        own copy and only restarts the agents if the build succeeds; check its output says they
+        restarted.
+      - To roll back, run `deploy ${name} <commit>` with an earlier commit.
+      - Never stop, restart or reconfigure the agents yourself, or use the deployed copy's port or
+        data for development. This repo's dev commands run separately.
+      - `agents-status` shows whether the agents are running, and where their logs are.
+      ${app.agentNotes}
+    '';
 
   deploy = pkgs.writeShellScriptBin "deploy" ''
     export PATH="${
@@ -71,6 +94,11 @@ in
               default = [ "writeBoundary" ];
               description = "Activation steps that must run before the first deploy, such as cloning the repo.";
             };
+            agentNotes = mkOption {
+              type = types.lines;
+              default = "";
+              description = "More about how this machine runs the app, for the checkout's CLAUDE.local.md.";
+            };
             current = mkOption {
               type = types.str;
               readOnly = true;
@@ -98,6 +126,23 @@ in
                 || echo "warning: deploying ${name} failed; fix it, then run: deploy ${name}" >&2
             fi
           '') (lib.attrNames apps)
+        );
+
+    # Linked after cloning, as creating the file first would create the checkout's directory and
+    # stop the clone. A CLAUDE.local.md written by hand is left alone.
+    home.activation.linkAgentInstructions =
+      lib.hm.dag.entryAfter (lib.concatMap (app: app.after) (lib.attrValues apps))
+        (
+          lib.concatStrings (
+            lib.mapAttrsToList (name: app: ''
+              instructions=${lib.escapeShellArg "${app.repo}/CLAUDE.local.md"}
+              if [ -e "$instructions" ] && [ ! -L "$instructions" ]; then
+                echo "warning: not replacing $instructions, which isn't from the dotfiles" >&2
+              elif [ -d ${lib.escapeShellArg app.repo} ]; then
+                $DRY_RUN_CMD ln -sfn ${agentInstructions name app} "$instructions"
+              fi
+            '') apps
+          )
         );
   };
 }

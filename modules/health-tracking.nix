@@ -50,6 +50,11 @@ in
       "health-tracking-server"
       "health-tracking-litestream"
     ];
+    agentNotes = ''
+      - `~/.local/share/health-tracking` holds real health data, which Litestream replicates to
+        R2. Never write to it; `npm run dev:seed` copies it into `.dev-data` to develop against.
+      - The deployed server listens on 127.0.0.1:8787; `npm run dev:server` uses 8789.
+    '';
   };
 
   launchd.agents = {
