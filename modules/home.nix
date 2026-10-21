@@ -51,7 +51,9 @@ let
     '';
 
   # Builds and installs a crate from a repo cloned with cloneRepo, if its binary isn't
-  # installed yet. preBuild runs first, for build-specific environment and checks.
+  # installed yet or the clone's HEAD has moved since the last build, so pulling a
+  # repo and re-running setup installs the matching binary. Uncommitted changes don't
+  # trigger a rebuild. preBuild runs first, for build-specific environment and checks.
   cargoInstallFromRepo =
     {
       repo,
@@ -60,13 +62,37 @@ let
       after,
       preBuild ? "",
     }:
+    let
+      repoDir = "${devDir}/${repo}";
+      builtCommitFile = "${config.home.homeDirectory}/.local/state/dotfiles/built-commits/${bin}";
+    in
     lib.hm.dag.entryAfter after ''
-      if [ ! -x "${cargoBin}/${bin}" ]; then
-        ${preBuild}
-        cd "${devDir}/${repo}"
-        $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-        ${cargoBuildEnv ""}
-        $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install --path ${cratePath} --locked
+      if [ ! -d "${repoDir}" ]; then
+        if [ -n "$DRY_RUN_CMD" ]; then
+          echo "Would build ${bin} once ${repoDir} is cloned"
+        else
+          echo "Can't build ${bin}: ${repoDir} doesn't exist" >&2
+          exit 1
+        fi
+      else
+        head_commit=$(${pkgs.git}/bin/git -C "${repoDir}" rev-parse HEAD)
+        built_commit=$(cat "${builtCommitFile}" 2>/dev/null || true)
+        if [ ! -x "${cargoBin}/${bin}" ] || [ "$head_commit" != "$built_commit" ]; then
+          ${preBuild}
+          cd "${repoDir}"
+          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
+          ${cargoBuildEnv ""}
+          # Pin rustc to the one cargo comes with: a rustup proxy earlier on PATH would
+          # pick a toolchain per directory, from the repo's rust-toolchain.toml or the
+          # default, so one build would mix rustc versions.
+          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+            ${pkgs.cargo}/bin/cargo install --path ${cratePath} --locked
+          if [ -z "$DRY_RUN_CMD" ]; then
+            mkdir -p "$(dirname "${builtCommitFile}")"
+            echo "$head_commit" > "${builtCommitFile}"
+            echo "Built ${bin} from ${repo} at $head_commit; anything already running ${bin} keeps the old build until restarted"
+          fi
+        fi
       fi
     '';
 

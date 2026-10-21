@@ -8,7 +8,9 @@ cd ~/Development/Personal/dotfiles
 ./setup.sh personal
 ```
 
-Re-run `setup.sh` (or `dp`) to apply changes. On hosts with `enableDependabotReview`, it also installs the weekly Dependabot review job and prompts you to log in to the Claude CLI and for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
+Re-run `setup.sh` (or `dp`) to apply changes. Setup clones the repos it builds from source, such as Helix and herdr, but never pulls them afterwards; pull one yourself and re-run setup to rebuild it. Anything already running keeps the old build until restarted.
+
+On hosts with `enableDependabotReview`, it also installs the weekly Dependabot review job and prompts you to log in to the Claude CLI and for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
 
 On hosts with `enableTodoistBackup`, it installs the Todoist backup job and prompts you to set up its Todoist credentials and deploy key if they're missing; see [todoist-backup/README.md](todoist-backup/README.md#setup).
 
