@@ -11,6 +11,28 @@
       "Bash(*.local/share/todoist-backup*)",
       "Bash(*todoist-backup_ed25519*)",
       "Bash(*security*todoist-backup*)"
+    ],
+    "defaultMode": "auto",
+    "ask": [
+      "mcp__claude_ai_Todoist__delete-object"
     ]
+  },
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "runpod@runpod": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "runpod": {
+      "source": {
+        "source": "github",
+        "repo": "runpod/runpod-plugins-official"
+      }
+    }
   }
 }
