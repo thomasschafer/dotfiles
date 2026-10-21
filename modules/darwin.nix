@@ -55,7 +55,12 @@
     config.allowUnfree = true;
   };
 
-  security.pam.services.sudo_local.touchIdAuth = true;
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    # Lets Touch ID work inside terminal multiplexers such as herdr, whose processes are
+    # detached from the login session.
+    reattach = true;
+  };
 
   system.defaults = {
     dock = {
