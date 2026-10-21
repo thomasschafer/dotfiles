@@ -99,11 +99,11 @@ let
 
   hxUtils = pkgs.rustPlatform.buildRustPackage {
     pname = "hx-utils";
-    version = "main";
+    version = "0-unstable-2025-02-05";
     src = pkgs.fetchFromGitHub {
       owner = "thomasschafer";
       repo = "hx-utils";
-      rev = "main";
+      rev = "cc7fac12f3c8e8e0fa4c5a47d3237537c32f6148";
       hash = "sha256-KpU9Mxn1Fs3VXlAMTLR1mCQizNuQKrjmePatSjth+/s=";
     };
     cargoHash = "sha256-/9FLbTyHuhEA5BfAXw99pu+482O/s604ehkk1WPC+Hk=";
