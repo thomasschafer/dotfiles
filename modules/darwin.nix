@@ -156,7 +156,7 @@
 
     # CLI tools belong in home.nix; these stay in Homebrew because nixpkgs can't
     # replace them. minimal-racket: nixpkgs' racket-minimal doesn't support macOS.
-    # zig@0.16: see zigForHerdr in home.nix.
+    # zig@0.16: see zigForHerdrCandidates in home.nix.
     brews = [
       "minimal-racket"
       "zig@0.16"
