@@ -14,6 +14,11 @@ delivery = "system"
 [workspace]
 dynamic_naming = false
 
+[update]
+# herdr is built from its checkout by home-manager, so `herdr update` would
+# replace that build with a release binary.
+version_check = false
+
 [session]
 # Start these again, with the same arguments, when herdr restores a pane after
 # a restart.
