@@ -438,7 +438,7 @@ in
 
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
         scooter_hx_dir="${devDir}/scooter.hx"
-        steel_home="${config.home.homeDirectory}/.steel"
+        steel_home="${config.home.homeDirectory}/.local/share/steel"
         scooter_hx_lib="$steel_home/native/libscooter_hx.dylib"
         scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
         current_hash=$(${pkgs.coreutils}/bin/md5sum "$scooter_hx_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
@@ -446,7 +446,7 @@ in
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
           cd "$scooter_hx_dir"
           ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo steel-lib
+          $DRY_RUN_CMD env STEEL_HOME="$steel_home" ${pkgs.cargo}/bin/cargo steel-lib
           echo "$current_hash" > "$scooter_hx_hash_file"
         fi
       '';
