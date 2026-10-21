@@ -69,7 +69,8 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/etc/profiles/per-user/$USER/bin:$PATH"  # Nix - TODO is there a better way of doing this?
-export PATH="$HOME/go/bin:$PATH"
+# Last, so tools installed with `go install` don't shadow anything else
+export PATH="$PATH:$HOME/go/bin"
 
 # Work-specific config
 if [[ -f $HOME/.zshrc.private ]]; then
