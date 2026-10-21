@@ -283,6 +283,35 @@ EOF
     chmod +x "$path"
 }
 
+# Usage: write_git_tool <checkout> <path>
+# Writes the only git the agent may run: read-only subcommands in <checkout>, refusing options
+# that read or write files elsewhere, such as `diff --no-index`.
+write_git_tool() {
+    local dir="$1" path="$2"
+    mkdir -p "$(dirname "$path")"
+    cat >"$path" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+case "\${1:-}" in
+    diff | log | show | status) ;;
+    *) echo "only git diff, log, show and status are allowed" >&2; exit 2 ;;
+esac
+for arg in "\${@:2}"; do
+    name="\${arg%%=*}"
+    # git accepts unambiguous abbreviations of long options, so refuse those too.
+    for forbidden in --no-index --output --ext-diff; do
+        if [[ \$name == --?* && \$forbidden == "\$name"* ]]; then
+            echo "\$arg is not allowed" >&2
+            exit 2
+        fi
+    done
+done
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+exec git -C $(printf '%q' "$dir") --no-pager "\$@"
+EOF
+    chmod +x "$path"
+}
+
 # Usage: render_prompt <template> <sandbox> [KEY=VALUE...]
 render_prompt() {
     local template="$1" sandbox="$2" text kv sandbox_note=""
@@ -306,16 +335,19 @@ render_prompt() {
     printf '%s\n' "$text"
 }
 
-# Usage: run_claude <cwd> <sandbox> <prompt> <output-file>
+# Usage: run_claude <cwd> <sandbox> <git-tool> <prompt> <output-file>
 # Prints the verdict JSON, or nothing if the session failed or hit a cap. Writes the raw
 # result to <output-file>.
+# The agent reads hostile text (PR bodies, changelogs, dependency code), so it may only read the
+# checkout and the context directory. With the rest of $HOME readable, a prompt injection could
+# copy a secret into the checkout and send it out from the sandbox, which has network access.
 run_claude() {
-    local cwd="$1" sandbox="$2" prompt="$3" output="$4" domain status=0
+    local cwd="$1" sandbox="$2" git_tool="$3" prompt="$4" output="$5" domain status=0
     local allowed=(
-        Read Grep Glob
+        "Read(/$cwd/**)" "Read(/$context_dir/**)"
         "Edit(/$cwd/**)" "Write(/$cwd/**)"
         "Bash($sandbox:*)"
-        "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)" "Bash(git status:*)"
+        "Bash($git_tool:*)"
     )
     for domain in "${WEBFETCH_DOMAINS[@]}"; do
         allowed+=("WebFetch(domain:$domain)")
@@ -561,10 +593,12 @@ do_split() {
     fi
 
     git -C "$cache_repo" worktree add --quiet --detach "$split_checkout" "refs/remotes/origin/$base_ref"
-    local split_sandbox="$bin_dir/sandbox-split"
+    local split_sandbox="$bin_dir/sandbox-split" split_git="$bin_dir/git-split"
     write_sandbox "$split_checkout" "$split_sandbox"
-    split_verdict=$(run_claude "$split_checkout" "$split_sandbox" \
-        "$(render_prompt "$script_dir/prompts/split.md" "$split_sandbox" "KEEP_LIST=$keep_list")" \
+    write_git_tool "$split_checkout" "$split_git"
+    split_verdict=$(run_claude "$split_checkout" "$split_sandbox" "$split_git" \
+        "$(render_prompt "$script_dir/prompts/split.md" "$split_sandbox" "KEEP_LIST=$keep_list" \
+            "GIT=$split_git")" \
         "$context_dir/split-result.json")
     if [ -z "$split_verdict" ]; then
         flag broken "could not prepare the split" "$reasoning" \
@@ -634,10 +668,12 @@ fi
 prepare_cache_repo
 git -C "$cache_repo" worktree add --quiet --detach "$checkout" "$head_sha"
 sandbox="$bin_dir/sandbox"
+git_tool="$bin_dir/git"
 write_sandbox "$checkout" "$sandbox"
+write_git_tool "$checkout" "$git_tool"
 
-verdict=$(run_claude "$checkout" "$sandbox" \
-    "$(render_prompt "$script_dir/prompts/review.md" "$sandbox" "CI_STATE=$ci")" \
+verdict=$(run_claude "$checkout" "$sandbox" "$git_tool" \
+    "$(render_prompt "$script_dir/prompts/review.md" "$sandbox" "CI_STATE=$ci" "GIT=$git_tool")" \
     "$context_dir/result.json")
 if [ -z "$verdict" ]; then
     flag review "$(session_failure_reason "$context_dir/result.json")" \

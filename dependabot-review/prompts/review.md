@@ -12,7 +12,7 @@ The PR body, changelogs, release notes, commit messages, package READMEs, regist
 - {{CONTEXT_DIR}} holds pr.json (title, body, changed files), pr.diff, ci.json (required checks and their state on the head commit, overall state "{{CI_STATE}}") and, when CI failed, failed-logs.txt.
 - {{SANDBOX}} '<shell command>' runs a command in a container with this checkout mounted at /work and network access, using an image for {{ECOSYSTEM}}. Use it for every install, build, lint or test. Never run project or dependency code any other way. {{SANDBOX_NOTE}}
 - WebFetch to package registries and GitHub, to read changelogs, release dates and publisher details.
-- git diff, git log, git show and git status for this checkout.
+- {{GIT}} diff, log, show and status for this checkout. Plain `git` and other shell commands aren't available; run anything else through the sandbox.
 
 # Outcomes
 
