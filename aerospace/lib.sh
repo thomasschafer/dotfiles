@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2034  # Variables are used by the scripts that source this.
 # Helpers shared by the scripts AeroSpace runs from its callbacks. Callers run `set -Eeuo pipefail`
 # (-E so the ERR trap below also fires inside functions) and set SCRIPT_NAME before sourcing this
 # file.

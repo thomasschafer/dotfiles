@@ -7,6 +7,7 @@
 
 set -Eeuo pipefail
 
+# shellcheck disable=SC2034  # Used by lib.sh
 readonly SCRIPT_NAME='Zoom'
 # shellcheck source=lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
