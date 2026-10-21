@@ -49,6 +49,18 @@ in
       [solutions]
       dir = "${home}/Development/Personal/advent-of-code"
       commit_after_star = true
+
+      # Some older solutions take a few minutes.
+      [run]
+      timeout_secs = 300
+    '';
+    # The server reads its config at startup, so restart it to pick up a change. Before the
+    # agent is first loaded, there's nothing to restart.
+    onChange = ''
+      agent="gui/$(id -u)/org.nix-community.home.workshop"
+      if /bin/launchctl print "$agent" >/dev/null 2>&1; then
+        /bin/launchctl kickstart -k "$agent"
+      fi
     '';
   };
 
