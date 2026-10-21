@@ -243,7 +243,6 @@ in
           };
         }))
         biome
-        delta
         colima
         delve
         direnv
@@ -259,7 +258,6 @@ in
         golangci-lint-langserver
         gopls
         gh
-        git
         hadolint
         jless
         neovim
@@ -478,6 +476,36 @@ in
 
   programs = {
     home-manager.enable = true;
+
+    # Written to ~/.config/git/config, leaving ~/.gitconfig to tools that set things with
+    # `git config --global`, such as `gh auth setup-git`. Git reads both.
+    git = {
+      enable = true;
+      ignores = [ "**/.claude/settings.local.json" ];
+      signing = {
+        format = "ssh";
+        key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub";
+        signByDefault = true;
+      };
+      settings = {
+        user = {
+          name = "Thomas Schafer";
+          email = "thomasschafer97@gmail.com";
+        };
+        gpg.ssh.allowedSignersFile = "${config.home.homeDirectory}/.ssh/allowed_signers";
+        rerere.enabled = true;
+      };
+    };
+
+    delta = {
+      enable = true;
+      enableGitIntegration = true;
+      options = {
+        line-numbers = true;
+        navigate = true;
+        syntax-theme = "Catppuccin Macchiato";
+      };
+    };
 
     bat = {
       enable = true;
