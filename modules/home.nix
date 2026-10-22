@@ -310,6 +310,7 @@ in
       ]
       ++ [
         _7zz
+        rclone
         ripgrep
         ruff
         # scooter  # Building from source manually
