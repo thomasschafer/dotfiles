@@ -5,6 +5,7 @@ depth = 1
 [[search_dirs]]
 path = "~/Development/Work"
 depth = 1
+optional = true
 
 [on_open]
 panes = [
