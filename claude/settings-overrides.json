@@ -13,10 +13,9 @@
       "Bash(*security*todoist-backup*)"
     ],
     "defaultMode": "auto",
-    "ask": [
-      "mcp__claude_ai_Todoist__delete-object"
-    ]
+    "ask": ["mcp__claude_ai_Todoist__delete-object"]
   },
+  "editorMode": "vim",
   "enabledPlugins": {
     "codex@openai-codex": true,
     "runpod@runpod": true
