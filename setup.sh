@@ -65,9 +65,9 @@ fi
 if enabled enableWorkshop; then
     # The first switch deploys Workshop, but only warns if that fails.
     if url="$("$bin/workshop" token --tailscale 2>/dev/null | grep -o 'https://[^ ]*token=[^ ]*')"; then
-        printf '\nworkshop: open %s on your phone\n' "$url"
+        printf 'workshop: open %s on your phone\n' "$url"
     else
-        printf '\nworkshop: not deployed; run: deploy workshop\n' >&2
+        printf 'workshop: not deployed; run: deploy workshop\n' >&2
     fi
 fi
 
