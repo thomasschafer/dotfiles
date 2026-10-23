@@ -18,7 +18,7 @@ case "${1:-}" in
     *) die "usage: run [--force]" ;;
 esac
 
-require_commands gh git jq curl claude colima docker
+require_commands gh git jq curl claude colima docker secret
 
 mkdir -p "$STATE_DIR/logs" "$WORK_DIR"
 use_job_docker_config
@@ -52,7 +52,7 @@ now=$(date +%s)
 last_success=$(cat "$STATE_DIR/last-success" 2>/dev/null || echo 0)
 [[ "$last_success" =~ ^[0-9]+$ ]] || die "corrupt $STATE_DIR/last-success"
 
-TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+TODOIST_TOKEN=$(secret get "$TODOIST_TOKEN_SECRET")
 export TODOIST_TOKEN
 
 reference="$last_success"
@@ -70,7 +70,7 @@ if [ "$force" = false ] && [ "$last_success" -ge "$(last_friday_20_epoch)" ]; th
     exit 0
 fi
 
-GH_TOKEN=$(read_secret "$GITHUB_TOKEN_SECRET")
+GH_TOKEN=$(secret get "$GITHUB_TOKEN_SECRET")
 export GH_TOKEN
 
 log_file="$STATE_DIR/logs/run-$(date +%Y%m%d-%H%M%S).log"

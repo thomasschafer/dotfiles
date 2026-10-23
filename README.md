@@ -23,6 +23,10 @@ Setup ends by checking what it can't do for you: each background service is runn
 - Restoring secrets from the password manager when prompted: the health-tracking backup key, and the Dependabot review and Todoist backup tokens.
 - On your phone, opening each printed link, adding it to the home screen, and in Workshop, turning on notifications.
 
+### Secrets
+
+Secrets live in the login keychain, not in this repo or in plain-text files. The `secret` command reads and stores them for the scripts here: `secret get|exists|set <service>`. `secret set` prompts for the value, so it never ends up in your shell history. rclone's config is encrypted with a password from the `rclone-config` item, and setup lists encrypting it as a to-do if it isn't.
+
 ## Adding a host
 
 Create `modules/hosts/<name>/default.nix`, setting every option declared in [modules/host-options.nix](modules/host-options.nix), then run `./setup.sh <name>`.

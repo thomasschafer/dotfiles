@@ -32,15 +32,6 @@ require_commands() {
     done
 }
 
-# Usage: read_secret <service>
-read_secret() {
-    local service="$1" value
-    value=$(security find-generic-password -s "$service" -w 2>/dev/null) ||
-        die "no keychain item for service '$service' (see README)"
-    [ -n "$value" ] || die "secret '$service' is empty"
-    printf '%s' "$value"
-}
-
 github_owner() {
     local owner
     owner=$(gh api user --jq .login) || die "could not determine GitHub user from gh"

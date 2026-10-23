@@ -143,6 +143,21 @@ let
     '';
   };
 
+  secret = pkgs.callPackage ../tools/secret.nix { };
+
+  # rclone reads its config's encryption password from the keychain item rclone-config, so the
+  # OAuth tokens in the config aren't stored in plain text. setup.sh checks the config is
+  # encrypted.
+  rcloneWithKeychain = pkgs.symlinkJoin {
+    name = "rclone-with-keychain";
+    paths = [ pkgs.rclone ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/rclone \
+        --set-default RCLONE_PASSWORD_COMMAND "${lib.getExe secret} get rclone-config"
+    '';
+  };
+
   catppuccinMacchiatoTheme = pkgs.fetchurl {
     url = "https://github.com/catppuccin/bat/raw/6810349b28055dce54076712fc05fc68da4b8ec0/themes/Catppuccin%20Macchiato.tmTheme";
     sha256 = "sha256-EQCQ9lW5cOVp2C+zeAwWF2m1m6I0wpDQA5wejEm7WgY=";
@@ -310,7 +325,7 @@ in
       ]
       ++ [
         _7zz
-        rclone
+        rcloneWithKeychain
         ripgrep
         ruff
         # scooter  # Building from source manually
@@ -343,6 +358,7 @@ in
         (writeShellScriptBin "fr" (builtins.readFile ../tools/fr.sh))
         (writeShellScriptBin "mux-new-window" (builtins.readFile ../tools/mux-new-window.sh))
         (writeShellScriptBin "mux-send-keys" (builtins.readFile ../tools/mux-send-keys.sh))
+        secret
       ];
 
     activation = {

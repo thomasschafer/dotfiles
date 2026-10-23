@@ -27,10 +27,10 @@ for arg in "$@"; do
     esac
 done
 
-require_commands gh git jq yq curl
+require_commands gh git jq yq curl secret
 
 if [ "$dry_run" = false ] && [ "$use_todoist" = true ]; then
-    TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+    TODOIST_TOKEN=$(secret get "$TODOIST_TOKEN_SECRET")
     export TODOIST_TOKEN
     todoist_check_labels
 fi

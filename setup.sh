@@ -50,7 +50,8 @@ else
 fi
 
 if enabled enableDependabotReview; then
-    "$script_dir/dependabot-review/setup-secrets"
+    # The profile's bin directory, where `secret` is, may not be on PATH yet on a new machine.
+    PATH="$bin:$PATH" "$script_dir/dependabot-review/setup-secrets"
 fi
 
 if enabled enableTodoistBackup; then
@@ -100,6 +101,10 @@ to_do() {
     || to_do "log in to GitHub, for cloning and pushing: gh auth login"
 "$HOME/.local/bin/claude" auth status --json 2>/dev/null | jq -e '.loggedIn == true' >/dev/null 2>&1 \
     || to_do "log in to Claude Code: run claude"
+rclone_config="$("$bin/rclone" config file 2>/dev/null | tail -1)"
+if [ -f "$rclone_config" ] && ! grep -q '^RCLONE_ENCRYPT_V0:' "$rclone_config"; then
+    to_do "encrypt the rclone config, which holds its OAuth tokens in plain text: openssl rand -base64 32 | secret set rclone-config && rclone config encryption set"
+fi
 if enabled enableTailscale; then
     tailscale status >/dev/null 2>&1 || to_do "log in to Tailscale in its app"
 fi

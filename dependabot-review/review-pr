@@ -35,14 +35,14 @@ number="$2"
 [[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "invalid repo: $repo"
 [[ "$number" =~ ^[0-9]+$ ]] || die "invalid PR number: $number"
 
-require_commands gh git jq docker colima claude curl
+require_commands gh git jq docker colima claude curl secret
 if [ "$preview" = false ]; then
     if [ -z "${GH_TOKEN:-}" ]; then
-        GH_TOKEN=$(read_secret "$GITHUB_TOKEN_SECRET")
+        GH_TOKEN=$(secret get "$GITHUB_TOKEN_SECRET")
         export GH_TOKEN
     fi
     if [ -z "${TODOIST_TOKEN:-}" ]; then
-        TODOIST_TOKEN=$(read_secret "$TODOIST_TOKEN_SECRET")
+        TODOIST_TOKEN=$(secret get "$TODOIST_TOKEN_SECRET")
         export TODOIST_TOKEN
     fi
 fi

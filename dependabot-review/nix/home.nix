@@ -21,6 +21,7 @@ let
     jq
     lima
     yq-go
+    (callPackage ../../tools/secret.nix { })
   ];
   path = lib.concatStringsSep ":" [
     (lib.makeBinPath tools)
