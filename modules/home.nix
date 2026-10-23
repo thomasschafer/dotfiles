@@ -252,6 +252,7 @@ in
   imports = [
     ./agents-status.nix
     ./deploy.nix
+    ./tailscale-serve.nix
   ]
   ++ lib.optionals hostConfig.enableDependabotReview [
     ../dependabot-review/nix/home.nix

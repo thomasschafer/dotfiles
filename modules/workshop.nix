@@ -14,6 +14,14 @@ let
   background = import ./background-app.nix { inherit config lib; };
   home = config.home.homeDirectory;
   inherit (config.deploy.apps.workshop) current;
+  port = 7878;
+  workshop = pkgs.writeShellScriptBin "workshop" ''
+    if [ ! -x ${lib.escapeShellArg "${current}/workshop"} ]; then
+      echo "workshop isn't deployed yet; run: deploy workshop" >&2
+      exit 1
+    fi
+    exec ${lib.escapeShellArg "${current}/workshop"} "$@"
+  '';
   # Workshop runs the model CLIs (in ~/.local/bin), tailscale, and the toolchains solutions are
   # built with, so it needs what a login shell would find. Builds use mise for the repo's own
   # tools (Rust, Node).
@@ -31,13 +39,7 @@ in
     # For dictation, which is more accurate with code than phones' own speech recognition.
     pkgs.whisper-cpp
     # The deployed CLI, for `workshop doctor`, `workshop run` and so on.
-    (pkgs.writeShellScriptBin "workshop" ''
-      if [ ! -x ${lib.escapeShellArg "${current}/workshop"} ]; then
-        echo "workshop isn't deployed yet; run: deploy workshop" >&2
-        exit 1
-      fi
-      exec ${lib.escapeShellArg "${current}/workshop"} "$@"
-    '')
+    workshop
   ];
 
   # Workshop only writes its config on first run, and keeps choices made in the app in
@@ -46,6 +48,9 @@ in
   home.file."Library/Application Support/workshop/config.toml" = {
     force = true;
     text = ''
+      [server]
+      bind = "127.0.0.1:${toString port}"
+
       [solutions]
       dir = "${home}/Development/Personal/advent-of-code"
       commit_after_star = true
@@ -80,10 +85,21 @@ in
     '';
     agents = [ "workshop" ];
     agentNotes = ''
-      - The deployed server listens on 127.0.0.1:7878 and keeps its state in
+      - The deployed server listens on 127.0.0.1:${toString port} and keeps its state in
         `~/Library/Application Support/workshop`. `mise run dev` runs a separate copy on 7879, with
         its state in `.dev`.
+      - `workshop token --tailscale`, `mise run serve` and `workshop serve --tailscale` without
+        `--https-port` serve Workshop on HTTPS port 443, replacing the app the dotfiles serve
+        there, so don't run them here. `mise run dev --tailscale` uses its own port.
     '';
+  };
+
+  # Rather than `workshop serve --tailscale`, so every app is served the same way.
+  tailscaleServe.apps.workshop = {
+    httpsPort = 8444;
+    localPort = port;
+    # The link has the access token.
+    pathCommand = "${lib.getExe workshop} token | grep -oE '/\\?token=[^[:space:]]+'";
   };
 
   launchd.agents.workshop = background.agent {
@@ -92,7 +108,6 @@ in
     programArguments = [
       "${current}/workshop"
       "serve"
-      "--tailscale"
     ];
     workingDirectory = current;
     keepAlive = true;

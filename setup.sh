@@ -62,15 +62,6 @@ if enabled enableHealthTracking; then
     "$HOME/Development/Personal/health-tracking/scripts/setup-machine.sh"
 fi
 
-if enabled enableWorkshop; then
-    # The first switch deploys Workshop, but only warns if that fails.
-    if url="$("$bin/workshop" token --tailscale 2>/dev/null | grep -o 'https://[^ ]*token=[^ ]*')"; then
-        printf 'workshop: open %s on your phone\n' "$url"
-    else
-        printf 'workshop: not deployed; run: deploy workshop\n' >&2
-    fi
-fi
-
 # Uninstalling a formula leaves its `brew services` plist behind, so launchd keeps trying to
 # start a program that no longer exists. Warns about any such plist rather than removing it.
 for plist in "$HOME"/Library/LaunchAgents/homebrew.mxcl.*.plist /Library/LaunchDaemons/homebrew.mxcl.*.plist; do
@@ -108,7 +99,16 @@ fi
 if enabled enableTailscale; then
     tailscale status >/dev/null 2>&1 || to_do "log in to Tailscale in its app"
 fi
-if enabled enableWorkshop && [ -n "${url:-}" ]; then
+# Each app served over Tailscale (see modules/tailscale-serve.nix) with its link, or how to serve it.
+while IFS=$'\t' read -r kind subject url; do
+    case "$kind" in
+        link) printf '%s: open %s on your phone\n' "$subject" "$url" ;;
+        todo) to_do "$subject" ;;
+        *) to_do "fix tailscale-serve check, which printed: $kind" ;;
+    esac
+done < <("$bin/tailscale-serve" check || printf 'todo\tfix tailscale-serve check, which failed (above)\n')
+# The first switch deploys Workshop, but only warns if that fails, which agents-status reports.
+if enabled enableWorkshop && "$bin/workshop" token >/dev/null 2>&1; then
     # Shows only what isn't OK, such as the Advent of Code cookie or packages, with its fix.
     # ~/.local/bin, where the model CLIs are, comes first as it does for the agent.
     doctor="$(PATH="$HOME/.local/bin:$PATH" "$bin/workshop" doctor 2>&1)" || todo=1

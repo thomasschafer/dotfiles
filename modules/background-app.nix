@@ -16,6 +16,20 @@ rec {
     "/sbin"
   ];
 
+  # Where the tailscale CLI can be: in /usr/local/bin if it was installed from the Tailscale
+  # app's settings, and always inside the app.
+  tailscaleClis = [
+    "/usr/local/bin/tailscale"
+    "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+  ];
+
+  # For agents that run `tailscale`: its directories for PATH (macOS's filesystem ignores case, so
+  # `tailscale` finds the app's binary too), and the environment to run it with. The app's binary
+  # only acts as the CLI when it seems to be run from a terminal, unless TAILSCALE_BE_CLI is set,
+  # so under launchd it would otherwise try to start the app.
+  tailscalePath = map dirOf tailscaleClis;
+  tailscaleEnvironment.TAILSCALE_BE_CLI = "1";
+
   # An activation step creating the state directory, as launchd can't open log files in a
   # directory that doesn't exist yet. It's private, as logs can hold secrets such as Workshop's
   # access link.

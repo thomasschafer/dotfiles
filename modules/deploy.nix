@@ -26,6 +26,17 @@ let
     labels = map (agent: config.launchd.agents.${agent}.config.Label) app.agents;
   }) apps;
 
+  servedNote =
+    name:
+    let
+      served = config.tailscaleServe.apps.${name};
+    in
+    lib.optionalString (config.tailscaleServe.apps ? ${name}) ''
+      - The dotfiles serve it on the tailnet with Tailscale Serve, on HTTPS port
+        ${toString served.httpsPort}. Never change `tailscale serve` yourself, as other apps
+        share this Mac's address.
+    '';
+
   agentInstructions =
     name: app:
     pkgs.writeText "${name}-CLAUDE.local.md" ''
@@ -45,7 +56,7 @@ let
       - Never stop, restart or reconfigure the agents yourself, or use the deployed copy's port or
         data for development. This repo's dev commands run separately.
       - `agents-status` shows whether the agents are running, and where their logs are.
-      ${app.agentNotes}
+      ${servedNote name}${app.agentNotes}
     '';
 
   deploy = pkgs.writeShellScriptBin "deploy" ''
