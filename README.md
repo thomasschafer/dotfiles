@@ -14,7 +14,7 @@ On hosts with `enableDependabotReview`, it also installs the weekly Dependabot r
 
 On hosts with `enableTodoistBackup`, it installs the Todoist backup job and prompts you to set up its Todoist credentials and deploy key if they're missing; see [todoist-backup/README.md](todoist-backup/README.md#setup).
 
-On hosts with `enableHealthTracking` or `enableWorkshop`, it clones those repos (and, for Workshop, the advent-of-code repo it keeps solutions in), runs them in the background and serves each to your other devices with Tailscale Serve, on its own HTTPS port of the Mac's tailnet address (see [modules/tailscale-serve.nix](modules/tailscale-serve.nix)). It then prints the link to open each on your phone. Ports served by hand are left alone, as long as no app uses them.
+On hosts with `enableAlmanac`, `enableHealthTracking` or `enableWorkshop`, it clones those repos (and, for Workshop, the advent-of-code repo it keeps solutions in), runs them in the background and serves each to your other devices with Tailscale Serve, on its own HTTPS port of the Mac's tailnet address (see [modules/tailscale-serve.nix](modules/tailscale-serve.nix)). It then prints the link to open each on your phone. Ports served by hand are left alone, as long as no app uses them.
 
 Setup ends by checking what it can't do for you: each background service is running and served over Tailscale, you're logged in to GitHub, Claude Code and Tailscale, and `workshop doctor` is happy (the Advent of Code cookie, packages and so on). Anything missing is listed with how to fix it, so on a new machine, run `dp` again until it's quiet.
 

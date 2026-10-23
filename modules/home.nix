@@ -259,6 +259,7 @@ in
   ]
   ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ]
   ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ]
+  ++ lib.optionals hostConfig.enableAlmanac [ ./almanac.nix ]
   ++ lib.optionals hostConfig.enableTodoistBackup [ ../todoist-backup/nix/home.nix ];
 
   home = {
@@ -530,6 +531,9 @@ in
     // lib.optionalAttrs hostConfig.enableWorkshop {
       cloneWorkshop = cloneRepo { repo = "workshop"; };
       cloneAdventOfCode = cloneRepo { repo = "advent-of-code"; };
+    }
+    // lib.optionalAttrs hostConfig.enableAlmanac {
+      cloneAlmanac = cloneRepo { repo = "almanac"; };
     };
   };
 

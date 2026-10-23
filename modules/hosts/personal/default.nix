@@ -7,5 +7,6 @@
   enableDependabotReview = true;
   enableHealthTracking = true;
   enableWorkshop = true;
+  enableAlmanac = true;
   enableTodoistBackup = true;
 }
