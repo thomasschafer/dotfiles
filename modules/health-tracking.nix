@@ -66,6 +66,10 @@ in
   tailscaleServe.apps.health-tracking = {
     httpsPort = 8443;
     localPort = port;
+    link = {
+      name = "Health";
+      description = "Blood pressure and other health tracking";
+    };
   };
 
   launchd.agents = {

@@ -14,6 +14,10 @@ let
   home = config.home.homeDirectory;
   inherit (config.deploy.apps.almanac) current;
   port = 8790;
+  # The other served apps, for the index to link to.
+  links = lib.mapAttrsToList (_: app: app.link // { inherit (app) httpsPort; }) (
+    lib.filterAttrs (name: app: name != "almanac" && app.link != null) config.tailscaleServe.apps
+  );
   binPath = lib.makeBinPath [
     pkgs.nodejs_26
     pkgs.git
@@ -57,6 +61,7 @@ in
     path = [ binPath ] ++ background.tailscalePath;
     environment = background.tailscaleEnvironment // {
       ALMANAC_PORT = toString port;
+      ALMANAC_LINKS = builtins.toJSON links;
     };
   };
 }

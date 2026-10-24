@@ -98,6 +98,10 @@ in
   tailscaleServe.apps.workshop = {
     httpsPort = 8444;
     localPort = port;
+    link = {
+      name = "Workshop";
+      description = "Advent of Code by voice, from your phone";
+    };
     # The link has the access token.
     pathCommand = "${lib.getExe workshop} token | grep -oE '/\\?token=[^[:space:]]+'";
   };

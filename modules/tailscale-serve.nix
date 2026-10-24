@@ -61,6 +61,24 @@ in
             type = types.port;
             description = "The port the app listens on, on 127.0.0.1.";
           };
+          link = mkOption {
+            type = types.nullOr (
+              types.submodule {
+                options = {
+                  name = mkOption {
+                    type = types.str;
+                    description = "The app's name, as shown to people.";
+                  };
+                  description = mkOption {
+                    type = types.str;
+                    description = "One line on what the app is for.";
+                  };
+                };
+              }
+            );
+            default = null;
+            description = "How Almanac's index links to the app, or null to leave it out.";
+          };
           pathCommand = mkOption {
             type = types.nullOr types.str;
             default = null;
