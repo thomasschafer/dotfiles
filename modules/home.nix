@@ -260,6 +260,7 @@ in
   ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ]
   ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ]
   ++ lib.optionals hostConfig.enableAlmanac [ ./almanac.nix ]
+  ++ lib.optionals hostConfig.enableOvis [ ./ovis.nix ]
   ++ lib.optionals hostConfig.enableTodoistBackup [ ../todoist-backup/nix/home.nix ];
 
   home = {

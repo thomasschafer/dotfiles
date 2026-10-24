@@ -16,6 +16,8 @@ On hosts with `enableTodoistBackup`, it installs the Todoist backup job and prom
 
 On hosts with `enableAlmanac`, `enableHealthTracking` or `enableWorkshop`, it clones those repos (and, for Workshop, the advent-of-code repo it keeps solutions in), runs them in the background and serves each to your other devices with Tailscale Serve, on its own HTTPS port of the Mac's tailnet address (see [modules/tailscale-serve.nix](modules/tailscale-serve.nix)). It then prints the link to open each on your phone. Ports served by hand are left alone, as long as no app uses them.
 
+On hosts with `enableOvis`, it installs [Ovis](https://github.com/devswha/ovis) as a herdr plugin, to use herdr's agents and terminals from your phone, and serves it the same way. It's pinned to a release in [modules/ovis.nix](modules/ovis.nix), which says how to update it; don't use Update in the app. On your phone, add its link to the home screen, then turn on alerts from the ⋯ menu.
+
 Setup ends by checking what it can't do for you: each background service is running and served over Tailscale, you're logged in to GitHub, Claude Code and Tailscale, and `workshop doctor` is happy (the Advent of Code cookie, packages and so on). Anything missing is listed with how to fix it, so on a new machine, run `dp` again until it's quiet.
 
 ### What setup can't check

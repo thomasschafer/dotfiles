@@ -55,6 +55,11 @@ in
       description = "Whether to run Almanac in the background (see modules/almanac.nix).";
     };
 
+    enableOvis = mkOption {
+      type = types.bool;
+      description = "Whether to install Ovis, to use herdr from my phone (see modules/ovis.nix).";
+    };
+
     enableTodoistBackup = mkOption {
       type = types.bool;
       description = "Whether to back up Todoist every few hours (see todoist-backup/README.md).";

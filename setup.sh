@@ -107,6 +107,12 @@ while IFS=$'\t' read -r kind subject url; do
         *) to_do "fix tailscale-serve check, which printed: $kind" ;;
     esac
 done < <("$bin/tailscale-serve" check || printf 'todo\tfix tailscale-serve check, which failed (above)\n')
+# Ovis starts with herdr once installed, and the switch only warns if installing it fails.
+if enabled enableOvis; then
+    while IFS= read -r problem; do
+        to_do "$problem"
+    done < <("$bin/ovis-check" || echo "fix ovis-check, which failed (above)")
+fi
 # The first switch deploys Workshop, but only warns if that fails, which agents-status reports.
 if enabled enableWorkshop && "$bin/workshop" token >/dev/null 2>&1; then
     # Shows only what isn't OK, such as the Advent of Code cookie or packages, with its fix.
