@@ -372,6 +372,14 @@ in
         hash -r
       '';
 
+      # Activation runs without the CA certificates a login shell gets from Nix's profile, so
+      # Nix's git, curl, cargo and npm can't verify HTTPS servers. Every step that downloads
+      # anything runs after writeBoundary, so this gives them all Nix's bundle.
+      exportCaCertificates = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
+        export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        export NIX_SSL_CERT_FILE="$SSL_CERT_FILE"
+      '';
+
       installTy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/ty" ]; then
           $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install ty@latest

@@ -109,8 +109,7 @@ in
 
   # Installing builds the plugin and downloads its dependencies, so a failure (such as being
   # offline) only warns, and ovis-check reports it. It runs once the env file is linked and Bun
-  # is in the profile, as herdr may start the plugin with its own PATH. Activation has no CA
-  # certificates of its own, so git and Bun are given Nix's.
+  # is in the profile, as herdr may start the plugin with its own PATH.
   home.activation.installOvis =
     lib.hm.dag.entryAfter
       [
@@ -121,8 +120,7 @@ in
       ''
         installed="$(${installedCommit})"
         if [ "$installed" != ${commit} ]; then
-          certs=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-          if $DRY_RUN_CMD env SSL_CERT_FILE="$certs" NIX_SSL_CERT_FILE="$certs" PATH="${
+          if $DRY_RUN_CMD env PATH="${
             lib.makeBinPath [
               pkgs.bun
               pkgs.nodejs
