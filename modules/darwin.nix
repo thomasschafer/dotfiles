@@ -21,18 +21,6 @@
     "3bd68ef979a42070a44f8d82c205cfd8e8cca425d91253ec2c10a88179bb34aa"
   ];
 
-  # The Determinate-managed nix.conf adds FlakeHub Cache as a substituter after including
-  # nix.custom.conf, so it can't be removed there. FlakeHub Cache needs a paid FlakeHub login,
-  # which this machine doesn't have, so every substituter query warns with HTTP 401. Nix reads
-  # the XDG config files after nix.conf, letting this replace the list rather than append to it.
-  # /etc/xdg is Nix's default when XDG_CONFIG_DIRS is unset, which covers the daemon and sudo;
-  # it's added to the shell's XDG_CONFIG_DIRS so that user commands read it too. Remove this to
-  # use FlakeHub Cache after `determinate-nixd login`.
-  environment.etc."xdg/nix/nix.conf".text = ''
-    substituters = https://cache.nixos.org/
-  '';
-  environment.variables.XDG_CONFIG_DIRS = lib.mkAfter [ "/etc/xdg" ];
-
   # Deletes generations older than 30 days and the store paths only they used, which Determinate
   # Nixd's garbage collection leaves alone as they're still roots. launchd runs a missed
   # calendar job when the Mac next wakes.
