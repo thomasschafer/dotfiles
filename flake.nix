@@ -11,6 +11,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Configures Determinate Nix, which runs the Nix daemon here, from nix-darwin.
+    determinate = {
+      url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -19,6 +24,7 @@
       nix-darwin,
       nixpkgs,
       home-manager,
+      determinate,
     }:
     let
       inherit (nixpkgs) lib;
@@ -48,6 +54,7 @@
             inherit self hostConfig;
           };
           modules = [
+            determinate.darwinModules.default
             ./modules/darwin.nix
             home-manager.darwinModules.home-manager
             { users.users.${hostConfig.username}.home = /Users/${hostConfig.username}; }

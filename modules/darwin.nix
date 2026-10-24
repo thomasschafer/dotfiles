@@ -5,21 +5,21 @@
   ...
 }:
 {
-  # Determinate Nix manages the daemon and /etc/nix/nix.conf, so nix-darwin's nix.* options
-  # (including nix.settings and nix.gc) have no effect. Settings go in nix.custom.conf, which
-  # nix.conf includes.
-  nix.enable = false;
-
-  environment.etc."nix/nix.custom.conf" = {
-    text = ''
-      # Collects garbage during builds when free space drops below min-free, until max-free
-      # is free. Old generations are still roots; the nix-gc launchd job removes those.
-      min-free = ${toString (30 * 1024 * 1024 * 1024)}
-      max-free = ${toString (60 * 1024 * 1024 * 1024)}
-    '';
-    # The empty file the Determinate installer wrote, which nix-darwin may replace.
-    knownSha256Hashes = [ "3bd68ef979a42070a44f8d82c205cfd8e8cca425d91253ec2c10a88179bb34aa" ];
+  # Determinate Nix runs the daemon and owns /etc/nix/nix.conf, so nix-darwin's own nix.*
+  # options are turned off. Its module writes custom Nix settings (determinateNix.customSettings)
+  # to /etc/nix/nix.custom.conf, which nix.conf includes, and Determinate Nixd's own settings to
+  # /etc/determinate/config.json.
+  determinateNix = {
+    enable = true;
+    # Collects unreferenced store paths in the background as the disk fills. Old generations are
+    # still roots; the nix-gc launchd job below removes those.
+    determinateNixd.garbageCollector.strategy = "automatic";
   };
+
+  # The empty file the Determinate installer wrote, which nix-darwin may replace.
+  environment.etc."nix/nix.custom.conf".knownSha256Hashes = [
+    "3bd68ef979a42070a44f8d82c205cfd8e8cca425d91253ec2c10a88179bb34aa"
+  ];
 
   # The Determinate-managed nix.conf adds FlakeHub Cache as a substituter after including
   # nix.custom.conf, so it can't be removed there. FlakeHub Cache needs a paid FlakeHub login,
@@ -33,8 +33,9 @@
   '';
   environment.variables.XDG_CONFIG_DIRS = lib.mkAfter [ "/etc/xdg" ];
 
-  # Deletes generations older than 30 days and the store paths only they used. launchd runs a
-  # missed calendar job when the Mac next wakes.
+  # Deletes generations older than 30 days and the store paths only they used, which Determinate
+  # Nixd's garbage collection leaves alone as they're still roots. launchd runs a missed
+  # calendar job when the Mac next wakes.
   launchd.daemons.nix-gc = {
     command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 30d";
     # Deletes through the Nix daemon, as root would otherwise delete store paths itself, and
