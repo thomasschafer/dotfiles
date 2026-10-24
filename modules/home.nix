@@ -494,6 +494,41 @@ in
         fi
       '';
 
+      # mise's Rust backend uses ~/.cargo/bin as its bin directory, so once a repo pins Rust
+      # (as Workshop does) mise shims everything cargo installs there, and `mise activate` puts
+      # those shims ahead of the real binaries on PATH. This excludes all but rustup's proxies
+      # (cargo, rustc and so on, which are links to rustup), as mise needs those to pick a
+      # toolchain. Anything installed with cargo by hand is excluded at the next switch.
+      excludeCargoBinsFromMiseShims =
+        lib.hm.dag.entryAfter
+          [
+            "installHelix"
+            "installScooter"
+            "installHerdr"
+            "installCargoSteelLib"
+          ]
+          ''
+            mise_conf="${config.home.homeDirectory}/.config/mise/conf.d/cargo-bin-shims.toml"
+            excluded=()
+            for bin in "${cargoBin}"/*; do
+              [ -f "$bin" ] && [ -x "$bin" ] || continue
+              [ "$bin" -ef "${cargoBin}/rustup" ] || excluded+=("$(basename "$bin")")
+            done
+            if [ -z "$DRY_RUN_CMD" ]; then
+              mkdir -p "$(dirname "$mise_conf")"
+              {
+                echo "# Written by excludeCargoBinsFromMiseShims in the dotfiles' modules/home.nix on every switch."
+                echo "[settings]"
+                printf 'shims.exclude = %s\n' \
+                  "$(printf '%s\n' ''${excluded[@]+"''${excluded[@]}"} | ${pkgs.jq}/bin/jq -Rsc 'split("\n") | map(select(. != ""))')"
+              } > "$mise_conf.new"
+              mv "$mise_conf.new" "$mise_conf"
+              ${pkgs.mise}/bin/mise reshim
+            else
+              echo "Would exclude from mise's shims: ''${excluded[*]-}"
+            fi
+          '';
+
       buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
         scooter_hx_dir="${devDir}/scooter.hx"
         steel_home="${config.home.homeDirectory}/.local/share/steel"
