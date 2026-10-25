@@ -1,5 +1,6 @@
 {
   self,
+  config,
   lib,
   hostConfig,
   ...
@@ -119,13 +120,15 @@
     fi
   '';
 
-  # Homebrew stores tap trust per user. Declare it before `brew bundle` so
-  # third-party casks managed below can be installed and upgraded unattended.
+  # Homebrew stores tap trust per user. Declare it before `brew bundle` so the
+  # third-party formulae and casks managed below can be installed and upgraded unattended.
   system.activationScripts.extraActivation.text = ''
     if [ -x "/opt/homebrew/bin/brew" ]; then
-      PATH="/opt/homebrew/bin:$PATH" \
-        sudo --preserve-env=PATH --user=${hostConfig.username} --set-home env \
-        brew trust --tap nikitabobko/tap
+      for tap in ${lib.escapeShellArgs (map (tap: tap.name) config.homebrew.taps)}; do
+        PATH="/opt/homebrew/bin:$PATH" \
+          sudo --preserve-env=PATH --user=${hostConfig.username} --set-home env \
+          brew trust --tap "$tap"
+      done
     fi
   '';
 
@@ -144,6 +147,7 @@
 
     taps = [
       "nikitabobko/tap"
+      "runpod/runpodctl"
     ];
 
     casks = [
@@ -157,10 +161,12 @@
 
     # CLI tools belong in home.nix; these stay in Homebrew because nixpkgs can't
     # replace them. minimal-racket: nixpkgs' racket-minimal doesn't support macOS.
-    # zig@0.16: see zigForHerdrCandidates in home.nix.
+    # zig@0.16: see zigForHerdrCandidates in home.nix. runpodctl: nixpkgs' lags a major
+    # version behind, which the Runpod plugin for Claude Code's skills don't cover.
     brews = [
       "minimal-racket"
       "zig@0.16"
+      "runpod/runpodctl/runpodctl"
     ];
   };
 }
