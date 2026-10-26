@@ -11,7 +11,7 @@ readonly CITRIX_MAIN_WORKSPACE=Q CITRIX_IB_WORKSPACE=W CITRIX_LAUNCHPAD_WORKSPAC
 
 notify_error() {
     osascript -e 'on run {message, title}' -e 'display notification message with title title' -e 'end run' \
-        "$1" "AeroSpace $SCRIPT_NAME script" || true
+        -- "$1" "AeroSpace $SCRIPT_NAME script" || true
 }
 # Command substitutions inherit the trap (set -E) and a failure in one is reported again by the
 # command using it, so only report from the main shell. Bash 3.2 reports the line of the enclosing

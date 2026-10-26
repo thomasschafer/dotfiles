@@ -153,7 +153,7 @@ window_size() {
                 current = size();
             }
             return current;
-        }' "$1" "${2:-}" "${3:-0}" "$CITRIX_APP_ID"
+        }' -- "$1" "${2:-}" "${3:-0}" "$CITRIX_APP_ID"
 }
 
 # Prints the mouse position as "<x> <y>" in global display coordinates
@@ -182,7 +182,7 @@ move_mouse_to() {
                 }
             }
             return "off-screen";
-        }' "$1" "$2")
+        }' -- "$1" "$2")
     case $result in
         moved) ;;
         off-screen) aerospace move-mouse monitor-force-center ;;
@@ -280,10 +280,12 @@ refresh_window_sizes() {
 
     wait_for_windows_to_settle
     route_windows_once
-    nudge_tiled_windows
+    # Recorded before nudging, as focus changes start a refresh for a layout that isn't recorded, so
+    # a failing nudge would otherwise repeatedly pull focus to Citrix windows
     if [[ -n $LAYOUT_STAMP ]]; then
         echo "$LAYOUT_STAMP" >"$REFRESHED_LAYOUT_FILE"
     fi
+    nudge_tiled_windows
     trace "Refreshed window sizes"
 }
 
