@@ -1,4 +1,6 @@
 onboarding = false
+# Settings for this machine only, kept out of this repo. Skipped if missing.
+include = ["config.local.toml"]
 
 [ui]
 agent_panel_sort = "priority"
