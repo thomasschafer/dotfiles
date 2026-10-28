@@ -1,0 +1,6 @@
+# The identity for commits to my own repos. Machines where that isn't the default identity
+# can include this for just those repos.
+
+[user]
+	name = Thomas Schafer
+	email = thomasschafer97@gmail.com

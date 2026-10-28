@@ -592,17 +592,16 @@ in
     # `git config --global`, such as `gh auth setup-git`. Git reads both.
     git = {
       enable = true;
-      includes = [ { path = ../git/shared.gitconfig; } ];
+      includes = [
+        { path = ../git/shared.gitconfig; }
+        { path = ../git/identity.gitconfig; }
+      ];
       signing = {
         format = "ssh";
         key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub";
         signByDefault = true;
       };
       settings = {
-        user = {
-          name = "Thomas Schafer";
-          email = "thomasschafer97@gmail.com";
-        };
         gpg.ssh.allowedSignersFile = "${config.home.homeDirectory}/.ssh/allowed_signers";
       };
     };
