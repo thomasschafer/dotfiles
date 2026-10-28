@@ -17,8 +17,10 @@ if [[ -f $HOME/Development/Personal/zshelix/zshelix.plugin.zsh ]]; then
     source $HOME/Development/Personal/zshelix/zshelix.plugin.zsh
 fi
 
-# Note: compinit is run by Nix's /etc/zshrc. If we stop using Nix, add back:
-# autoload -Uz compinit && compinit -C
+# Tab-completion. Nix's /etc/zshrc already runs compinit on machines managed by nix-darwin.
+if ! command -v darwin-rebuild &>/dev/null; then
+    autoload -Uz compinit && compinit -C
+fi
 
 # Claude config
 export CLAUDE_CODE_NO_FLICKER=1
