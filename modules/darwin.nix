@@ -90,6 +90,8 @@
       InitialKeyRepeat = 15;
       KeyRepeat = 2;
       AppleInterfaceStyle = "Dark";
+      # Tab moves focus between all controls, not just text fields and lists.
+      AppleKeyboardUIMode = 2;
     };
 
     menuExtraClock = {
