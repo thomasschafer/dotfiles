@@ -336,6 +336,8 @@ in
         shellcheck
         sqlfluff
         taplo
+        # herdr's system notifications use it when present, so clicking one focuses the terminal
+        terminal-notifier
         tree
         typescript-language-server
         uv
