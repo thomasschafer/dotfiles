@@ -158,10 +158,8 @@ let
     '';
   };
 
-  catppuccinMacchiatoTheme = pkgs.fetchurl {
-    url = "https://github.com/catppuccin/bat/raw/6810349b28055dce54076712fc05fc68da4b8ec0/themes/Catppuccin%20Macchiato.tmTheme";
-    sha256 = "sha256-EQCQ9lW5cOVp2C+zeAwWF2m1m6I0wpDQA5wejEm7WgY=";
-  };
+  catppuccin = builtins.fromTOML (builtins.readFile ../catppuccin.toml);
+  catppuccinMacchiatoTheme = pkgs.fetchurl catppuccin.tmtheme;
 
   files = {
     ".claude/CLAUDE.md".source = ../agents/shared.md;
@@ -172,6 +170,9 @@ let
 
     # Atuin
     ".config/atuin/config.toml".source = ../atuin/config.toml;
+
+    # Bat
+    ".config/bat/config".source = ../bat/config;
 
     # Biome
     ".config/biome/biome.json".source = ../biome/biome.json;
@@ -207,10 +208,7 @@ let
 
     # Yazi
     ".config/yazi/yazi.toml".source = ../yazi/yazi.toml;
-    ".config/yazi/theme.toml".source = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/catppuccin/yazi/fc69d6472d29b823c4980d23186c9c120a0ad32c/themes/macchiato/catppuccin-macchiato-blue.toml";
-      sha256 = "sha256-FboUSmRYx7z+orHnf1xS4EFpJOnvalR7OeivbrJKH4s=";
-    };
+    ".config/yazi/theme.toml".source = pkgs.fetchurl catppuccin.yazi;
     ".config/yazi/Catppuccin-macchiato.tmTheme".source = catppuccinMacchiatoTheme;
 
     # Zshrc
@@ -220,6 +218,9 @@ let
     ".npmrc".text = ''
       prefix=${config.home.homeDirectory}/.local
     '';
+
+    # Git
+    ".config/git/ignore".source = ../git/ignore;
 
     # Direnv
     ".config/direnv/direnv.toml".text = ''
@@ -292,6 +293,7 @@ in
         }))
         biome
         colima
+        delta
         delve
         direnv
         docker-client
@@ -590,10 +592,7 @@ in
     # `git config --global`, such as `gh auth setup-git`. Git reads both.
     git = {
       enable = true;
-      ignores = [
-        "**/.claude/settings.local.json"
-        "CLAUDE.local.md"
-      ];
+      includes = [ { path = ../git/shared.gitconfig; } ];
       signing = {
         format = "ssh";
         key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub";
@@ -605,25 +604,11 @@ in
           email = "thomasschafer97@gmail.com";
         };
         gpg.ssh.allowedSignersFile = "${config.home.homeDirectory}/.ssh/allowed_signers";
-        rerere.enabled = true;
-      };
-    };
-
-    delta = {
-      enable = true;
-      enableGitIntegration = true;
-      options = {
-        line-numbers = true;
-        navigate = true;
-        syntax-theme = "Catppuccin Macchiato";
       };
     };
 
     bat = {
       enable = true;
-      config = {
-        theme = "Catppuccin Macchiato";
-      };
       themes = {
         "Catppuccin Macchiato" = {
           src = catppuccinMacchiatoTheme;

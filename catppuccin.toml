@@ -1,0 +1,11 @@
+# Catppuccin Macchiato themes, fetched by modules/home.nix and by setup scripts on machines
+# without Nix.
+
+# For bat, delta (through bat), scooter and yazi's previews.
+[tmtheme]
+url = "https://github.com/catppuccin/bat/raw/6810349b28055dce54076712fc05fc68da4b8ec0/themes/Catppuccin%20Macchiato.tmTheme"
+sha256 = "sha256-EQCQ9lW5cOVp2C+zeAwWF2m1m6I0wpDQA5wejEm7WgY="
+
+[yazi]
+url = "https://raw.githubusercontent.com/catppuccin/yazi/fc69d6472d29b823c4980d23186c9c120a0ad32c/themes/macchiato/catppuccin-macchiato-blue.toml"
+sha256 = "sha256-FboUSmRYx7z+orHnf1xS4EFpJOnvalR7OeivbrJKH4s="

@@ -1,0 +1,17 @@
+# Git settings shared by every machine, included by each machine's own git config, which sets
+# the identity and anything else that differs between machines. This repo is public, so only
+# generic settings belong here.
+
+[rerere]
+	enabled = true
+
+[core]
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	line-numbers = true
+	navigate = true
+	syntax-theme = Catppuccin Macchiato
