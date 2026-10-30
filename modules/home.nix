@@ -18,7 +18,9 @@ let
         ${pkgs.bash}/bin/bash ${../ghostty/build-config.sh} ${../ghostty/config.template} > $out
       '';
 
-  # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds.
+  # Shell snippet to set up CC, SDKROOT, and PATH for cargo builds. Run it in a subshell:
+  # activation steps share one shell, and later ones (setupLaunchAgents) need GNU tools
+  # ahead of /usr/bin on PATH.
   # extraPathPrefix: colon-separated paths to prepend before the common entries.
   cargoBuildEnv =
     extraPathPrefix:
@@ -82,16 +84,20 @@ let
         head_commit=$(${pkgs.git}/bin/git -C "${repoDir}" rev-parse HEAD)
         built_commit=$(cat "${builtCommitFile}" 2>/dev/null || true)
         if [ ! -e "${installedPath}" ] || [ "$head_commit" != "$built_commit" ]; then
-          ${preBuild}
-          cd "${repoDir}"
-          ${cargoBuildEnv ""}
-          ${build}
-          if [ -z "$DRY_RUN_CMD" ]; then
-            mkdir -p "$(dirname "${builtCommitFile}")"
-            echo "$head_commit" > "${builtCommitFile}"
-            echo "Built ${name} from ${repo} at $head_commit; anything already running ${name} keeps the old build until restarted"
-            ${afterBuild}
-          fi
+          # A subshell, so the build's cd and environment don't leak into later activation
+          # steps (setupLaunchAgents needs GNU readlink first on PATH).
+          (
+            ${preBuild}
+            cd "${repoDir}"
+            ${cargoBuildEnv ""}
+            ${build}
+            if [ -z "$DRY_RUN_CMD" ]; then
+              mkdir -p "$(dirname "${builtCommitFile}")"
+              echo "$head_commit" > "${builtCommitFile}"
+              echo "Built ${name} from ${repo} at $head_commit; anything already running ${name} keeps the old build until restarted"
+              ${afterBuild}
+            fi
+          )
         fi
       fi
     '';
@@ -614,9 +620,11 @@ in
         herdr_bin="${cargoBin}/herdr"
         kiosk_plugins=$("$herdr_bin" plugin list --plugin thomasschafer.herdr-kiosk --json)
         if ! printf '%s' "$kiosk_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
-          export PATH="${pkgs.curl}/bin:${pkgs.gawk}/bin:${pkgs.gnused}/bin:${pkgs.cargo}/bin:$PATH"
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD "$herdr_bin" plugin link "${devDir}/herdr-kiosk" >/dev/null
+          (
+            export PATH="${pkgs.curl}/bin:${pkgs.gawk}/bin:${pkgs.gnused}/bin:${pkgs.cargo}/bin:$PATH"
+            ${cargoBuildEnv ""}
+            $DRY_RUN_CMD "$herdr_bin" plugin link "${devDir}/herdr-kiosk" >/dev/null
+          )
         fi
       '';
 
@@ -628,8 +636,10 @@ in
 
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${cargoBin}/cargo-steel-lib" ]; then
-          ${cargoBuildEnv ""}
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
+          (
+            ${cargoBuildEnv ""}
+            $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo install cargo-steel-lib
+          )
         fi
       '';
 
@@ -677,12 +687,14 @@ in
         current_hash=$(${pkgs.coreutils}/bin/md5sum "$scooter_hx_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
         stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
         if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
-          cd "$scooter_hx_dir"
-          ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
-          # cargo steel-lib copies the library into native/, but doesn't create it.
-          $DRY_RUN_CMD mkdir -p "$steel_home/native"
-          $DRY_RUN_CMD env STEEL_HOME="$steel_home" ${pkgs.cargo}/bin/cargo steel-lib
-          echo "$current_hash" > "$scooter_hx_hash_file"
+          (
+            cd "$scooter_hx_dir"
+            ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
+            # cargo steel-lib copies the library into native/, but doesn't create it.
+            $DRY_RUN_CMD mkdir -p "$steel_home/native"
+            $DRY_RUN_CMD env STEEL_HOME="$steel_home" ${pkgs.cargo}/bin/cargo steel-lib
+            echo "$current_hash" > "$scooter_hx_hash_file"
+          )
         fi
       '';
 
