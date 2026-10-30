@@ -37,6 +37,13 @@ rex.action{
   end,
 }
 
+-- rex-kiosk's picker, as the "kiosk" action. Setup links kiosk.lua and builds rex-kiosk
+-- from its checkout.
+require("kiosk").setup{
+  command = { os.getenv("HOME") .. "/Development/Personal/rex-kiosk/target/release/rex-kiosk" },
+}
+rex.bind("cmd+p", "kiosk")
+
 -- --- Sessions (herdr workspaces) ---
 
 rex.bind("cmd+n", "session.new")

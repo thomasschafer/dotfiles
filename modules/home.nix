@@ -312,6 +312,17 @@ let
     # The same config as the herdr plugin's below.
     ".config/herdr-kiosk/config.toml".source = ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
+    # rex-kiosk: herdr-kiosk's config, with worktrees where herdr puts them so herdr and Rex
+    # share checkouts. The Lua action is linked from the checkout so it matches the build
+    # it runs.
+    ".config/rex-kiosk/config.toml".text = ''
+      ${builtins.readFile ../herdr/config/thomasschafer.herdr-kiosk/config.toml}
+      [worktrees]
+      directory = "~/.herdr/worktrees"
+    '';
+    ".config/rex/kiosk.lua".source =
+      config.lib.file.mkOutOfStoreSymlink "${devDir}/rex-kiosk/rex/kiosk.lua";
+
     # Herdr
     ".config/herdr/config.toml".source = ../herdr/config.toml;
     ".config/herdr/plugins/config/thomasschafer.herdr-kiosk/config.toml".source =
@@ -674,6 +685,23 @@ in
           )
         fi
       '';
+
+      cloneRexKiosk = cloneRepo {
+        repo = "rex-kiosk";
+        pull = true;
+      };
+
+      # rex/init.lua runs the checkout's release build.
+      buildRexKiosk = buildFromRepo {
+        repo = "rex-kiosk";
+        name = "rex-kiosk";
+        installedPath = "${devDir}/rex-kiosk/target/release/rex-kiosk";
+        after = [ "cloneRexKiosk" ];
+        build = ''
+          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+            ${pkgs.cargo}/bin/cargo build --release --locked
+        '';
+      };
 
       cloneScooterHx = cloneRepo {
         repo = "scooter.hx";
