@@ -9,6 +9,8 @@
 # (which Helix does), so it lands as literal inserted text instead of
 # running as a command. `pane send-keys` sends real per-character key
 # events instead, which Helix processes the same as actual typing.
+# `rex send` types text without bracketed paste, so Rex needs no
+# workaround.
 
 USAGE="Usage: $(basename "$0") [--close-self] <text>"
 
@@ -25,8 +27,19 @@ fi
 
 TEXT="$1"
 
+if [ -n "$REX_SESSION" ]; then
+    # Rex sets REX_BIN_DIR in its terminals, but a command Rex starts gets the
+    # login shell's PATH, which leaves it out.
+    REX="${REX_BIN_DIR:?REX_SESSION is set without REX_BIN_DIR}/rex"
+    "$REX" send -b "${HELIX_PANE:-$REX_BLOCK}" "$TEXT"$'\r' || exit 1
+    if [ "$CLOSE_SELF" = true ]; then
+        exec "$REX" block close "$REX_BLOCK"
+    fi
+    exit 0
+fi
+
 if [ -z "$HERDR_ENV" ]; then
-    echo "mux-send-keys: not running inside herdr" >&2
+    echo "mux-send-keys: not running inside herdr or Rex" >&2
     exit 1
 fi
 
