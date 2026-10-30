@@ -710,8 +710,9 @@ in
       # caffeinate used to run from this herdr plugin, before caffeinate.nix ran it for Rex
       # too. TODO: remove once every machine has switched.
       unlinkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
-        if "${cargoBin}/herdr" plugin list --plugin local.caffeinate --json \
-          | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
+        if ! caffeinate_plugins=$("${cargoBin}/herdr" plugin list --plugin local.caffeinate --json); then
+          echo "Couldn't list herdr's plugins, so the old caffeinate plugin may still be linked" >&2
+        elif printf '%s' "$caffeinate_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
           $DRY_RUN_CMD "${cargoBin}/herdr" plugin unlink local.caffeinate >/dev/null
         fi
       '';
