@@ -45,7 +45,10 @@ menuExtras = [
 
 # Rex's appearance settings, which it keeps as defaults rather than in its config file.
 ["com.superlogical.rex"]
-"Workspace.terminalFontName" = "JetBrainsMonoNL Nerd Font Mono"
+# Ghostty's font. Bold and 1px spacing stand in for its font-thicken and adjust-cell-width.
+"Workspace.terminalFontName" = "JetBrainsMono Nerd Font Mono"
+"Workspace.terminalFontStyle" = "Bold"
+"Workspace.terminalCharacterSpacing" = "1"
 "Workspace.terminalCursorStyle" = "block"
 "Workspace.tabStyle" = "vertical"
 "Workspace.sidebarPosition" = "left"
