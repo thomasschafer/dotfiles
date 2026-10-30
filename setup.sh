@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Installs Nix if needed, then switches to the nix-darwin configuration for the given
-# host. Safe to re-run; `dp` runs it after the first install.
+# host. Safe to re-run; `dp` runs it after the first install. The switch pulls the repos
+# it builds from source (see cloneRepo in modules/home.nix) unless given --no-pull.
 
 set -euo pipefail
 
@@ -10,12 +11,23 @@ host_dirs=("$hosts_dir"/*/)
 host_dirs=("${host_dirs[@]%/}")
 available_hosts=$(IFS=, ; echo "${host_dirs[*]##*/}")
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <host> (one of: $available_hosts)" >&2
+usage() {
+    echo "Usage: $0 [--no-pull] <host> (one of: $available_hosts)" >&2
     exit 1
-fi
-
-host="$1"
+}
+pull=1
+host=""
+for arg in "$@"; do
+    case "$arg" in
+        --no-pull) pull=0 ;;
+        -*) usage ;;
+        *)
+            [ -z "$host" ] || usage
+            host="$arg"
+            ;;
+    esac
+done
+[ -n "$host" ] || usage
 
 if [ ! -d "$hosts_dir/$host" ]; then
     echo "Error: unknown host '$host' (one of: $available_hosts)" >&2
@@ -41,6 +53,21 @@ enabled() {
     jq -e --arg option "$1" '.[$option] == true' <<<"$host_config" >/dev/null
 }
 bin="/etc/profiles/per-user/$USER/bin"
+
+# Shared with modules/home.nix (stateDir and the files in it), as sudo and darwin-rebuild
+# don't pass on the environment. The switch skips pulling while skip-pull exists, and
+# writes why it didn't pull a repo to pull-warnings.
+state_dir="$HOME/.local/state/dotfiles"
+skip_pull_file="$state_dir/skip-pull"
+pull_warnings_file="$state_dir/pull-warnings"
+mkdir -p "$state_dir"
+rm -f "$pull_warnings_file"
+if [ "$pull" = 1 ]; then
+    rm -f "$skip_pull_file"
+else
+    touch "$skip_pull_file"
+    trap 'rm -f "$skip_pull_file"' EXIT
+fi
 
 flake="$script_dir#$host"
 if command -v darwin-rebuild &>/dev/null; then
@@ -80,6 +107,13 @@ for plist in "$HOME"/Library/LaunchAgents/homebrew.mxcl.*.plist /Library/LaunchD
         printf '    %slaunchctl bootout %s/%s; %srm %s\n' "$sudo" "$domain" "$label" "$sudo" "$plist" >&2
     fi
 done
+
+# The switch builds whatever these checkouts have, so they may be behind their upstream.
+if [ -f "$pull_warnings_file" ]; then
+    while IFS= read -r warning; do
+        printf 'warning: %s\n' "$warning" >&2
+    done <"$pull_warnings_file"
+fi
 
 # Logins and setup a script can check, each with how to fix it. On a fresh machine, these are
 # what's left to do by hand; README.md lists what can't be checked from here.

@@ -36,28 +36,60 @@ let
   devDir = "${config.home.homeDirectory}/Development/Personal";
   cargoBin = "${config.home.homeDirectory}/.cargo/bin";
 
-  # Clones one of my repos into devDir if it isn't there yet. Existing clones are left
-  # alone so local work isn't disturbed.
+  # setup.sh reads and writes these too, so keep the paths in step with it.
+  stateDir = "${config.home.homeDirectory}/.local/state/dotfiles";
+  # Present while `dp --no-pull` runs, to skip pulling.
+  skipPullFile = "${stateDir}/skip-pull";
+  # Why checkouts weren't pulled, one per line, which setup.sh shows after the switch.
+  pullWarningsFile = "${stateDir}/pull-warnings";
+
+  pullRepoScript = pkgs.writeShellScript "pull-repo" ''
+    export PATH="${
+      lib.makeBinPath [
+        pkgs.git
+        pkgs.coreutils
+      ]
+    }:$PATH"
+    exec ${lib.getExe pkgs.bash} ${../tools/pull-repo.sh} "$@"
+  '';
+
+  # Clones one of my repos into devDir if it isn't there yet. With pull, an existing clone
+  # is fast-forwarded to its upstream (see tools/pull-repo.sh, which leaves local work
+  # alone), so the build steps after it pick up new commits. Other clones are left alone.
   cloneRepo =
     {
       repo,
       branch ? null,
       submodules ? false,
+      pull ? false,
     }:
-    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      if [ ! -d "${devDir}/${repo}" ]; then
-        $DRY_RUN_CMD mkdir -p "${devDir}"
-        $DRY_RUN_CMD ${pkgs.git}/bin/git clone ${
-          lib.optionalString (branch != null) "--branch ${branch} "
-        }${lib.optionalString submodules "--recurse-submodules "}https://github.com/thomasschafer/${repo}.git "${devDir}/${repo}"
-      fi
-    '';
+    lib.hm.dag.entryAfter [ "writeBoundary" ] (
+      ''
+        if [ ! -d "${devDir}/${repo}" ]; then
+          $DRY_RUN_CMD mkdir -p "${devDir}"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone ${
+            lib.optionalString (branch != null) "--branch ${branch} "
+          }${lib.optionalString submodules "--recurse-submodules "}https://github.com/thomasschafer/${repo}.git "${devDir}/${repo}"
+      ''
+      + lib.optionalString pull ''
+        elif [ -e "${skipPullFile}" ]; then
+          echo "Not pulling ${repo} (dp --no-pull)"
+        else
+          $DRY_RUN_CMD ${pullRepoScript} "${devDir}/${repo}" ${
+            lib.escapeShellArg (if branch == null then "" else branch)
+          } ${if submodules then "1" else "0"} "${pullWarningsFile}"
+      ''
+      + ''
+        fi
+      ''
+    );
 
   # Builds a repo cloned with cloneRepo, if what it installs (installedPath) is missing or
   # the clone's HEAD has moved since the last build, so pulling a repo and re-running setup
   # installs the matching build. Uncommitted changes don't trigger a rebuild. preBuild runs
   # first, for build-specific environment and checks; build runs in the repo with
-  # cargoBuildEnv set up, and afterBuild once the build is recorded.
+  # cargoBuildEnv set up (with extraPath ahead on PATH), and afterBuild once the build is
+  # recorded.
   buildFromRepo =
     {
       repo,
@@ -67,10 +99,11 @@ let
       build,
       preBuild ? "",
       afterBuild ? "",
+      extraPath ? "",
     }:
     let
       repoDir = "${devDir}/${repo}";
-      builtCommitFile = "${config.home.homeDirectory}/.local/state/dotfiles/built-commits/${name}";
+      builtCommitFile = "${stateDir}/built-commits/${name}";
     in
     lib.hm.dag.entryAfter after ''
       if [ ! -d "${repoDir}" ]; then
@@ -89,7 +122,7 @@ let
           (
             ${preBuild}
             cd "${repoDir}"
-            ${cargoBuildEnv ""}
+            ${cargoBuildEnv extraPath}
             ${build}
             if [ -z "$DRY_RUN_CMD" ]; then
               mkdir -p "$(dirname "${builtCommitFile}")"
@@ -487,6 +520,7 @@ in
       cloneHelix = cloneRepo {
         repo = "helix";
         branch = "steel-event-system-plus";
+        pull = true;
       };
 
       installHelix = cargoInstallFromRepo {
@@ -530,7 +564,10 @@ in
 
       cloneZshelix = cloneRepo { repo = "zshelix"; };
 
-      cloneScooter = cloneRepo { repo = "scooter"; };
+      cloneScooter = cloneRepo {
+        repo = "scooter";
+        pull = true;
+      };
 
       installScooter = cargoInstallFromRepo {
         repo = "scooter";
@@ -539,7 +576,10 @@ in
         after = [ "cloneScooter" ];
       };
 
-      cloneHerdr = cloneRepo { repo = "herdr"; };
+      cloneHerdr = cloneRepo {
+        repo = "herdr";
+        pull = true;
+      };
 
       installHerdr = cargoInstallFromRepo {
         repo = "herdr";
@@ -552,6 +592,7 @@ in
       cloneHerdrCore = cloneRepo {
         repo = "herdr-core";
         submodules = true;
+        pull = true;
       };
 
       # The Herdr app finds hc in ~/.cargo/bin. A running core keeps the old build until
@@ -571,6 +612,7 @@ in
       cloneHerdrApp = cloneRepo {
         repo = "herdr-app";
         submodules = true;
+        pull = true;
       };
 
       # The repo's installer builds ~/Applications/Herdr.app and links
@@ -602,7 +644,10 @@ in
         jqFilter = "'.[1] * .[0]'";
       };
 
-      cloneHerdrKiosk = cloneRepo { repo = "herdr-kiosk"; };
+      cloneHerdrKiosk = cloneRepo {
+        repo = "herdr-kiosk";
+        pull = true;
+      };
 
       # Both the herdr plugin and the Herdr app's mod run the checkout's release build.
       buildHerdrKiosk = buildFromRepo {
@@ -630,11 +675,20 @@ in
         fi
       '';
 
-      cloneScooterHx = cloneRepo { repo = "scooter.hx"; };
+      cloneScooterHx = cloneRepo {
+        repo = "scooter.hx";
+        pull = true;
+      };
 
-      cloneSmoothScrollHx = cloneRepo { repo = "smooth-scroll.hx"; };
+      cloneSmoothScrollHx = cloneRepo {
+        repo = "smooth-scroll.hx";
+        pull = true;
+      };
 
-      cloneHerdrSessionHx = cloneRepo { repo = "herdr-session.hx"; };
+      cloneHerdrSessionHx = cloneRepo {
+        repo = "herdr-session.hx";
+        pull = true;
+      };
 
       installCargoSteelLib = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${cargoBin}/cargo-steel-lib" ]; then
@@ -681,24 +735,25 @@ in
             fi
           '';
 
-      buildScooterHx = lib.hm.dag.entryAfter [ "cloneScooterHx" "installCargoSteelLib" ] ''
-        scooter_hx_dir="${devDir}/scooter.hx"
-        steel_home="${config.home.homeDirectory}/.local/share/steel"
-        scooter_hx_lib="$steel_home/native/libscooter_hx.dylib"
-        scooter_hx_hash_file="$steel_home/.scooter-hx-cargo-lock-hash"
-        current_hash=$(${pkgs.coreutils}/bin/md5sum "$scooter_hx_dir/Cargo.lock" 2>/dev/null | cut -d' ' -f1)
-        stored_hash=$(cat "$scooter_hx_hash_file" 2>/dev/null || true)
-        if [ -d "$scooter_hx_dir" ] && { [ ! -f "$scooter_hx_lib" ] || [ "$current_hash" != "$stored_hash" ]; }; then
-          (
-            cd "$scooter_hx_dir"
-            ${cargoBuildEnv "${cargoBin}:${pkgs.cargo}/bin"}
+      buildScooterHx =
+        let
+          steelHome = "${config.home.homeDirectory}/.local/share/steel";
+        in
+        buildFromRepo {
+          repo = "scooter.hx";
+          name = "scooter.hx";
+          installedPath = "${steelHome}/native/libscooter_hx.dylib";
+          after = [
+            "cloneScooterHx"
+            "installCargoSteelLib"
+          ];
+          extraPath = "${cargoBin}:${pkgs.cargo}/bin";
+          build = ''
             # cargo steel-lib copies the library into native/, but doesn't create it.
-            $DRY_RUN_CMD mkdir -p "$steel_home/native"
-            $DRY_RUN_CMD env STEEL_HOME="$steel_home" ${pkgs.cargo}/bin/cargo steel-lib
-            echo "$current_hash" > "$scooter_hx_hash_file"
-          )
-        fi
-      '';
+            $DRY_RUN_CMD mkdir -p "${steelHome}/native"
+            $DRY_RUN_CMD env STEEL_HOME="${steelHome}" ${pkgs.cargo}/bin/cargo steel-lib
+          '';
+        };
 
       # TODO: currently relies on raco from homebrew, should move to Nix
       installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
