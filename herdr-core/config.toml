@@ -1,0 +1,4 @@
+# Type these back into a terminal's shell when herdr-core recovers it after a
+# reboot or crash, with the same arguments. herdr-session.hx then reopens Helix's
+# files and splits for that terminal.
+restore_commands = ["hx"]

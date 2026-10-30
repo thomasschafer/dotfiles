@@ -40,20 +40,64 @@ let
     {
       repo,
       branch ? null,
+      submodules ? false,
     }:
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "${devDir}/${repo}" ]; then
         $DRY_RUN_CMD mkdir -p "${devDir}"
         $DRY_RUN_CMD ${pkgs.git}/bin/git clone ${
           lib.optionalString (branch != null) "--branch ${branch} "
-        }https://github.com/thomasschafer/${repo}.git "${devDir}/${repo}"
+        }${lib.optionalString submodules "--recurse-submodules "}https://github.com/thomasschafer/${repo}.git "${devDir}/${repo}"
       fi
     '';
 
-  # Builds and installs a crate from a repo cloned with cloneRepo, if its binary isn't
-  # installed yet or the clone's HEAD has moved since the last build, so pulling a
-  # repo and re-running setup installs the matching binary. Uncommitted changes don't
-  # trigger a rebuild. preBuild runs first, for build-specific environment and checks.
+  # Builds a repo cloned with cloneRepo, if what it installs (installedPath) is missing or
+  # the clone's HEAD has moved since the last build, so pulling a repo and re-running setup
+  # installs the matching build. Uncommitted changes don't trigger a rebuild. preBuild runs
+  # first, for build-specific environment and checks; build runs in the repo with
+  # cargoBuildEnv set up, and afterBuild once the build is recorded.
+  buildFromRepo =
+    {
+      repo,
+      name,
+      installedPath,
+      after,
+      build,
+      preBuild ? "",
+      afterBuild ? "",
+    }:
+    let
+      repoDir = "${devDir}/${repo}";
+      builtCommitFile = "${config.home.homeDirectory}/.local/state/dotfiles/built-commits/${name}";
+    in
+    lib.hm.dag.entryAfter after ''
+      if [ ! -d "${repoDir}" ]; then
+        if [ -n "$DRY_RUN_CMD" ]; then
+          echo "Would build ${name} once ${repoDir} is cloned"
+        else
+          echo "Can't build ${name}: ${repoDir} doesn't exist" >&2
+          exit 1
+        fi
+      else
+        head_commit=$(${pkgs.git}/bin/git -C "${repoDir}" rev-parse HEAD)
+        built_commit=$(cat "${builtCommitFile}" 2>/dev/null || true)
+        if [ ! -e "${installedPath}" ] || [ "$head_commit" != "$built_commit" ]; then
+          ${preBuild}
+          cd "${repoDir}"
+          ${cargoBuildEnv ""}
+          ${build}
+          if [ -z "$DRY_RUN_CMD" ]; then
+            mkdir -p "$(dirname "${builtCommitFile}")"
+            echo "$head_commit" > "${builtCommitFile}"
+            echo "Built ${name} from ${repo} at $head_commit; anything already running ${name} keeps the old build until restarted"
+            ${afterBuild}
+          fi
+        fi
+      fi
+    '';
+
+  # Builds and installs a crate from a repo cloned with cloneRepo with `cargo install` (see
+  # buildFromRepo for when).
   cargoInstallFromRepo =
     {
       repo,
@@ -61,40 +105,26 @@ let
       bin,
       after,
       preBuild ? "",
+      afterBuild ? "",
     }:
-    let
-      repoDir = "${devDir}/${repo}";
-      builtCommitFile = "${config.home.homeDirectory}/.local/state/dotfiles/built-commits/${bin}";
-    in
-    lib.hm.dag.entryAfter after ''
-      if [ ! -d "${repoDir}" ]; then
-        if [ -n "$DRY_RUN_CMD" ]; then
-          echo "Would build ${bin} once ${repoDir} is cloned"
-        else
-          echo "Can't build ${bin}: ${repoDir} doesn't exist" >&2
-          exit 1
-        fi
-      else
-        head_commit=$(${pkgs.git}/bin/git -C "${repoDir}" rev-parse HEAD)
-        built_commit=$(cat "${builtCommitFile}" 2>/dev/null || true)
-        if [ ! -x "${cargoBin}/${bin}" ] || [ "$head_commit" != "$built_commit" ]; then
-          ${preBuild}
-          cd "${repoDir}"
-          $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
-          ${cargoBuildEnv ""}
-          # Pin rustc to the one cargo comes with: a rustup proxy earlier on PATH would
-          # pick a toolchain per directory, from the repo's rust-toolchain.toml or the
-          # default, so one build would mix rustc versions.
-          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
-            ${pkgs.cargo}/bin/cargo install --path ${cratePath} --locked
-          if [ -z "$DRY_RUN_CMD" ]; then
-            mkdir -p "$(dirname "${builtCommitFile}")"
-            echo "$head_commit" > "${builtCommitFile}"
-            echo "Built ${bin} from ${repo} at $head_commit; anything already running ${bin} keeps the old build until restarted"
-          fi
-        fi
-      fi
-    '';
+    buildFromRepo {
+      inherit
+        repo
+        after
+        preBuild
+        afterBuild
+        ;
+      name = bin;
+      installedPath = "${cargoBin}/${bin}";
+      build = ''
+        $DRY_RUN_CMD ${pkgs.cargo}/bin/cargo clean
+        # Pin rustc to the one cargo comes with: a rustup proxy earlier on PATH would
+        # pick a toolchain per directory, from the repo's rust-toolchain.toml or the
+        # default, so one build would mix rustc versions.
+        $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+          ${pkgs.cargo}/bin/cargo install --path ${cratePath} --locked
+      '';
+    };
 
   # Installs an npm package globally into ~/.local, if its binary isn't installed yet.
   # Later updates are left to the tool's own updater.
@@ -107,6 +137,30 @@ let
       fi
     '';
 
+  # Merges overrides into a JSON settings file rather than owning the whole file, so the
+  # rest stays writable by the app that owns it. jqFilter combines `[existing, overrides]`
+  # (read with `jq -s`); the existing file is `{}` on first run.
+  mergeJsonSettings =
+    {
+      target,
+      overrides,
+      jqFilter,
+    }:
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      settings_file="${target}"
+      $DRY_RUN_CMD mkdir -p "$(dirname "$settings_file")"
+      base=$(${pkgs.coreutils}/bin/mktemp)
+      if [ -f "$settings_file" ]; then
+        ${pkgs.coreutils}/bin/cat "$settings_file" > "$base"
+      else
+        echo '{}' > "$base"
+      fi
+      merged=$(${pkgs.coreutils}/bin/mktemp)
+      ${pkgs.jq}/bin/jq -s ${jqFilter} "$base" ${overrides} > "$merged"
+      $DRY_RUN_CMD ${pkgs.coreutils}/bin/mv "$merged" "$settings_file"
+      ${pkgs.coreutils}/bin/rm -f "$base"
+    '';
+
   # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
   # crates/ghostty-vt/build.rs in herdr). nixpkgs' Zig can't link against the
   # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula, or
@@ -116,6 +170,23 @@ let
     "/opt/homebrew/opt/zig@0.16/bin/zig"
     "${config.home.homeDirectory}/.local/share/zig/0.16.0/zig"
   ];
+
+  # Exports ZIG for the herdr builds (herdr, herdr-core and the Herdr app all vendor
+  # libghostty-vt).
+  exportZigForHerdr = name: ''
+    ZIG=""
+    for candidate in ${lib.escapeShellArgs zigForHerdrCandidates}; do
+      if [ -x "$candidate" ]; then
+        ZIG="$candidate"
+        break
+      fi
+    done
+    if [ -z "$ZIG" ]; then
+      echo "${name}: Zig 0.16 not found at any of: ${lib.concatStringsSep " " zigForHerdrCandidates}" >&2
+      exit 1
+    fi
+    export ZIG
+  '';
 
   helixConfig =
     pkgs.runCommand "helix-config"
@@ -186,6 +257,21 @@ let
     ".config/helix/themes".source = ../helix/themes;
     ".config/helix/init.scm".source = ../helix/init.scm;
     ".config/helix/cogs/keymaps.scm".source = ../helix/cogs/keymaps.scm;
+
+    # herdr-core
+    ".config/herdr-core/config.toml".source = ../herdr-core/config.toml;
+
+    # Herdr app (settings.json is merged by setHerdrAppSettings, as the app writes to it)
+    ".config/herdr-app/keys.json".source = ../herdr-app/keys.json;
+    ".config/herdr-app/layouts/compact.json".source = ../herdr-app/layouts/compact.json;
+    ".config/herdr-app/themes/catppuccin-macchiato.json".source =
+      ../herdr-app/themes/catppuccin-macchiato.json;
+    # Linked from the checkout rather than the store: the mod finds kiosk's binary beside
+    # it, and the app writes typings into mod folders.
+    ".config/herdr-app/mods/kiosk".source =
+      config.lib.file.mkOutOfStoreSymlink "${devDir}/herdr-kiosk/herdr-app/kiosk";
+    # The same config as the herdr plugin's below.
+    ".config/herdr-kiosk/config.toml".source = ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
     # Herdr
     ".config/herdr/config.toml".source = ../herdr/config.toml;
@@ -421,26 +507,13 @@ in
         fi
       '';
 
-      # Merge our overrides into settings.json rather than owning the whole
-      # file, so the rest stays writable by Claude Code. The desired keys live
-      # in claude/settings-overrides.json, and claude/merge-settings.jq says
-      # how they combine; the if only picks the base to merge onto (existing
-      # file, or an empty object on first run).
-      setClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        claude_dir="${config.home.homeDirectory}/.claude"
-        claude_settings="$claude_dir/settings.json"
-        $DRY_RUN_CMD mkdir -p "$claude_dir"
-        base=$(${pkgs.coreutils}/bin/mktemp)
-        if [ -f "$claude_settings" ]; then
-          ${pkgs.coreutils}/bin/cat "$claude_settings" > "$base"
-        else
-          echo '{}' > "$base"
-        fi
-        merged=$(${pkgs.coreutils}/bin/mktemp)
-        ${pkgs.jq}/bin/jq -s -f ${../claude/merge-settings.jq} "$base" ${../claude/settings-overrides.json} > "$merged"
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mv "$merged" "$claude_settings"
-        ${pkgs.coreutils}/bin/rm -f "$base"
-      '';
+      # The desired keys live in claude/settings-overrides.json, and
+      # claude/merge-settings.jq says how they combine.
+      setClaudeSettings = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.claude/settings.json";
+        overrides = ../claude/settings-overrides.json;
+        jqFilter = "-f ${../claude/merge-settings.jq}";
+      };
 
       installOpenCode = npmInstall {
         bin = "opencode";
@@ -465,27 +538,79 @@ in
         cratePath = ".";
         bin = "herdr";
         after = [ "cloneHerdr" ];
-        preBuild = ''
-          ZIG=""
-          for candidate in ${lib.escapeShellArgs zigForHerdrCandidates}; do
-            if [ -x "$candidate" ]; then
-              ZIG="$candidate"
-              break
-            fi
-          done
-          if [ -z "$ZIG" ]; then
-            echo "installHerdr: Zig 0.16 not found at any of: ${lib.concatStringsSep " " zigForHerdrCandidates}" >&2
-            exit 1
-          fi
-          export ZIG
+        preBuild = exportZigForHerdr "installHerdr";
+      };
+
+      cloneHerdrCore = cloneRepo {
+        repo = "herdr-core";
+        submodules = true;
+      };
+
+      # The Herdr app finds hc in ~/.cargo/bin. A running core keeps the old build until
+      # `hc server restart`, which keeps its terminals running; it isn't restarted here as
+      # it would inherit this activation's environment.
+      installHerdrCore = cargoInstallFromRepo {
+        repo = "herdr-core";
+        cratePath = "crates/herdr-core";
+        bin = "herdr-core";
+        after = [ "cloneHerdrCore" ];
+        preBuild = exportZigForHerdr "installHerdrCore";
+        afterBuild = ''
+          ln -sfn herdr-core "${cargoBin}/hc"
         '';
+      };
+
+      cloneHerdrApp = cloneRepo {
+        repo = "herdr-app";
+        submodules = true;
+      };
+
+      # The repo's installer builds ~/Applications/Herdr.app and links
+      # ~/.local/bin/herdr-app to it. The app's Info.plist gets the PATH it runs with.
+      installHerdrApp = buildFromRepo {
+        repo = "herdr-app";
+        name = "herdr-app";
+        installedPath = "${config.home.homeDirectory}/Applications/Herdr.app/Contents/MacOS/Herdr";
+        after = [ "cloneHerdrApp" ];
+        preBuild = exportZigForHerdr "installHerdrApp";
+        build = ''
+          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+            PATH="${pkgs.cargo}/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+            /bin/bash scripts/install-macos
+        '';
+      };
+
+      setHerdrAppSettings = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.config/herdr-app/settings.json";
+        overrides = ../herdr-app/settings-overrides.json;
+        jqFilter = "'.[0] * .[1]'";
+      };
+
+      # Defaults for the app's shared state on first run: skip the welcome and show the
+      # compact layout. Anything the app has already set wins, so switching layout sticks.
+      setHerdrAppSharedDefaults = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.config/herdr-app/shared.json";
+        overrides = ../herdr-app/shared-defaults.json;
+        jqFilter = "'.[1] * .[0]'";
       };
 
       cloneHerdrKiosk = cloneRepo { repo = "herdr-kiosk"; };
 
+      # Both the herdr plugin and the Herdr app's mod run the checkout's release build.
+      buildHerdrKiosk = buildFromRepo {
+        repo = "herdr-kiosk";
+        name = "herdr-kiosk";
+        installedPath = "${devDir}/herdr-kiosk/target/release/herdr-kiosk";
+        after = [ "cloneHerdrKiosk" ];
+        build = ''
+          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+            ${pkgs.cargo}/bin/cargo build --release --locked
+        '';
+      };
+
       # Linking runs the plugin's build step, which downloads a release binary
       # (or builds from source), so only link when the plugin is missing.
-      linkHerdrKiosk = lib.hm.dag.entryAfter [ "installHerdr" "cloneHerdrKiosk" ] ''
+      linkHerdrKiosk = lib.hm.dag.entryAfter [ "installHerdr" "buildHerdrKiosk" ] ''
         herdr_bin="${cargoBin}/herdr"
         kiosk_plugins=$("$herdr_bin" plugin list --plugin thomasschafer.herdr-kiosk --json)
         if ! printf '%s' "$kiosk_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
@@ -519,6 +644,7 @@ in
             "installHelix"
             "installScooter"
             "installHerdr"
+            "installHerdrCore"
             "installCargoSteelLib"
           ]
           ''
