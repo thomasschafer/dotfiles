@@ -26,6 +26,8 @@ Give the reviewer exact commands for the requested changes:
 
 Do not assume `origin/main`, a clean tree, or committed changes. For multiple repositories, run from a common parent and use absolute `git -C <repo>` commands. Include relevant product context, companion repository paths or MCP sources, and contract owners.
 
+A review is only valid if the reviewer was able to read all the context relevant to the change, including code outside the reviewed repository such as companion repositories, dependencies, MCP sources and contract owners. A reviewer that cannot reach that context will miss issues while still sounding confident, so treat a review done without it as no review at all.
+
 ## Start the reviewer
 
 For Codex, first create and remember a unique output directory:
@@ -61,16 +63,20 @@ Product context: <purpose and constraints>.
 External context: <companion repos, MCP sources, and contract owners>.
 Review scope: <exact branch and/or working-tree commands>.
 
+While reviewing, read all context relevant to the change, including external code (companion repositories, dependencies, MCP sources, contract owners) and anything else the change interacts with. If you cannot access any of it, for example because a tool call fails, is denied or is sandboxed, or a path, repository or MCP server is unavailable, do not continue the review and do not report findings based on partial context. Instead, list exactly what you could not access, the command or tool you tried, and the error, then end with STATUS: blocked.
+
 Review for correctness, regressions, edge cases, maintainability, integration behavior, and missing verification. Verify external contracts at their authoritative source rather than trusting local types, tests, comments, or documentation alone. Do not run tests, linting or formatting for the sake of it: run targeted tests when useful to investigate an issue, but do not duplicate routine CI without a clear reason.
 
 Number findings F1, F2, ... with severity, evidence, and a recommendation. Judge the author's later responses on their merits: concede when the author is right and hold firm when not.
 
-End with exactly one line: STATUS: issues-remaining or STATUS: consensus
+End with exactly one line: STATUS: issues-remaining, STATUS: consensus, or STATUS: blocked
 ```
 
 Do not seed the reviewer with your suspected findings or intended fixes.
 
 ## Iterate
+
+After every reviewer turn, check its full output as well as its final message for failed, denied or sandboxed tool calls, and for unavailable repositories, paths or MCP servers. If the reviewer reports `STATUS: blocked`, or you see it could not read relevant context even though it did not say so, abort the loop immediately: do not adjudicate its findings, do not paste the missing context in yourself as a workaround, and do not continue with a degraded review. Report to the user what the reviewer could not access and the errors, so the underlying problem can be fixed before the review is re-run.
 
 For each finding, decide whether you agree, implement agreed fixes in the working tree, and reply by finding number. Include what changed or why you disagree, then ask the reviewer to re-run the exact current review commands.
 
@@ -94,7 +100,8 @@ When needed, use `codex --ask-for-approval on-request exec resume ...`. Point th
 
 ## Finish
 
-- Stop at `STATUS: consensus` when you also have no unresolved disagreement.
+- Stop at `STATUS: consensus` when you also have no unresolved disagreement, and only if the reviewer had access to all relevant context in every round.
+- Abort at `STATUS: blocked` or any other sign the reviewer could not read relevant context, as described above. Report the review as invalid, not as consensus or partial results.
 - Stop after 5 rounds, or when one finding has stalled twice; report both positions and your recommendation without claiming consensus.
 - Never claim consensus was reached if it was not, and never silently drop a finding you did not fix.
 - Remove the temporary output directory.
