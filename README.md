@@ -18,7 +18,7 @@ On hosts with `enableAlmanac`, `enableHealthTracking` or `enableWorkshop`, it cl
 
 On hosts with `enableOvis`, it installs [Ovis](https://github.com/devswha/ovis) as a herdr plugin, to use herdr's agents and terminals from your phone, and serves it the same way. It's pinned to a release in [modules/ovis.nix](modules/ovis.nix), which says how to update it; don't use Update in the app. On your phone, add its link to the home screen, then turn on alerts from the ⋯ menu.
 
-[Rex](https://www.superlogical.com/rex/) works alongside herdr, from the same Helix, lazygit and yazi setup. Install the beta app by hand, then re-run setup to link its config ([rex/init.lua](rex/init.lua)) and set up its skill for Claude Code, Codex and OpenCode. In the app, open the command palette and run Import Theme File with `/Applications/Ghostty.app/Contents/Resources/ghostty/themes/Catppuccin Macchiato`, and in its settings, make Option act as Alt and turn on Remote Control, which kiosk needs to switch sessions.
+[Rex](https://www.superlogical.com/rex/) works alongside herdr, from the same Helix, lazygit and yazi setup. Install the beta app by hand and open it, then re-run setup to link its config ([rex/init.lua](rex/init.lua)), apply its settings, import its theme and set up its skill for Claude Code, Codex and OpenCode. Importing the theme needs the app open, so setup says so if it isn't.
 
 Setup ends by checking what it can't do for you: each background service is running and served over Tailscale, you're logged in to GitHub, Claude Code and Tailscale, and `workshop doctor` is happy (the Advent of Code cookie, packages and so on). Anything missing is listed with how to fix it, so on a new machine, run `dp` again until it's quiet.
 

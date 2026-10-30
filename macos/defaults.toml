@@ -50,3 +50,7 @@ menuExtras = [
 "Workspace.tabStyle" = "vertical"
 "Workspace.sidebarPosition" = "left"
 "Workspace.paneDensity" = "compact"
+"Workspace.terminalOptionKeyBehavior" = "actsAsAlt"
+# Lets the rex CLI ask the app to act, such as kiosk switching sessions and setup importing
+# the theme.
+"rex.client.remoteControl" = true
