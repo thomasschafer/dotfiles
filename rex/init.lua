@@ -37,6 +37,19 @@ rex.action{
   end,
 }
 
+-- rex-kiosk's picker, as the "kiosk" action. Setup links kiosk.lua and builds rex-kiosk
+-- from its checkout. A failed require would stop the rest of this file loading, so it's
+-- logged instead.
+local kiosk_loaded, kiosk = pcall(require, "kiosk")
+if kiosk_loaded then
+  kiosk.setup{
+    command = { os.getenv("HOME") .. "/Development/Personal/rex-kiosk/target/release/rex-kiosk" },
+  }
+  rex.bind("cmd+p", "kiosk")
+else
+  rex.log("error", "rex-kiosk isn't set up, so Cmd+P does nothing: " .. tostring(kiosk))
+end
+
 -- --- Sessions (herdr workspaces) ---
 
 rex.bind("cmd+n", "session.new")
