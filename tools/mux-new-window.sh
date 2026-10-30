@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Opens a new herdr tab, tagging it with $HELIX_PANE so tools spawned from it
-# (lazygit, yazi, etc.) can send commands back to the Helix pane that launched
-# them. Called from the Helix keybindings in helix/config.template.toml.
+# Opens a new herdr or Rex tab, tagging it with $HELIX_PANE so tools spawned
+# from it (lazygit, yazi, etc.) can send commands back to the Helix pane that
+# launched them. Called from the Helix keybindings in helix/config.template.toml.
 
 USAGE="Usage: $(basename "$0") [-e KEY=VALUE]... <command>"
 
@@ -17,8 +17,18 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
+if [ -n "$REX_SESSION" ]; then
+    # Rex sets REX_BIN_DIR in its terminals, but a command Rex starts gets the
+    # login shell's PATH, which leaves it out.
+    REX="${REX_BIN_DIR:?REX_SESSION is set without REX_BIN_DIR}/rex"
+    # rex run has no flag for the environment, so env sets it. Rex closes the
+    # tab when the command exits. Its stdout is dropped for the same reason as
+    # herdr's below.
+    exec "$REX" run -- env "HELIX_PANE=$REX_BLOCK" "${ENV_ARGS[@]}" /bin/sh -c "$*" >/dev/null
+fi
+
 if [ -z "$HERDR_ENV" ]; then
-    echo "mux-new-window: not running inside herdr" >&2
+    echo "mux-new-window: not running inside herdr or Rex" >&2
     exit 1
 fi
 

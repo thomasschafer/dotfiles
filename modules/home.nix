@@ -344,7 +344,9 @@ in
 {
   imports = [
     ./agents-status.nix
+    ./caffeinate.nix
     ./deploy.nix
+    ./rex.nix
     ./tailscale-serve.nix
   ]
   ++ lib.optionals hostConfig.enableDependabotReview [
@@ -705,11 +707,13 @@ in
         fi
       '';
 
-      # herdr snapshots the manifest and resolved store path when linking, so
-      # relink on every switch to pick up changes before old paths are GC'd.
-      linkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
-        $DRY_RUN_CMD "${cargoBin}/herdr" plugin link \
-          ${../herdr/plugins/caffeinate} >/dev/null
+      # caffeinate used to run from this herdr plugin, before caffeinate.nix ran it for Rex
+      # too. TODO: remove once every machine has switched.
+      unlinkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
+        if "${cargoBin}/herdr" plugin list --plugin local.caffeinate --json \
+          | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
+          $DRY_RUN_CMD "${cargoBin}/herdr" plugin unlink local.caffeinate >/dev/null
+        fi
       '';
     }
     // lib.optionalAttrs hostConfig.enableHealthTracking {

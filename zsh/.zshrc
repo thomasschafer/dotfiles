@@ -101,3 +101,9 @@ fi
 if command -v agents-status &>/dev/null; then
     agents-status --quiet || true
 fi
+
+# Rex puts its own rex CLI first on PATH, which the PATH changes above undo. Last, so nothing
+# goes ahead of it.
+if [[ -n "$REX_BIN_DIR" ]]; then
+    export PATH="$REX_BIN_DIR:$PATH"
+fi

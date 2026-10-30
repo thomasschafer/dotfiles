@@ -42,3 +42,11 @@ menuExtras = [
   "/System/Library/CoreServices/Menu Extras/Clock.menu",
   "/System/Library/CoreServices/Menu Extras/Volume.menu",
 ]
+
+# Rex's appearance settings, which it keeps as defaults rather than in its config file.
+["com.superlogical.rex"]
+"Workspace.terminalFontName" = "JetBrainsMonoNL Nerd Font Mono"
+"Workspace.terminalCursorStyle" = "block"
+"Workspace.tabStyle" = "vertical"
+"Workspace.sidebarPosition" = "left"
+"Workspace.paneDensity" = "compact"

@@ -1,9 +1,0 @@
-id = "local.caffeinate"
-name = "Caffeinate"
-version = "0.1.0"
-min_herdr_version = "0.9.0"
-description = "Keep caffeinate -is running in the Development workspace"
-platforms = ["macos"]
-
-[[startup]]
-command = ["sh", "start.sh"]
