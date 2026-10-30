@@ -1,8 +1,9 @@
 # Rex (superlogical.com/rex), alongside herdr. The beta app is installed by hand, as it has no
-# cask; until it is, the steps below that need its CLI skip themselves. Its appearance settings
-# are macOS defaults, in macos/defaults.toml.
+# cask; until it is, the steps below that need its CLI skip themselves. Its settings are macOS
+# defaults, in macos/defaults.toml, apart from its theme, which importThemeIntoRex adds.
 {
   config,
+  pkgs,
   lib,
   ...
 }:
@@ -17,6 +18,9 @@ let
       echo "Rex isn't installed at ${rex}, so its setup was skipped" >&2
     fi
   '';
+  themeName = "Catppuccin Macchiato";
+  # Ghostty's copy, which is also what Ghostty itself uses.
+  themeFile = "/Applications/Ghostty.app/Contents/Resources/ghostty/themes/${themeName}";
 in
 {
   home.file.".config/rex/init.lua".source = ../rex/init.lua;
@@ -34,6 +38,26 @@ in
     # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings.
     setupRexForAgents = lib.hm.dag.entryAfter [ "setClaudeSettings" ] (ifRexInstalled ''
       $DRY_RUN_CMD ${lib.escapeShellArg rex} skill setup --agent claude --agent codex --agent opencode >/dev/null
+    '');
+
+    # Rex keeps imported themes as its own resolved palettes, so this imports the theme file
+    # through the app rather than writing that format. The app has to be open, with Remote
+    # Control on (set in macos/defaults.toml), and importing selects the theme.
+    importThemeIntoRex = lib.hm.dag.entryAfter [ "writeBoundary" ] (ifRexInstalled ''
+      rex_prefs=$(${pkgs.coreutils}/bin/mktemp)
+      if /usr/bin/defaults export com.superlogical.rex "$rex_prefs" 2>/dev/null \
+        && /usr/libexec/PlistBuddy -c 'Print :Workspace.customThemes' "$rex_prefs" 2>/dev/null \
+          | /usr/bin/grep -qF '"name":"${themeName}"'; then
+        :
+      elif [ ! -f ${lib.escapeShellArg themeFile} ]; then
+        echo "Can't import Rex's theme: ${themeFile} doesn't exist (it comes with Ghostty)" >&2
+      elif ! rex_app=$(${lib.escapeShellArg rex} --autostart=false client ls --json 2>/dev/null \
+        | ${pkgs.jq}/bin/jq -er 'first(.clients[] | select(.info.kind == "app" and .principal.transport == "unix") | .client_id)'); then
+        echo "Open Rex and re-run setup to import its ${themeName} theme" >&2
+      elif ! $DRY_RUN_CMD ${lib.escapeShellArg rex} --autostart=false -C "$rex_app" do client.theme.import path=${lib.escapeShellArg themeFile} >/dev/null; then
+        echo "Importing Rex's ${themeName} theme failed (above); if Remote Control is off in Rex's settings, turn it on and re-run setup" >&2
+      fi
+      ${pkgs.coreutils}/bin/rm -f "$rex_prefs"
     '');
   };
 }
