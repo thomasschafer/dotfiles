@@ -478,6 +478,7 @@ in
         taplo
         # herdr's system notifications use it when present, so clicking one focuses the terminal
         terminal-notifier
+        tmux
         tree
         typescript-language-server
         uv
