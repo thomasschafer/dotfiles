@@ -451,6 +451,7 @@ in
         neovim
         nixfmt
         jq
+        just
         lazygit
         mise
         # Runs the npm-installed CLIs (Codex, OpenCode)
