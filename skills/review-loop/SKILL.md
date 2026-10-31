@@ -24,7 +24,7 @@ Give the reviewer exact commands for the requested changes:
 - **Working tree:** use `git diff`, `git diff --cached`, and `git status --short`, then inspect relevant untracked files.
 - **Both:** provide both sets of commands.
 
-Do not assume `origin/main`, a clean tree, or committed changes. For multiple repositories, run from a common parent and use absolute `git -C <repo>` commands. Include relevant product context, companion repository paths or MCP sources, and contract owners.
+Do not assume `origin/main`, a clean tree, or committed changes. For multiple repositories, run from a common parent and use absolute `git -C <repo>` commands; Codex refuses to run outside a git repository, so add `--skip-git-repo-check` to every `codex exec` and `codex exec resume` call there. Include relevant product context, companion repository paths or MCP sources, and contract owners.
 
 A review is only valid if the reviewer was able to read all the context relevant to the change, including code outside the reviewed repository such as companion repositories, dependencies, MCP sources and contract owners. A reviewer that cannot reach that context will miss issues while still sounding confident, so treat a review done without it as no review at all.
 
