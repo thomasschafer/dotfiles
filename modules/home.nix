@@ -176,6 +176,8 @@ let
       fi
     '';
 
+  codexConfig = import ./codex-config.nix { inherit pkgs; };
+
   # Merges overrides into a JSON settings file rather than owning the whole file, so the
   # rest stays writable by the app that owns it. jqFilter combines `[existing, overrides]`
   # (read with `jq -s`); the existing file is `{}` on first run.
@@ -551,6 +553,24 @@ in
         bin = "codex";
         package = "@openai/codex";
       };
+
+      # By default Codex runs its TUIs' sessions in one shared background server, which
+      # keeps the environment of the TUI that started it and runs every session's hooks
+      # in it, so the hooks herdr and Rex use to tie a session to its pane see the wrong
+      # pane. This stops TUIs starting that server, but they still use one that's already
+      # running, until `codex app-server daemon stop`.
+      disableCodexDaemon = lib.hm.dag.entryAfter [ "installCodex" ] ''
+        $DRY_RUN_CMD ${codexConfig}/bin/codex-config set-feature \
+          "${config.home.homeDirectory}/.codex/config.toml" daemon_auto_start false
+        if [[ ! -v DRY_RUN ]]; then
+          daemon_auto_start=$("${config.home.homeDirectory}/.local/bin/codex" features list \
+            | ${pkgs.gawk}/bin/awk '$1 == "daemon_auto_start" { print $NF }')
+          if [ "$daemon_auto_start" != false ]; then
+            echo "Codex's daemon_auto_start feature is '$daemon_auto_start' after setting it to false; Codex may have renamed it, or something else overrides it" >&2
+            exit 1
+          fi
+        fi
+      '';
 
       installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -x "${config.home.homeDirectory}/.local/bin/claude" ]; then

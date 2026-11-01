@@ -138,12 +138,13 @@ local function sql_string(value)
   return "'" .. value:gsub("'", "''") .. "'"
 end
 
--- The Codex TUI keeps its threads in a daemon, so nothing ties a TUI's process to its
--- thread. Its candidates are the threads TUIs in its directory have written since it
--- started, and the one it was started to resume with `codex resume ID`. The only TUI in
--- a directory has the latest of them. Several are told apart by thread name, which
--- Codex shows in the terminal's title as "NAME | DIRECTORY", which is preferred even
--- for one TUI, as a TUI that has since exited may have written a later thread.
+-- Codex records nothing that ties a TUI's process to its thread, which runs in Codex's
+-- shared background server rather than the TUI when one is in use. A TUI's candidates
+-- are the threads TUIs in its directory have written since it started, and the one it
+-- was started to resume with `codex resume ID`. The only TUI in a directory has the
+-- latest of them. Several are told apart by thread name, which Codex shows in the
+-- terminal's title as "NAME | DIRECTORY", which is preferred even for one TUI, as a TUI
+-- that has since exited may have written a later thread.
 local function codex_thread(block, info, shared)
   local argv = info.argv
   local resumed = argv[2] == "resume" and argv[3] ~= nil and argv[3]:sub(1, 1) ~= "-"

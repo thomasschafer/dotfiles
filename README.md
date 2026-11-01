@@ -20,6 +20,8 @@ On hosts with `enableOvis`, it installs [Ovis](https://github.com/devswha/ovis) 
 
 [Rex](https://www.superlogical.com/rex/) works alongside herdr, from the same Helix, lazygit and yazi setup. Install the beta app by hand and open it, then re-run setup to link its config ([rex/init.lua](rex/init.lua)), apply its settings, import its theme and set up its skill for Claude Code, Codex and OpenCode, approving its Codex hook so Codex runs it without asking. Importing the theme needs the app open, so setup says so if it isn't. Rex brings sessions, tabs and panes back itself when its server restarts, such as after a reboot, and a background job ([rex/restore.lua](rex/restore.lua)) starts what ran in them again, as herdr does: Helix with the same files, and Claude Code and Codex resuming their sessions. It only types into a pane that's back at its shell in the same directory, and reports any program it can't restore in a notification and its log, in `~/.local/state/rex-restore`.
 
+Setup turns off Codex's shared background server (`daemon_auto_start` in `~/.codex/config.toml`), as it runs every session's hooks in the environment of the terminal that started it, so herdr and Rex couldn't tell which pane a Codex session is in. A server that's already running is still used until it's stopped with `codex app-server daemon stop`, which ends the sessions in it.
+
 Setup ends by checking what it can't do for you: each background service is running and served over Tailscale, you're logged in to GitHub, Claude Code and Tailscale, and `workshop doctor` is happy (the Advent of Code cookie, packages and so on). Anything missing is listed with how to fix it, so on a new machine, run `dp` again until it's quiet.
 
 ### What setup can't check
