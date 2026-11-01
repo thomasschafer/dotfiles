@@ -171,6 +171,111 @@ rex.action{
   end,
 }
 
+-- --- Agent navigation ---
+
+-- Steps through the panes whose programs report a status with OSC 7501 (Claude Code
+-- and Codex do), across every session, as herdr's next and previous agent keys do
+-- with agent_panel_sort = "priority": the most urgent first, and within a state the
+-- most recently changed first. herdr has no error state, so error ranks with done.
+local status_priority = { blocked = 4, done = 3, error = 3, working = 2, idle = 1 }
+
+-- Rex stamps each record with the time of its latest report, and agents report again
+-- without changing state (Claude Code each time it starts a tool), so this keeps when
+-- each pane was first seen in its current state, to order panes by state changes as
+-- herdr does.
+local status_since = {}
+
+local function root_status(session, block_id)
+  local status = call(terminal .. ".program_status", {
+    session_id = session,
+    block_id   = block_id,
+    args       = {},
+  })
+  for _, record in ipairs(status.records) do
+    if record.id == nil then return record end
+  end
+  return nil
+end
+
+-- Every pane with a status, most urgent first. Calls about a session fail until the
+-- action has attached to it, and attaching returns the session's view.
+local function agent_panes()
+  local panes = {}
+  local seen = {}
+  for _, session in ipairs(session_ids()) do
+    local view = call("session.attach", { session_id = session }).view
+    for _, window in ipairs(view.windows) do
+      for _, layer in ipairs(window.layers) do
+        for _, block in ipairs(layer.blocks) do
+          local record = block.creator_name == terminal and root_status(session, block.block_id)
+          if record then
+            local previous = status_since[block.block_id]
+            local since = record.updated_at
+            if previous ~= nil and previous.state == record.state then since = previous.since end
+            seen[block.block_id] = { state = record.state, since = since }
+            table.insert(panes, {
+              session  = session,
+              window   = window,
+              block_id = block.block_id,
+              -- Rex says to read a state it doesn't document as idle.
+              priority = status_priority[record.state] or status_priority.idle,
+              since    = since,
+              position = #panes,
+            })
+          end
+        end
+      end
+    end
+  end
+  status_since = seen
+  table.sort(panes, function(a, b)
+    if a.priority ~= b.priority then return a.priority > b.priority end
+    -- RFC 3339 times from the server's clock, so they order as strings.
+    if a.since ~= b.since then return a.since > b.since end
+    return a.position < b.position
+  end)
+  return panes
+end
+
+-- From a pane that isn't an agent's, the next agent is the first and the previous one
+-- the last, as in herdr.
+local function focus_agent(ctx, offset, action)
+  local from_session = require_ctx(ctx, "session_id", action)
+  local panes = agent_panes()
+  if #panes == 0 then return end
+  local current = nil
+  for i, pane in ipairs(panes) do
+    if pane.session == from_session and pane.block_id == ctx.block_id then current = i end
+  end
+  local target
+  if current ~= nil then
+    target = panes[(current - 1 + offset) % #panes + 1]
+  elseif offset > 0 then
+    target = panes[1]
+  else
+    target = panes[#panes]
+  end
+
+  local window_id = target.window.window_id
+  local h = history.pane_by_window[window_id] or {}
+  history.pane_by_window[window_id] = h
+  call("session.focus_block", { session_id = target.session, block_id = target.block_id })
+  visit(h, target.window.focused_block_id, target.block_id)
+  if target.session ~= from_session then switch_session(from_session, target.session) end
+end
+
+rex.action{
+  name  = "next_agent",
+  title = "Focus Next Agent",
+  run   = function(ctx) focus_agent(ctx, 1, "next_agent") end,
+}
+
+rex.action{
+  name  = "previous_agent",
+  title = "Focus Previous Agent",
+  run   = function(ctx) focus_agent(ctx, -1, "previous_agent") end,
+}
+
 -- rex-kiosk's picker, as the "kiosk" action. Setup links kiosk.lua and builds rex-kiosk
 -- from its checkout. A failed require would stop the rest of this file loading, so it's
 -- logged instead.
@@ -235,6 +340,11 @@ for direction, keys in pairs(directions) do
   rex.bind("cmd+alt+" .. keys[2], "focus_pane", { direction = direction })
   rex.bind("cmd+alt+shift+" .. keys[2], "pane.move." .. direction)
 end
+
+-- --- Agents ---
+
+rex.bind("cmd+j", "next_agent")
+rex.bind("cmd+k", "previous_agent")
 
 -- --- App ---
 
