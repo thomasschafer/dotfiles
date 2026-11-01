@@ -558,8 +558,9 @@ in
       # keeps the environment of the TUI that started it and runs every session's hooks
       # in it, so the hooks herdr and Rex use to tie a session to its pane see the wrong
       # pane. This stops TUIs starting that server, but they still use one that's already
-      # running, until `codex app-server daemon stop`.
-      disableCodexDaemon = lib.hm.dag.entryAfter [ "installCodex" ] ''
+      # running, until `codex app-server daemon stop`. After linkGeneration, which creates
+      # ~/.codex on a new machine.
+      disableCodexDaemon = lib.hm.dag.entryAfter [ "installCodex" "linkGeneration" ] ''
         $DRY_RUN_CMD ${codexConfig}/bin/codex-config set-feature \
           "${config.home.homeDirectory}/.codex/config.toml" daemon_auto_start false
         if [[ ! -v DRY_RUN ]]; then
