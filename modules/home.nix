@@ -801,6 +801,25 @@ in
           $DRY_RUN_CMD "${cargoBin}/herdr" plugin unlink local.caffeinate >/dev/null
         fi
       '';
+
+      # herdr's agent hooks only change when they're installed again, so a newer herdr
+      # would otherwise keep running old ones. After setClaudeSettings, whose merge keeps
+      # the hooks herdr adds to Claude Code's settings. Codex asks once to approve its
+      # updated hooks.
+      updateHerdrIntegrations = lib.hm.dag.entryAfter [ "installHerdr" "setClaudeSettings" ] ''
+        if ! herdr_integrations=$("${cargoBin}/herdr" integration status); then
+          echo "Couldn't read herdr's integration status, so its agent hooks may be out of date" >&2
+        elif unrecognised=$(printf '%s\n' "$herdr_integrations" \
+          | grep -Ev '^[a-z-]+( \(experimental\))?: (not installed|current|outdated)'); then
+          echo "herdr's integration status has lines setup doesn't recognise, so it updated none:" >&2
+          printf '%s\n' "$unrecognised" >&2
+        else
+          for integration in $(printf '%s\n' "$herdr_integrations" | sed -n 's/^\([a-z-]*\)\( (experimental)\)\{0,1\}: outdated.*/\1/p'); do
+            $DRY_RUN_CMD "${cargoBin}/herdr" integration install "$integration" >/dev/null \
+              || echo "Updating herdr's $integration integration failed (above)" >&2
+          done
+        fi
+      '';
     }
     // lib.optionalAttrs hostConfig.enableHealthTracking {
       cloneHealthTracking = cloneRepo { repo = "health-tracking"; };

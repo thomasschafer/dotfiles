@@ -59,10 +59,13 @@ in
     '');
 
     # Installs Rex's agent skill and its session-start hook, which does nothing outside Rex.
-    # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings.
-    setupRexForAgents = lib.hm.dag.entryAfter [ "setClaudeSettings" ] (ifRexInstalled ''
-      $DRY_RUN_CMD ${lib.escapeShellArg rex} skill setup --agent claude --agent codex --agent opencode >/dev/null
-    '');
+    # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings,
+    # and after herdr rewrites the agents' hooks.
+    setupRexForAgents =
+      lib.hm.dag.entryAfter [ "setClaudeSettings" "updateHerdrIntegrations" ]
+        (ifRexInstalled ''
+          $DRY_RUN_CMD ${lib.escapeShellArg rex} skill setup --agent claude --agent codex --agent opencode >/dev/null
+        '');
 
     # Codex skips a hook until it's approved, and approving Rex's by hand would need
     # redoing whenever its definition changes.
