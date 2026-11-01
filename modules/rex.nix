@@ -33,6 +33,13 @@ let
       snapshot=${lib.escapeShellArg "${background.stateDir "rex-restore"}/programs.json"} \
       procinfo=${procinfo}/bin/rex-procinfo
   '';
+  trustCodexHook = pkgs.writers.writePython3Bin "codex-trust-hook" {
+    libraries = [ pkgs.python3Packages.tomlkit ];
+    flakeIgnore = [ "E501" ];
+  } (builtins.readFile ../codex/trust-hook.py);
+  # The hook `rex skill setup` adds to Codex's hooks.json. If a new Rex changes it,
+  # trustRexCodexHook fails until this matches again.
+  rexCodexHookCommand = "/bin/sh -c 'rex __internal session-start --agent codex --feature-session-naming=false 2>/dev/null || true'";
   themeName = "Catppuccin Macchiato";
   # Ghostty's copy, which is also what Ghostty itself uses.
   themeFile = "/Applications/Ghostty.app/Contents/Resources/ghostty/themes/${themeName}";
@@ -55,6 +62,19 @@ in
     # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings.
     setupRexForAgents = lib.hm.dag.entryAfter [ "setClaudeSettings" ] (ifRexInstalled ''
       $DRY_RUN_CMD ${lib.escapeShellArg rex} skill setup --agent claude --agent codex --agent opencode >/dev/null
+    '');
+
+    # Codex skips a hook until it's approved, and approving Rex's by hand would need
+    # redoing whenever its definition changes.
+    trustRexCodexHook = lib.hm.dag.entryAfter [ "setupRexForAgents" ] (ifRexInstalled ''
+      $DRY_RUN_CMD ${trustCodexHook}/bin/codex-trust-hook ${
+        lib.escapeShellArgs [
+          "${config.home.homeDirectory}/.codex/hooks.json"
+          "${config.home.homeDirectory}/.codex/config.toml"
+          "SessionStart"
+          rexCodexHookCommand
+        ]
+      }
     '');
 
     # Rex keeps imported themes as its own resolved palettes, so this imports the theme file
