@@ -1,16 +1,24 @@
-"""Marks one command hook in Codex's hooks.json as trusted in its config.toml.
+"""Edits Codex's config.toml, which Codex also rewrites, leaving the rest of it as it was.
 
-Codex skips a hook until it is trusted, which it records as the hook's hash under
-[hooks.state."<hooks.json path>:<event>:<group>:<handler>"]. The hook is the single
-handler for EVENT whose command is exactly COMMAND, so nothing else is trusted, and its
-hash is computed from its current definition, as it stands in HOOKS_JSON.
+Each edit goes through tomlkit, which keeps the file's formatting, and replaces the file
+only if nothing has changed it since it was read. An edit that's already in place
+leaves the file untouched.
 
-The hash follows hook_hash in codex-rs/hooks/src/engine/discovery.rs and
-version_for_toml in codex-rs/config/src/fingerprint.rs (Codex 0.166): the SHA-256 of
-the normalized hook, as JSON with sorted keys and no whitespace. Fields this doesn't
-know how Codex normalizes are rejected rather than guessed at.
+  trust-hook HOOKS_JSON CONFIG_TOML EVENT COMMAND
+    Marks one command hook in Codex's hooks.json as trusted. Codex skips a hook until it
+    is trusted, which it records as the hook's hash under
+    [hooks.state."<hooks.json path>:<event>:<group>:<handler>"]. The hook is the single
+    handler for EVENT whose command is exactly COMMAND, so nothing else is trusted, and
+    its hash is computed from its current definition, as it stands in HOOKS_JSON.
 
-Arguments: HOOKS_JSON CONFIG_TOML EVENT COMMAND
+    The hash follows hook_hash in codex-rs/hooks/src/engine/discovery.rs and
+    version_for_toml in codex-rs/config/src/fingerprint.rs (Codex 0.166): the SHA-256 of
+    the normalized hook, as JSON with sorted keys and no whitespace. Fields this doesn't
+    know how Codex normalizes are rejected rather than guessed at.
+
+  set-feature CONFIG_TOML FEATURE true|false
+    Sets [features] FEATURE. This doesn't know which features Codex has, so check that
+    Codex reads it (`codex features list`).
 """
 
 import hashlib
@@ -19,6 +27,7 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Callable
 
 import tomlkit
 
@@ -31,7 +40,7 @@ HANDLER_FIELDS = {"type", "command", "timeout", "async", "statusMessage"}
 
 
 def fail(message: str) -> None:
-    sys.exit(f"trust-hook: {message}")
+    sys.exit(f"codex-config: {message}")
 
 
 def expect(condition: bool, message: str) -> None:
@@ -133,14 +142,9 @@ def write_atomically(path: str, original: str | None, content: str) -> None:
         raise
 
 
-def main() -> None:
-    expect(len(sys.argv) == 5, f"usage: {sys.argv[0]} HOOKS_JSON CONFIG_TOML EVENT COMMAND")
-    hooks_path, config_path, event, command = sys.argv[1:]
-    expect(event in EVENT_KEYS, f"events other than {sorted(EVENT_KEYS)} aren't supported")
-    expect(os.path.isabs(hooks_path), "HOOKS_JSON must be an absolute path, as Codex keys hooks by it")
-    key, identity = find_hook(hooks_path, event, command)
-    trusted_hash = hook_hash(identity)
-
+def edit_config(config_path: str, edit: Callable[[tomlkit.TOMLDocument], str | None]) -> None:
+    """Applies edit to the parsed config. edit returns what it changed, or None when the
+    config is already as wanted."""
     config_path = os.path.realpath(config_path)
     try:
         with open(config_path) as f:
@@ -152,15 +156,63 @@ def main() -> None:
         tomlkit.dumps(config) == (original or ""),
         f"{config_path} doesn't round-trip through tomlkit, so editing it could change other settings",
     )
-
-    state = table(table(table(config, "hooks", "hooks"), "state", "hooks.state"), key, f"hooks.state.{key!r}")
-    previous = state.get("trusted_hash")
-    if previous == trusted_hash:
+    change = edit(config)
+    if change is None:
         return
-    state["trusted_hash"] = trusted_hash
     write_atomically(config_path, original, tomlkit.dumps(config))
-    action = "Trusted" if previous is None else f"Re-trusted (was {previous})"
-    print(f"{action} Codex's {event} hook {command!r}")
+    print(change)
+
+
+def trust_hook(hooks_path: str, config_path: str, event: str, command: str) -> None:
+    expect(event in EVENT_KEYS, f"events other than {sorted(EVENT_KEYS)} aren't supported")
+    expect(os.path.isabs(hooks_path), "HOOKS_JSON must be an absolute path, as Codex keys hooks by it")
+    key, identity = find_hook(hooks_path, event, command)
+    trusted_hash = hook_hash(identity)
+
+    def edit(config):
+        state = table(table(table(config, "hooks", "hooks"), "state", "hooks.state"), key, f"hooks.state.{key!r}")
+        previous = state.get("trusted_hash")
+        if previous == trusted_hash:
+            return None
+        state["trusted_hash"] = trusted_hash
+        action = "Trusted" if previous is None else f"Re-trusted (was {previous})"
+        return f"{action} Codex's {event} hook {command!r}"
+
+    edit_config(config_path, edit)
+
+
+def set_feature(config_path: str, feature: str, value: str) -> None:
+    expect(value in ("true", "false"), f"a feature is set to true or false, not {value!r}")
+    enabled = value == "true"
+
+    def edit(config):
+        features = table(config, "features", "features")
+        previous = features.get(feature)
+        expect(
+            previous is None or type(previous) is bool,
+            f"features.{feature} is {previous!r}, not a boolean, so this won't replace it",
+        )
+        if previous is enabled:
+            return None
+        features[feature] = enabled
+        was = "" if previous is None else f" (was {str(previous).lower()})"
+        return f"Set Codex's features.{feature} to {value}{was}"
+
+    edit_config(config_path, edit)
+
+
+COMMANDS = {
+    "trust-hook": (trust_hook, "HOOKS_JSON CONFIG_TOML EVENT COMMAND"),
+    "set-feature": (set_feature, "CONFIG_TOML FEATURE true|false"),
+}
+
+
+def main() -> None:
+    usage = "; ".join(f"{sys.argv[0]} {name} {args}" for name, (_, args) in COMMANDS.items())
+    expect(len(sys.argv) >= 2 and sys.argv[1] in COMMANDS, f"usage: {usage}")
+    run, args = COMMANDS[sys.argv[1]]
+    expect(len(sys.argv) - 2 == len(args.split()), f"usage: {sys.argv[0]} {sys.argv[1]} {args}")
+    run(*sys.argv[2:])
 
 
 if __name__ == "__main__":
