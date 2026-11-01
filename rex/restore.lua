@@ -142,7 +142,8 @@ end
 -- thread. Its candidates are the threads TUIs in its directory have written since it
 -- started, and the one it was started to resume with `codex resume ID`. The only TUI in
 -- a directory has the latest of them. Several are told apart by thread name, which
--- Codex shows in the terminal's title as "NAME | DIRECTORY".
+-- Codex shows in the terminal's title as "NAME | DIRECTORY", which is preferred even
+-- for one TUI, as a TUI that has since exited may have written a later thread.
 local function codex_thread(block, info, shared)
   local argv = info.argv
   local resumed = argv[2] == "resume" and argv[3] ~= nil and argv[3]:sub(1, 1) ~= "-"
@@ -158,7 +159,7 @@ local function codex_thread(block, info, shared)
   }
   if not r.ok then return nil, "reading Codex's threads failed: " .. r.stderr end
   local rows = r.stdout:match("%S") and assert(rex.json.decode(r.stdout)) or {}
-  if not shared or #rows == 0 then return rows[1] and rows[1].id end
+  if #rows == 0 then return nil end
   local title = block_call(block, "title").title or ""
   local name = title:match("^(.*) | [^|]*$")
   local matches = {}
@@ -166,9 +167,20 @@ local function codex_thread(block, info, shared)
     if name ~= nil and row.name == name then table.insert(matches, row.id) end
   end
   if #matches == 1 then return matches[1] end
+  if not shared then return rows[1].id end
   return nil, string.format(
     "more than one Codex runs in %s, and this one's title, %q, names %s of their sessions",
     block.fg.cwd, title, #matches == 0 and "none" or "several")
+end
+
+-- Restoring types arguments into a shell, where a control character would act as a
+-- key, such as Enter.
+local function typeable(argv)
+  if #argv == 0 then return false end
+  for _, arg in ipairs(argv) do
+    if type(arg) ~= "string" or arg:find("%c") then return false end
+  end
+  return true
 end
 
 -- What to start again in a pane: { argv = ... }, { error = ... } when it ran something
@@ -179,6 +191,9 @@ local function capture(block, info, codex_shared)
     if info == nil then return { error = name .. "'s arguments couldn't be read" } end
     local argv = { name }
     for i = 2, #info.argv do argv[i] = info.argv[i] end
+    if not typeable(argv) then
+      return { error = name .. "'s arguments hold a control character" }
+    end
     return { argv = argv }
   elseif name == "claude" then
     local id, err = claude_session(block.fg.pid)
@@ -210,7 +225,13 @@ local function snapshot_programs()
   local infos = process_info(pids)
   local programs = {}
   for _, block in ipairs(running) do
-    local entry = capture(block, infos[tostring(block.fg.pid)],
+    local info = infos[tostring(block.fg.pid)]
+    -- A different program means the PID was reused after the one Rex reported exited.
+    if info ~= nil and (info.argv[1] == nil
+      or program_name({ argv0 = info.argv[1] }) ~= program_name(block.fg)) then
+      info = nil
+    end
+    local entry = capture(block, info,
       (codex_per_cwd[block.fg.cwd] or 0) > 1)
     if entry ~= nil then
       entry.block_id = block.block_id
@@ -233,9 +254,12 @@ local function valid_snapshot(snapshot)
     return false
   end
   snapshot.programs = snapshot.programs or {}
+  if type(snapshot.programs) ~= "table" then return false end
   for _, entry in ipairs(snapshot.programs) do
-    if type(entry.block_id) ~= "string" or type(entry.cwd) ~= "string"
-      or (type(entry.argv) ~= "table") == (type(entry.error) ~= "string") then
+    if type(entry) ~= "table" or type(entry.block_id) ~= "string"
+      or type(entry.cwd) ~= "string" or type(entry.program) ~= "string"
+      or (type(entry.argv) ~= "table") == (type(entry.error) ~= "string")
+      or (entry.argv ~= nil and not typeable(entry.argv)) then
       return false
     end
   end
@@ -269,7 +293,8 @@ end
 -- --- Restoring ---
 
 local function shell_quote(arg)
-  if arg:match("^[%w_./:=@%%+,-]+$") then return arg end
+  -- zsh expands an unquoted leading "=" to a command's path.
+  if arg:match("^[%w_./:@%%+,-][%w_./:=@%%+,-]*$") then return arg end
   return "'" .. arg:gsub("'", [['\'']]) .. "'"
 end
 
@@ -301,7 +326,6 @@ end
 
 -- Starts one program again, returning why it couldn't be.
 local function restore_program(entry, block, resumed)
-  if entry.error ~= nil then return entry.error end
   if block == nil then return "Rex didn't restore its pane" end
   if entry.agent_session ~= nil and resumed[entry.agent_session] then
     return "its session is already resumed in another pane"
@@ -314,6 +338,7 @@ local function restore_program(entry, block, resumed)
     rex.log("info", describe(entry) .. " is still running")
     return nil
   end
+  if entry.error ~= nil then return entry.error end
   local shell, busy = wait_for_shell(block)
   if shell == nil then
     return "its pane is running " .. (busy and program_name(busy) or "something else")
