@@ -28,6 +28,7 @@ let
   ];
   todoistBackup = pkgs.writeShellScriptBin "todoist-backup" ''
     export PATH="${path}:$PATH"
+    export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     export UV_PYTHON_DOWNLOADS=never
     exec ${lib.getExe pkgs.uv} run --quiet --python ${lib.getExe python} --script \
       ${src}/todoist-backup "$@"
