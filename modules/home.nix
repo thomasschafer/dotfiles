@@ -306,6 +306,10 @@ let
     # Herdr app (settings.json is merged by setHerdrAppSettings, as the app writes to it)
     ".config/herdr-app/keys.json".source = ../herdr-app/keys.json;
     ".config/herdr-app/layouts/compact.json".source = ../herdr-app/layouts/compact.json;
+    ".config/herdr-app/mods/caffeinate" = {
+      source = ../herdr-app/mods/caffeinate;
+      recursive = true;
+    };
     ".config/herdr-app/themes/catppuccin-macchiato.json".source =
       ../herdr-app/themes/catppuccin-macchiato.json;
     # Linked from the checkout rather than the store: the mod finds kiosk's binary beside
@@ -668,7 +672,8 @@ in
       setHerdrAppSettings = mergeJsonSettings {
         target = "${config.home.homeDirectory}/.config/herdr-app/settings.json";
         overrides = ../herdr-app/settings-overrides.json;
-        jqFilter = "'.[0] * .[1]'";
+        # The app accepts the old name as an alias, but rejects a file containing both.
+        jqFilter = "'(.[0] | del(.macos_option_as_alt)) * .[1]'";
       };
 
       # Defaults for the app's shared state on first run: skip the welcome and show the

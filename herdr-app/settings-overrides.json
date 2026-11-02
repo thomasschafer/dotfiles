@@ -2,7 +2,7 @@
   "font": "JetBrainsMono Nerd Font Mono",
   "font_size": 12,
   "theme": "catppuccin-macchiato",
-  "macos_option_as_alt": true,
+  "option_as_alt": "on",
   "background_opacity": 0.8,
   "background_opacity_cells": true,
   "background_blur": 80

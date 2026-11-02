@@ -161,13 +161,29 @@
         },
         {
           "id": "status",
-          "type": "block",
+          "type": "row",
           "size": {
             "px": 28
           },
-          "content": {
-            "mod": "workspace-status"
-          }
+          "children": [
+            {
+              "id": "workspace-status",
+              "type": "block",
+              "content": {
+                "mod": "workspace-status"
+              }
+            },
+            {
+              "id": "caffeinate",
+              "type": "block",
+              "size": {
+                "px": 132
+              },
+              "content": {
+                "mod": "caffeinate"
+              }
+            }
+          ]
         }
       ]
     }
