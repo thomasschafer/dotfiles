@@ -16,7 +16,6 @@
     "ask": ["mcp__claude_ai_Todoist__delete-object"],
     "allow": ["Bash(deploy *)"]
   },
-  "editorMode": "vim",
   "enabledPlugins": {
     "codex@openai-codex": true,
     "runpod@runpod": true
