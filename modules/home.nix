@@ -565,7 +565,8 @@ in
         $DRY_RUN_CMD ${codexConfig}/bin/codex-config set-feature \
           "${config.home.homeDirectory}/.codex/config.toml" daemon_auto_start false
         if [[ ! -v DRY_RUN ]]; then
-          daemon_auto_start=$("${config.home.homeDirectory}/.local/bin/codex" features list \
+          daemon_auto_start=$(PATH="${pkgs.nodejs}/bin:$PATH" \
+            "${config.home.homeDirectory}/.local/bin/codex" features list \
             | ${pkgs.gawk}/bin/awk '$1 == "daemon_auto_start" { print $NF }')
           if [ "$daemon_auto_start" != false ]; then
             echo "Codex's daemon_auto_start feature is '$daemon_auto_start' after setting it to false; Codex may have renamed it, or something else overrides it" >&2
