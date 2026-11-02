@@ -391,7 +391,6 @@ in
 {
   imports = [
     ./agents-status.nix
-    ./caffeinate.nix
     ./deploy.nix
     ./rex.nix
     ./tailscale-serve.nix
@@ -815,14 +814,11 @@ in
         fi
       '';
 
-      # caffeinate used to run from this herdr plugin, before caffeinate.nix ran it for Rex
-      # too. TODO: remove once every machine has switched.
-      unlinkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
-        if ! caffeinate_plugins=$("${cargoBin}/herdr" plugin list --plugin local.caffeinate --json); then
-          echo "Couldn't list herdr's plugins, so the old caffeinate plugin may still be linked" >&2
-        elif printf '%s' "$caffeinate_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
-          $DRY_RUN_CMD "${cargoBin}/herdr" plugin unlink local.caffeinate >/dev/null
-        fi
+      # herdr snapshots the manifest and resolved store path when linking, so
+      # relink on every switch to pick up changes before old paths are GC'd.
+      linkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
+        $DRY_RUN_CMD "${cargoBin}/herdr" plugin link \
+          ${../herdr/plugins/caffeinate} >/dev/null
       '';
 
       # herdr's agent hooks only change when they're installed again, so a newer herdr
