@@ -48,6 +48,7 @@ let
       lib.makeBinPath [
         pkgs.git
         pkgs.coreutils
+        pkgs.openssh
       ]
     }:$PATH"
     exec ${lib.getExe pkgs.bash} ${../tools/pull-repo.sh} "$@"
