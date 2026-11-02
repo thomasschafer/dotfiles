@@ -7,32 +7,3 @@ git clone https://github.com/thomasschafer/dotfiles.git ~/Development/Personal/d
 cd ~/Development/Personal/dotfiles
 ./setup.sh personal
 ```
-
-Re-run `setup.sh` (or `dp`) to apply changes. Setup clones the repos it builds from source, such as Helix, herdr and the Herdr app (with herdr-core), and the Helix plugins it loads from their checkouts. Each run then fast-forwards them to their upstream and rebuilds any that changed. It only pulls a checkout that's on its tracked branch with no uncommitted changes or unpushed commits, and lists any it skipped, with why, at the end; `dp --no-pull` skips pulling altogether. Anything already running keeps the old build until restarted.
-
-On hosts with `enableDependabotReview`, it also installs the weekly Dependabot review job and prompts you to log in to the Claude CLI and for its GitHub and Todoist tokens if they're missing. Create them first, as described in [dependabot-review/README.md](dependabot-review/README.md#setup), or skip the prompt and run `./dependabot-review/setup-secrets` later.
-
-On hosts with `enableTodoistBackup`, it installs the Todoist backup job and prompts you to set up its Todoist credentials and deploy key if they're missing; see [todoist-backup/README.md](todoist-backup/README.md#setup).
-
-On hosts with `enableAlmanac`, `enableHealthTracking` or `enableWorkshop`, it clones those repos (and, for Workshop, the advent-of-code repo it keeps solutions in), runs them in the background and serves each to your other devices with Tailscale Serve, on its own HTTPS port of the Mac's tailnet address (see [modules/tailscale-serve.nix](modules/tailscale-serve.nix)). It then prints the link to open each on your phone. Ports served by hand are left alone, as long as no app uses them.
-
-On hosts with `enableOvis`, it installs [Ovis](https://github.com/devswha/ovis) as a herdr plugin, to use herdr's agents and terminals from your phone, and serves it the same way. It's pinned to a release in [modules/ovis.nix](modules/ovis.nix), which says how to update it; don't use Update in the app. On your phone, add its link to the home screen, then turn on alerts from the ⋯ menu.
-
-[Rex](https://www.superlogical.com/rex/) works alongside herdr, from the same Helix, lazygit and yazi setup. Install the beta app by hand and open it, then re-run setup to link its config ([rex/init.lua](rex/init.lua)), apply its settings, import its theme and set up its skill for Claude Code, Codex and OpenCode, approving its Codex hook so Codex runs it without asking. Importing the theme needs the app open, so setup says so if it isn't. Rex brings sessions, tabs and panes back itself when its server restarts, such as after a reboot, and a background job ([rex/restore.lua](rex/restore.lua)) starts what ran in them again, as herdr does: Helix with the same files, and Claude Code and Codex resuming their sessions. It only types into a pane that's back at its shell in the same directory, and reports any program it can't restore in a notification and its log, in `~/.local/state/rex-restore`.
-
-Setup turns off Codex's shared background server (`daemon_auto_start` in `~/.codex/config.toml`), as it runs every session's hooks in the environment of the terminal that started it, so herdr and Rex couldn't tell which pane a Codex session is in. A server that's already running is still used until it's stopped with `codex app-server daemon stop`, which ends the sessions in it.
-
-Setup ends by checking what it can't do for you: each background service is running and served over Tailscale, you're logged in to GitHub, Claude Code and Tailscale, and `workshop doctor` is happy (the Advent of Code cookie, packages and so on). Anything missing is listed with how to fix it, so on a new machine, run `dp` again until it's quiet.
-
-### What setup can't check
-
-- Restoring secrets from the password manager when prompted: the health-tracking backup key, and the Dependabot review and Todoist backup tokens.
-- On your phone, opening each printed link, adding it to the home screen, and in Workshop, turning on notifications.
-
-### Secrets
-
-Secrets live in the login keychain, not in this repo or in plain-text files. The `secret` command reads and stores them for the scripts here: `secret get|exists|set <service>`. `secret set` prompts for the value, so it never ends up in your shell history. rclone's config is encrypted with a password from the `rclone-config` item, and setup lists encrypting it as a to-do if it isn't.
-
-## Adding a host
-
-Create `modules/hosts/<name>/default.nix`, setting every option declared in [modules/host-options.nix](modules/host-options.nix), then run `./setup.sh <name>`.
