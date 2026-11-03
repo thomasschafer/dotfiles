@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-# Opens a new herdr or Rex tab, tagging it with $HELIX_PANE so tools spawned
-# from it (lazygit, yazi, etc.) can send commands back to the Helix pane that
-# launched them. Called from the Helix keybindings in helix/config.template.toml.
+# Opens a new herdr, Herdr app or Rex tab, tagging it with $HELIX_PANE so
+# tools spawned from it (lazygit, yazi, etc.) can send commands back to the
+# Helix pane that launched them. Called from the Helix keybindings in
+# helix/config.template.toml.
 
 USAGE="Usage: $(basename "$0") [-e KEY=VALUE]... <command>"
 
@@ -28,7 +29,25 @@ if [ -n "$REX_SESSION" ]; then
 fi
 
 if [ -z "$HERDR_ENV" ]; then
-    echo "mux-new-window: not running inside herdr or Rex" >&2
+    if [ -n "$HC_TERMINAL_ID" ]; then
+        # The Herdr app's terminals run in herdr-core, which gives each one its
+        # address as $HC_TERMINAL_ID. stay: false runs the argv as given, with
+        # no login shell, and closes the tab when it exits. The core's
+        # environment comes from wherever it was started (maybe the Dock), so
+        # the tab gets this PATH rather than the core's.
+        #
+        # NUL-separated, as jq would read a `-c` given with --args as its own flag.
+        REQUEST=$(printf '%s\0' env "PATH=$PATH" "HELIX_PANE=$HC_TERMINAL_ID" "${ENV_ARGS[@]}" /bin/sh -c "$*" |
+            jq -Rsc --arg folder "$PWD" '{folder: $folder, argv: split("\u0000")[:-1], stay: false}') || exit 1
+        # `do` prints the new IDs on success, which would land in a Helix
+        # scratch buffer (see the herdr case below), and an error on failure.
+        if ! REPLY=$(herdr-app "do" tab.new "$REQUEST"); then
+            echo "mux-new-window: ${REPLY:-herdr-app do tab.new failed}" >&2
+            exit 1
+        fi
+        exit 0
+    fi
+    echo "mux-new-window: not running inside herdr, the Herdr app or Rex" >&2
     exit 1
 fi
 

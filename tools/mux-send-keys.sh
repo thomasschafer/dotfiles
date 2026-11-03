@@ -10,7 +10,9 @@
 # running as a command. `pane send-keys` sends real per-character key
 # events instead, which Helix processes the same as actual typing.
 # `rex send` types text without bracketed paste, so Rex needs no
-# workaround.
+# workaround. In the Herdr app, `hc send` pastes the same way and `hc keys`
+# only knows key names (no `:` or capitals), so the app's own
+# `terminal.type` types the text instead.
 
 USAGE="Usage: $(basename "$0") [--close-self] <text>"
 
@@ -39,7 +41,19 @@ if [ -n "$REX_SESSION" ]; then
 fi
 
 if [ -z "$HERDR_ENV" ]; then
-    echo "mux-send-keys: not running inside herdr or Rex" >&2
+    if [ -n "$HC_TERMINAL_ID" ]; then
+        REQUEST=$(jq -nc --arg terminal "${HELIX_PANE:-$HC_TERMINAL_ID}" --arg line "$TEXT" \
+            '{terminal: $terminal, line: $line}') || exit 1
+        if ! REPLY=$(herdr-app "do" terminal.type "$REQUEST"); then
+            echo "mux-send-keys: ${REPLY:-herdr-app do terminal.type failed}" >&2
+            exit 1
+        fi
+        if [ "$CLOSE_SELF" = true ]; then
+            exec hc kill "$HC_TERMINAL_ID" >/dev/null
+        fi
+        exit 0
+    fi
+    echo "mux-send-keys: not running inside herdr, the Herdr app or Rex" >&2
     exit 1
 fi
 
