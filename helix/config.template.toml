@@ -1,6 +1,7 @@
 theme = "catppuccin_macchiato_transparent"
 
 [editor]
+shell = ["/bin/bash", "-c"]
 line-number = "relative"
 auto-format = true
 bufferline = "always"

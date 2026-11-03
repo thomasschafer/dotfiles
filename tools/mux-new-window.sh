@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Opens a new herdr, Herdr app or Rex tab, tagging it with $HELIX_PANE so
 # tools spawned from it (lazygit, yazi, etc.) can send commands back to the
@@ -18,14 +18,21 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
+# What the new tab runs, followed by any KEY=VALUE arguments: one bash that
+# exports them, then runs the command as a shell would. One program rather
+# than env and then a shell, as every program start costs time (and macOS's
+# /bin/sh is itself a launcher that starts another shell).
+# shellcheck disable=SC2016 # expanded by the tab's bash, not here
+RUN=(/bin/bash -c '(($# > 1)) && export "${@:2}"; eval "$1"' mux-new-window "$*")
+
 if [ -n "$REX_SESSION" ]; then
     # Rex sets REX_BIN_DIR in its terminals, but a command Rex starts gets the
     # login shell's PATH, which leaves it out.
     REX="${REX_BIN_DIR:?REX_SESSION is set without REX_BIN_DIR}/rex"
-    # rex run has no flag for the environment, so env sets it. Rex closes the
-    # tab when the command exits. Its stdout is dropped for the same reason as
-    # herdr's below.
-    exec "$REX" run -- env "HELIX_PANE=$REX_BLOCK" "${ENV_ARGS[@]}" /bin/sh -c "$*" >/dev/null
+    # rex run has no flag for the environment, so RUN exports it. Rex closes
+    # the tab when the command exits. Its stdout is dropped for the same
+    # reason as herdr's below.
+    exec "$REX" run -- "${RUN[@]}" "HELIX_PANE=$REX_BLOCK" "${ENV_ARGS[@]}" >/dev/null
 fi
 
 if [ -z "$HERDR_ENV" ]; then
@@ -37,7 +44,7 @@ if [ -z "$HERDR_ENV" ]; then
         # the tab gets this PATH rather than the core's.
         #
         # NUL-separated, as jq would read a `-c` given with --args as its own flag.
-        REQUEST=$(printf '%s\0' env "PATH=$PATH" "HELIX_PANE=$HC_TERMINAL_ID" "${ENV_ARGS[@]}" /bin/sh -c "$*" |
+        REQUEST=$(printf '%s\0' "${RUN[@]}" "PATH=$PATH" "HELIX_PANE=$HC_TERMINAL_ID" "${ENV_ARGS[@]}" |
             jq -Rsc --arg folder "$PWD" '{folder: $folder, argv: split("\u0000")[:-1], stay: false}') || exit 1
         # `do` prints the new IDs on success, which would land in a Helix
         # scratch buffer (see the herdr case below), and an error on failure.
@@ -57,9 +64,9 @@ for kv in "${ENV_ARGS[@]}"; do
 done
 # trailing argv after `--` runs directly as the tab's root process (no
 # interactive shell startup), so herdr closes the tab when it exits.
-# /bin/sh -c re-parses "$*" the same way the custom command keybindings do
+# RUN re-parses "$*" the same way the custom command keybindings do
 # internally.
 # redirect stdout: `tab create` prints a JSON response on success, and
 # since this runs via helix's `:sh`, any stdout would land in a scratch
 # buffer for you to look at instead of silently succeeding
-exec herdr tab create "${HERDR_ENV_FLAGS[@]}" --focus -- /bin/sh -c "$*" >/dev/null
+exec herdr tab create "${HERDR_ENV_FLAGS[@]}" --focus -- "${RUN[@]}" >/dev/null

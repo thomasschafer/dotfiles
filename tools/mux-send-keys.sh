@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Sends a command to the Helix pane that spawned the caller (tagged via
 # $HELIX_PANE in tools/mux-new-window.sh), then optionally closes the
