@@ -315,9 +315,10 @@ let
     # Linked from the checkout rather than the store: the mod finds kiosk's binary beside
     # it, and the app writes typings into mod folders.
     ".config/herdr-app/mods/kiosk".source =
-      config.lib.file.mkOutOfStoreSymlink "${devDir}/herdr-kiosk/herdr-app/kiosk";
+      config.lib.file.mkOutOfStoreSymlink "${devDir}/herdr-app-kiosk/mods/kiosk";
     # The same config as the herdr plugin's below.
-    ".config/herdr-kiosk/config.toml".source = ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
+    ".config/herdr-app-kiosk/config.toml".source =
+      ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
     # rex-kiosk: herdr-kiosk's config, with worktrees where herdr puts them so herdr and Rex
     # share checkouts. The Lua action is linked from the checkout so it matches the build
@@ -689,7 +690,7 @@ in
         pull = true;
       };
 
-      # Both the herdr plugin and the Herdr app's mod run the checkout's release build.
+      # The herdr plugin runs the checkout's release build.
       buildHerdrKiosk = buildFromRepo {
         repo = "herdr-kiosk";
         name = "herdr-kiosk";
@@ -714,6 +715,23 @@ in
           )
         fi
       '';
+
+      cloneHerdrAppKiosk = cloneRepo {
+        repo = "herdr-app-kiosk";
+        pull = true;
+      };
+
+      # The Herdr app's kiosk mod, linked from the checkout, runs its release build.
+      buildHerdrAppKiosk = buildFromRepo {
+        repo = "herdr-app-kiosk";
+        name = "herdr-app-kiosk";
+        installedPath = "${devDir}/herdr-app-kiosk/target/release/herdr-app-kiosk";
+        after = [ "cloneHerdrAppKiosk" ];
+        build = ''
+          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
+            ${pkgs.cargo}/bin/cargo build --release --locked
+        '';
+      };
 
       cloneRexKiosk = cloneRepo {
         repo = "rex-kiosk";
