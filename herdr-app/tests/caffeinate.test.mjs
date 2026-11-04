@@ -5,9 +5,10 @@ import { SourceTextModule, SyntheticModule } from "node:vm";
 
 const source = await readFile(new URL("../mods/caffeinate/main.js", import.meta.url), "utf8");
 
-async function harness(storage = new Map()) {
+async function harness(storage = new Map(), props = {}) {
   const actions = [];
   const notifications = [];
+  const resizes = [];
   const tasks = [];
   let refresh;
   let redraws = 0;
@@ -17,13 +18,16 @@ async function harness(storage = new Map()) {
     spawn(task) { tasks.push(task(cx)); },
     timer: { every(_interval, callback) { refresh = () => callback(cx); } },
   };
+  // An element builder that records what the mod set on it.
   function div() {
-    const result = { label: null };
+    const result = { children: [] };
     const builder = new Proxy(result, {
       get(target, key) {
-        if (key === "label") return target.label;
+        if (key === "set") return target;
         return (...args) => {
-          if (key === "child") target.label = args[0];
+          if (key === "child") target.children.push(args[0]);
+          else if (key === "when") return args[0] ? args[1](builder) : builder;
+          else target[key] = args[0];
           return builder;
         };
       },
@@ -40,6 +44,8 @@ async function harness(storage = new Map()) {
         return execute(action);
       },
       notify: (message) => notifications.push(message),
+      props: () => props,
+      run: (name, args) => { resizes.push([name, args]); return null; },
       shared: (key) => storage.get(key),
       setShared: (key, value) => storage.set(key, value),
       theme: () => ({}),
@@ -55,14 +61,15 @@ async function harness(storage = new Map()) {
   await module.evaluate();
   const view = new module.namespace.default();
   return {
-    actions, notifications, view,
+    actions, notifications, resizes, view,
     init: () => view.init({}, cx),
     toggle: () => view.toggle(cx),
     refresh: () => refresh(),
     settle: async () => { while (tasks.length) await tasks.shift(); },
     execute: (fn) => { execute = fn; },
     redraws: () => redraws,
-    label: () => view.render().label,
+    root: () => view.render().set,
+    label: () => view.render().set.children[0].set.children[0],
   };
 }
 
@@ -153,4 +160,31 @@ test("helper failures expose stderr and allow another action", async () => {
   h.toggle();
   await h.settle();
   assert.equal(h.label(), "Caffeinate off");
+});
+
+test("with a block, it sizes that layout node to its label plus the padding", async () => {
+  const h = await harness(new Map(), { block: "caffeinate", padding: [16, 14] });
+  h.init();
+  await h.settle();
+  const root = h.root();
+  assert.deepEqual([root.pl, root.pr], [16, 14]);
+  const label = root.children[0].set;
+  label.on_size_change({ width: 80.2, height: 14 });
+  label.on_size_change({ width: 80.4, height: 14 });
+  assert.deepEqual(h.resizes, [["layout.resize", { id: "caffeinate", px: 111 }]]);
+});
+
+test("without a block, it leaves its layout node's size alone", async () => {
+  const h = await harness();
+  h.init();
+  await h.settle();
+  assert.equal(h.root().children[0].set.on_size_change, undefined);
+});
+
+test("invalid sizing props show as an error", async () => {
+  const h = await harness(new Map(), { padding: [16] });
+  h.init();
+  await h.settle();
+  assert.match(h.root().tooltip, /^The layout gives caffeinate a padding of \[16\], not \[left, right\] in px\.$/);
+  assert.equal(h.label(), "Caffeinate on");
 });

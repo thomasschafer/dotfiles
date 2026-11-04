@@ -1,7 +1,22 @@
 import { View, div } from "gpui-kit";
-import { appHome, exec, notify, setShared, shared, theme } from "herdr";
+import { appHome, exec, notify, props, run, setShared, shared, theme } from "herdr";
 
 const ENABLED = "caffeinate.enabled";
+const DEFAULT_PADDING = [12, 12];
+
+// The sizing props, { block, padding: [left, right] }, or an error saying what's wrong with them.
+// With a block, the mod resizes that layout node to fit its label plus the padding, so the
+// layout can space it evenly from its neighbours.
+function sizing() {
+  const { block = null, padding = DEFAULT_PADDING } = props() ?? {};
+  if (block !== null && (typeof block !== "string" || block === "")) {
+    return { error: `The layout gives caffeinate a block of ${JSON.stringify(block)}, not a node id.` };
+  }
+  if (!Array.isArray(padding) || padding.length !== 2 || !padding.every((n) => Number.isFinite(n) && n >= 0)) {
+    return { error: `The layout gives caffeinate a padding of ${JSON.stringify(padding)}, not [left, right] in px.` };
+  }
+  return { block, padding };
+}
 
 export default class Caffeinate extends View {
   init(_props, cx) {
@@ -10,6 +25,7 @@ export default class Caffeinate extends View {
     this.changing = false;
     this.pending = null;
     this.error = null;
+    this.fitted = null;
     this.control(shared(ENABLED) === false ? "stop" : "start", cx);
     cx.timer.every(30000, (cx) => this.control("status", cx));
   }
@@ -58,13 +74,28 @@ export default class Caffeinate extends View {
     this.control(enabled ? "start" : "stop", cx);
   }
 
+  // Resizes the layout node to `px`, when that changes. The app keeps the size with the
+  // layout's clicks, not in its file.
+  fit(block, px) {
+    px = Math.ceil(px);
+    if (px === this.fitted) return;
+    this.fitted = px;
+    run("layout.resize", { id: block, px });
+  }
+
   render() {
     const t = theme();
+    const { block, padding: [left, right] = DEFAULT_PADDING, error: sizingError } = sizing();
+    const error = [this.error, sizingError].filter(Boolean).join("\n");
     const label = this.error ? "Caffeinate error" : this.changing || this.active === null ? "Caffeinate…" : this.active ? "Caffeinate on" : "Caffeinate off";
-    return div().id("caffeinate").size_full().flex().items_center().justify_center()
-      .bg(t.chrome).text_size(11.8).text_color(this.error ? t.blocked : this.active ? t.accent : t.dim)
-      .tooltip(this.error || "Keep this Mac awake while Herdr is running. Click to toggle.")
+    return div().id("caffeinate").size_full().flex().items_center().justify_center().pl(left).pr(right)
+      .bg(t.chrome).text_size(11.8).text_color(error ? t.blocked : this.active ? t.accent : t.dim)
+      .tooltip(error || "Keep this Mac awake while Herdr is running. Click to toggle.")
       .cursor_pointer().on_click((_event, cx) => this.toggle(cx))
-      .child(label);
+      .child(
+        div().id("caffeinate-label").flex_none()
+          .when(Boolean(block), (el) => el.on_size_change((size) => this.fit(block, size.width + left + right)))
+          .child(label),
+      );
   }
 }

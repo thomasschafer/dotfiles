@@ -180,7 +180,14 @@
                 "px": 132
               },
               "content": {
-                "mod": "caffeinate"
+                "mod": "caffeinate",
+                "props": {
+                  "block": "caffeinate",
+                  "padding": [
+                    16,
+                    14
+                  ]
+                }
               }
             }
           ]
