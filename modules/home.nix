@@ -181,14 +181,16 @@ let
 
   # Merges overrides into a JSON settings file rather than owning the whole file, so the
   # rest stays writable by the app that owns it. jqFilter combines `[existing, overrides]`
-  # (read with `jq -s`); the existing file is `{}` on first run.
+  # (read with `jq -s`); the existing file is `{}` on first run. Runs after `after`, such
+  # as other activations that write the file.
   mergeJsonSettings =
     {
       target,
       overrides,
       jqFilter,
+      after ? [ ],
     }:
-    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    lib.hm.dag.entryAfter ([ "writeBoundary" ] ++ after) ''
       settings_file="${target}"
       $DRY_RUN_CMD mkdir -p "$(dirname "$settings_file")"
       base=$(${pkgs.coreutils}/bin/mktemp)
@@ -304,6 +306,10 @@ let
 
     # herdr-core
     ".config/herdr-core/config.toml".source = ../herdr-core/config.toml;
+    ".config/herdr-core/agent-resume" = {
+      source = ../herdr-core/agent-resume;
+      executable = true;
+    };
 
     # Herdr app (settings.json is merged by setHerdrAppSettings, as the app writes to it)
     ".config/herdr-app/keys.json".source = ../herdr-app/keys.json;
@@ -597,6 +603,20 @@ in
         target = "${config.home.homeDirectory}/.claude/settings.json";
         overrides = ../claude/settings-overrides.json;
         jqFilter = "-f ${../claude/merge-settings.jq}";
+      };
+
+      # Adds the agent-resume hook (see herdr-core/agent-resume) to Codex's hooks.json, which
+      # herdr and Rex also write to. Codex asks once to approve it. After linkGeneration,
+      # which creates ~/.codex on a new machine.
+      setCodexHooks = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.codex/hooks.json";
+        overrides = ../codex/hooks-overrides.json;
+        jqFilter = "-f ${../claude/merge-settings.jq}";
+        after = [
+          "linkGeneration"
+          "updateHerdrIntegrations"
+          "setupRexForAgents"
+        ];
       };
 
       installOpenCode = npmInstall {

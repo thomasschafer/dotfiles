@@ -36,5 +36,18 @@
         "repo": "runpod/runpod-plugins-official"
       }
     }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.config/herdr-core/agent-resume\" claude",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

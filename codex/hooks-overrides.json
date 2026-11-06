@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c '\"$HOME/.config/herdr-core/agent-resume\" codex'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

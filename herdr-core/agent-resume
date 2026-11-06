@@ -1,0 +1,61 @@
+#!/bin/sh
+# Tells herdr-core how to reopen this agent's session after a reboot or core crash, so its
+# terminal comes back running the agent rather than a plain shell (`hc resume`). Run by
+# Claude Code's and Codex's SessionStart hooks, with the hook's JSON on stdin.
+#
+# Usage: agent-resume claude|codex
+set -eu
+
+agent="${1:?usage: agent-resume claude|codex}"
+input="$(cat)"
+
+# Outside a herdr-core terminal there's nothing to tell, and calling hc there could start a core.
+[ -n "${HC_TERMINAL_ID:-}" ] || exit 0
+
+if ! printf '%s' "$input" | jq -e 'type == "object"' >/dev/null; then
+    echo "agent-resume: the $agent hook's input isn't a JSON object" >&2
+    exit 1
+fi
+
+field() {
+    printf '%s' "$input" | jq -r --arg key "$1" '.[$key] // empty'
+}
+
+session="$(field session_id)"
+if [ -z "$session" ]; then
+    echo "agent-resume: the $agent hook gave no session_id" >&2
+    exit 1
+fi
+
+case "$agent" in
+    claude)
+        # Subagents start sessions of their own, which aren't the one to reopen.
+        [ -z "$(field agent_id)" ] || exit 0
+        set -- claude --resume "$session"
+        ;;
+    codex)
+        # Only sessions saved to disk can be resumed.
+        [ -n "$(field transcript_path)" ] || exit 0
+        # Codex sets this in everything it runs, so a different one means a nested codex.
+        [ -z "${CODEX_THREAD_ID:-}" ] || [ "$CODEX_THREAD_ID" = "$session" ] || exit 0
+        set -- codex resume "$session"
+        ;;
+    *)
+        echo "agent-resume: unknown agent '$agent'" >&2
+        exit 1
+        ;;
+esac
+
+# A session from startup is refused if the agent leading this terminal already gave one, as
+# it's a nested run, such as `claude -p` or `codex exec` from within it. Its other sources
+# (resume, clear, compact, fork) mean the agent itself switched session.
+replace=""
+[ "$(field source)" = startup ] || replace="--replace"
+
+if ! error="$(hc --json resume $replace "$HC_TERMINAL_ID" -- "$@" 2>&1 >/dev/null)"; then
+    case "$error" in
+        *'"kind":"conflict"'*) exit 0 ;;
+    esac
+    echo "agent-resume: $error" >&2
+    exit 1
+fi
