@@ -61,9 +61,3 @@ settings = "cmd+s"
 refresh_workspace_identity = "prefix+i"
 
 copy_mode = ["prefix+[", "ctrl+b"]
-
-[[keys.command]]
-key = "cmd+p"
-type = "plugin_action"
-command = "thomasschafer.herdr-kiosk.open-picker"
-description = "open repo picker"

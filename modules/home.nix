@@ -323,26 +323,11 @@ let
     # Linked from the checkout rather than the store: the mod finds kiosk's binary beside
     # it, and the app writes typings into mod folders.
     ".config/herdr-app/mods/kiosk".source =
-      config.lib.file.mkOutOfStoreSymlink "${devDir}/herdr-app-kiosk/mods/kiosk";
-    # The same config as the herdr plugin's below.
-    ".config/herdr-app-kiosk/config.toml".source =
-      ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
-
-    # rex-kiosk: herdr-kiosk's config, with worktrees where herdr puts them so herdr and Rex
-    # share checkouts. The Lua action is linked from the checkout so it matches the build
-    # it runs.
-    ".config/rex-kiosk/config.toml".text = ''
-      ${builtins.readFile ../herdr/config/thomasschafer.herdr-kiosk/config.toml}
-      [worktrees]
-      directory = "~/.herdr/worktrees"
-    '';
-    ".config/rex/kiosk.lua".source =
-      config.lib.file.mkOutOfStoreSymlink "${devDir}/rex-kiosk/rex/kiosk.lua";
+      config.lib.file.mkOutOfStoreSymlink "${devDir}/kiosk/mods/kiosk";
+    ".config/herdr-app-kiosk/config.toml".source = ../kiosk/config.toml;
 
     # Herdr
     ".config/herdr/config.toml".source = ../herdr/config.toml;
-    ".config/herdr/plugins/config/thomasschafer.herdr-kiosk/config.toml".source =
-      ../herdr/config/thomasschafer.herdr-kiosk/config.toml;
 
     # Lazygit
     "${configHome}/lazygit/config.yml".source = ../lazygit/config.yml;
@@ -707,65 +692,17 @@ in
         jqFilter = "'.[1] * .[0]'";
       };
 
-      cloneHerdrKiosk = cloneRepo {
-        repo = "herdr-kiosk";
-        pull = true;
-      };
-
-      # The herdr plugin runs the checkout's release build.
-      buildHerdrKiosk = buildFromRepo {
-        repo = "herdr-kiosk";
-        name = "herdr-kiosk";
-        installedPath = "${devDir}/herdr-kiosk/target/release/herdr-kiosk";
-        after = [ "cloneHerdrKiosk" ];
-        build = ''
-          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
-            ${pkgs.cargo}/bin/cargo build --release --locked
-        '';
-      };
-
-      # Linking runs the plugin's build step, which downloads a release binary
-      # (or builds from source), so only link when the plugin is missing.
-      linkHerdrKiosk = lib.hm.dag.entryAfter [ "installHerdr" "buildHerdrKiosk" ] ''
-        herdr_bin="${cargoBin}/herdr"
-        kiosk_plugins=$("$herdr_bin" plugin list --plugin thomasschafer.herdr-kiosk --json)
-        if ! printf '%s' "$kiosk_plugins" | ${pkgs.jq}/bin/jq -e '.result.plugins | length > 0' >/dev/null; then
-          (
-            export PATH="${pkgs.curl}/bin:${pkgs.gawk}/bin:${pkgs.gnused}/bin:${pkgs.cargo}/bin:$PATH"
-            ${cargoBuildEnv ""}
-            $DRY_RUN_CMD "$herdr_bin" plugin link "${devDir}/herdr-kiosk" >/dev/null
-          )
-        fi
-      '';
-
-      cloneHerdrAppKiosk = cloneRepo {
-        repo = "herdr-app-kiosk";
+      cloneKiosk = cloneRepo {
+        repo = "kiosk";
         pull = true;
       };
 
       # The Herdr app's kiosk mod, linked from the checkout, runs its release build.
-      buildHerdrAppKiosk = buildFromRepo {
-        repo = "herdr-app-kiosk";
+      buildKiosk = buildFromRepo {
+        repo = "kiosk";
         name = "herdr-app-kiosk";
-        installedPath = "${devDir}/herdr-app-kiosk/target/release/herdr-app-kiosk";
-        after = [ "cloneHerdrAppKiosk" ];
-        build = ''
-          $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
-            ${pkgs.cargo}/bin/cargo build --release --locked
-        '';
-      };
-
-      cloneRexKiosk = cloneRepo {
-        repo = "rex-kiosk";
-        pull = true;
-      };
-
-      # rex/init.lua runs the checkout's release build.
-      buildRexKiosk = buildFromRepo {
-        repo = "rex-kiosk";
-        name = "rex-kiosk";
-        installedPath = "${devDir}/rex-kiosk/target/release/rex-kiosk";
-        after = [ "cloneRexKiosk" ];
+        installedPath = "${devDir}/kiosk/target/release/herdr-app-kiosk";
+        after = [ "cloneKiosk" ];
         build = ''
           $DRY_RUN_CMD env RUSTC="${pkgs.rustc}/bin/rustc" \
             ${pkgs.cargo}/bin/cargo build --release --locked
