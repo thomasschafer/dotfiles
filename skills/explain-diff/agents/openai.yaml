@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Diff"
+  short_description: "Explain a code change with background, before/after diagrams and annotated key hunks"
+  default_prompt: "Use $explain-diff to walk me through the current changes (or a named branch, commit or pull request)."

@@ -279,6 +279,8 @@ let
     ".codex/AGENTS.md".source = ../agents/shared.md;
     ".claude/skills/review-loop".source = ../skills/review-loop;
     ".codex/skills/review-loop".source = ../skills/review-loop;
+    ".claude/skills/explain-diff".source = ../skills/explain-diff;
+    ".codex/skills/explain-diff".source = ../skills/explain-diff;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
 
     # Atuin
