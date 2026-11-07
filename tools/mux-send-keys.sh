@@ -4,15 +4,12 @@
 # $HELIX_PANE in tools/mux-new-window.sh), then optionally closes the
 # caller's own pane. Called from the lazygit/scooter/yazi configs.
 #
-# `herdr pane send-text`/`pane run` wrap the text in a bracketed
-# paste sequence whenever the target pane has bracketed paste enabled
-# (which Helix does), so it lands as literal inserted text instead of
-# running as a command. `pane send-keys` sends real per-character key
-# events instead, which Helix processes the same as actual typing.
+# The text has to arrive as typed keys rather than a bracketed paste, which
+# Helix would insert as literal text instead of running it as a command.
 # `rex send` types text without bracketed paste, so Rex needs no
-# workaround. In the Herdr app, `hc send` pastes the same way and `hc keys`
-# only knows key names (no `:` or capitals), so the app's own
-# `terminal.type` types the text instead.
+# workaround. In the Herdr app, `hc send` pastes and `hc keys` only knows
+# key names (no `:` or capitals), so the app's own `terminal.type` types
+# the text instead.
 
 USAGE="Usage: $(basename "$0") [--close-self] <text>"
 
@@ -40,42 +37,18 @@ if [ -n "$REX_SESSION" ]; then
     exit 0
 fi
 
-if [ -z "$HERDR_ENV" ]; then
-    if [ -n "$HC_TERMINAL_ID" ]; then
-        REQUEST=$(jq -nc --arg terminal "${HELIX_PANE:-$HC_TERMINAL_ID}" --arg line "$TEXT" \
-            '{terminal: $terminal, line: $line}') || exit 1
-        if ! REPLY=$(herdr-app "do" terminal.type "$REQUEST"); then
-            echo "mux-send-keys: ${REPLY:-herdr-app do terminal.type failed}" >&2
-            exit 1
-        fi
-        if [ "$CLOSE_SELF" = true ]; then
-            exec hc kill "$HC_TERMINAL_ID" >/dev/null
-        fi
-        exit 0
+if [ -n "$HC_TERMINAL_ID" ]; then
+    REQUEST=$(jq -nc --arg terminal "${HELIX_PANE:-$HC_TERMINAL_ID}" --arg line "$TEXT" \
+        '{terminal: $terminal, line: $line}') || exit 1
+    if ! REPLY=$(herdr-app "do" terminal.type "$REQUEST"); then
+        echo "mux-send-keys: ${REPLY:-herdr-app do terminal.type failed}" >&2
+        exit 1
     fi
-    echo "mux-send-keys: not running inside herdr, the Herdr app or Rex" >&2
-    exit 1
+    if [ "$CLOSE_SELF" = true ]; then
+        exec hc kill "$HC_TERMINAL_ID" >/dev/null
+    fi
+    exit 0
 fi
 
-TARGET="${HELIX_PANE:-$HERDR_PANE_ID}"
-CHARS=()
-for (( i = 0; i < ${#TEXT}; i++ )); do
-    CH="${TEXT:i:1}"
-    # herdr trims each key token before parsing, so a literal " " key
-    # collapses to empty and fails; use the named alias instead.
-    if [ "$CH" = " " ]; then
-        CH="space"
-    fi
-    CHARS+=("$CH")
-done
-if [ "$CLOSE_SELF" = true ]; then
-    # Run concurrently: these target different panes (the Helix pane vs
-    # our own) with no ordering dependency, and each `herdr` invocation
-    # has a fixed process-spawn/socket cost, so sequencing them doubles
-    # the latency for no reason.
-    herdr pane send-keys "$TARGET" "${CHARS[@]}" enter &
-    herdr pane close "$HERDR_PANE_ID" &
-    wait
-else
-    herdr pane send-keys "$TARGET" "${CHARS[@]}" enter
-fi
+echo "mux-send-keys: not running inside the Herdr app or Rex" >&2
+exit 1

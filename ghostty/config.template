@@ -42,23 +42,6 @@ shell-integration-features = ssh-terminfo,ssh-env
 
 # --- Keybindings ---
 
-# herdr binds these cmd chords directly (see herdr/config.toml) and receives
-# them through the kitty keyboard protocol, so Ghostty's defaults for them are
-# unbound to let the keys through.
-keybind = cmd+t=unbind                    ## new tab
-keybind = cmd+ctrl+arrow_left=unbind      ## previous tab
-keybind = cmd+ctrl+arrow_right=unbind     ## next tab
-keybind = cmd+d=unbind                    ## split vertical
-keybind = cmd+shift+d=unbind              ## split horizontal
-keybind = cmd+w=unbind                    ## close pane
-keybind = cmd+shift+enter=unbind          ## zoom pane
-keybind = cmd+shift+arrow_up=unbind       ## focus pane up
-keybind = cmd+shift+arrow_down=unbind     ## focus pane down
-keybind = cmd+shift+j=unbind              ## focus pane down
-keybind = cmd+,=unbind                    ## last workspace; `,` and `comma` are distinct triggers to Ghostty, and the open_config default binds `,`
-keybind = cmd+j=unbind                    ## next agent
-keybind = cmd+k=unbind                    ## previous agent
-
 keybind = alt+3=text:#                    ## macos-option-as-alt would otherwise swallow this
 keybind = cmd+r=reload_config
 keybind = ctrl+shift+q=quit
@@ -66,5 +49,5 @@ keybind = ctrl+shift+q=quit
 # Line editing
 keybind = alt+left=text:\x1b[1;3D         ## move to previous word
 keybind = alt+right=text:\x1b[1;3C        ## move to next word
-keybind = cmd+left=text:\x1b[H            ## jump to start of line; the default sends ctrl+a, herdr's prefix
+keybind = cmd+left=text:\x1b[H            ## jump to start of line; the default sends ctrl+a
 keybind = cmd+right=text:\x1b[F           ## jump to end of line

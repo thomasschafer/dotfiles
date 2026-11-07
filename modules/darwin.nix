@@ -63,7 +63,7 @@
 
   security.pam.services.sudo_local = {
     touchIdAuth = true;
-    # Lets Touch ID work inside terminal multiplexers such as herdr, whose processes are
+    # Lets Touch ID work inside terminal servers such as herdr-core, whose processes are
     # detached from the login session.
     reattach = true;
   };

@@ -123,7 +123,7 @@ local function window_holding(view, block_id)
   return nil
 end
 
--- Pane history is per tab, as herdr's last pane is.
+-- Pane history is per tab.
 local function session_view(session)
   return call("session.view", { session_id = session })
 end
@@ -174,15 +174,13 @@ rex.action{
 -- --- Agent navigation ---
 
 -- Steps through the panes whose programs report a status with OSC 7501 (Claude Code
--- and Codex do), across every session, as herdr's next and previous agent keys do
--- with agent_panel_sort = "priority": the most urgent first, and within a state the
--- most recently changed first. herdr has no error state, so error ranks with done.
+-- and Codex do), across every session: the most urgent first, and within a state the
+-- most recently changed first. Error ranks with done.
 local status_priority = { blocked = 4, done = 3, error = 3, working = 2, idle = 1 }
 
 -- Rex stamps each record with the time of its latest report, and agents report again
 -- without changing state (Claude Code each time it starts a tool), so this keeps when
--- each pane was first seen in its current state, to order panes by state changes as
--- herdr does.
+-- each pane was first seen in its current state, to order panes by state changes.
 local status_since = {}
 
 local function root_status(session, block_id)
@@ -238,7 +236,7 @@ local function agent_panes()
 end
 
 -- From a pane that isn't an agent's, the next agent is the first and the previous one
--- the last, as in herdr.
+-- the last.
 local function focus_agent(ctx, offset, action)
   local from_session = require_ctx(ctx, "session_id", action)
   local panes = agent_panes()
@@ -276,7 +274,7 @@ rex.action{
   run   = function(ctx) focus_agent(ctx, -1, "previous_agent") end,
 }
 
--- --- Sessions (herdr workspaces) ---
+-- --- Sessions ---
 
 rex.bind("cmd+n", "session.new")
 for _, key in ipairs({ "cmd+ctrl+j", "cmd+alt+]" }) do

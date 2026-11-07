@@ -1,4 +1,4 @@
--- Starts programs again in their panes after the Rex server restarts, as herdr does.
+-- Starts programs again in their panes after the Rex server restarts.
 -- Rex brings back sessions, tabs, splits and each pane's working directory itself, but
 -- not what ran in them. This keeps a snapshot of the programs worth starting again, and
 -- when it first sees a new server, types each one into its restored pane's shell:
@@ -14,7 +14,7 @@ local snapshot_path = assert(rex.args.snapshot, "pass snapshot=PATH")
 local procinfo = assert(rex.args.procinfo, "pass procinfo=PATH")
 local snapshot_version = 1
 
--- herdr's [session] restore_commands: programs started again with the same arguments.
+-- Programs started again with the same arguments.
 local restore_commands = { hx = true }
 
 local function call(method, params)

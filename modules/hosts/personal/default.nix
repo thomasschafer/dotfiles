@@ -8,6 +8,5 @@
   enableHealthTracking = true;
   enableWorkshop = true;
   enableAlmanac = true;
-  enableOvis = true;
   enableTodoistBackup = true;
 }

@@ -1,4 +1,4 @@
-# Rex (superlogical.com/rex), alongside herdr. The beta app is installed by hand, as it has no
+# Rex (superlogical.com/rex), alongside the Herdr app. The beta app is installed by hand, as it has no
 # cask; until it is, the steps below that need its CLI skip themselves. Its settings are macOS
 # defaults, in macos/defaults.toml, apart from its theme, which importThemeIntoRex adds.
 {
@@ -56,10 +56,9 @@ in
     '');
 
     # Installs Rex's agent skill and its session-start hook, which does nothing outside Rex.
-    # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings,
-    # and after herdr rewrites the agents' hooks.
+    # After setClaudeSettings, whose merge keeps the hook Rex adds to Claude Code's settings.
     setupRexForAgents =
-      lib.hm.dag.entryAfter [ "setClaudeSettings" "updateHerdrIntegrations" ]
+      lib.hm.dag.entryAfter [ "setClaudeSettings" ]
         (ifRexInstalled ''
           $DRY_RUN_CMD ${lib.escapeShellArg rex} skill setup --agent claude --agent codex --agent opencode >/dev/null
         '');

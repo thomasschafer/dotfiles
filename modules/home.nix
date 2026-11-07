@@ -205,8 +205,8 @@ let
       ${pkgs.coreutils}/bin/rm -f "$base"
     '';
 
-  # herdr's vendored libghostty-vt needs an exact Zig toolchain version (see
-  # crates/ghostty-vt/build.rs in herdr). nixpkgs' Zig can't link against the
+  # herdr-core's vendored libghostty-vt needs an exact Zig toolchain version (see
+  # crates/ghostty-vt/build.rs in herdr-core). nixpkgs' Zig can't link against the
   # macOS SDK outside the Nix sandbox, so use Homebrew's versioned formula, or
   # the release unpacked into ~/.local/share/zig where Homebrew's isn't
   # installed, matching the ZIG export in zsh/.zshrc.
@@ -215,8 +215,7 @@ let
     "${config.home.homeDirectory}/.local/share/zig/0.16.0/zig"
   ];
 
-  # Exports ZIG for the herdr builds (herdr, herdr-core and the Herdr app all vendor
-  # libghostty-vt).
+  # Exports ZIG for the herdr-core and Herdr app builds (both vendor libghostty-vt).
   exportZigForHerdr = name: ''
     ZIG=""
     for candidate in ${lib.escapeShellArgs zigForHerdrCandidates}; do
@@ -326,9 +325,6 @@ let
       config.lib.file.mkOutOfStoreSymlink "${devDir}/kiosk/mods/kiosk";
     ".config/herdr-app-kiosk/config.toml".source = ../kiosk/config.toml;
 
-    # Herdr
-    ".config/herdr/config.toml".source = ../herdr/config.toml;
-
     # Lazygit
     "${configHome}/lazygit/config.yml".source = ../lazygit/config.yml;
 
@@ -399,7 +395,6 @@ in
   ++ lib.optionals hostConfig.enableHealthTracking [ ./health-tracking.nix ]
   ++ lib.optionals hostConfig.enableWorkshop [ ./workshop.nix ]
   ++ lib.optionals hostConfig.enableAlmanac [ ./almanac.nix ]
-  ++ lib.optionals hostConfig.enableOvis [ ./ovis.nix ]
   ++ lib.optionals hostConfig.enableTodoistBackup [ ../todoist-backup/nix/home.nix ];
 
   home = {
@@ -477,8 +472,6 @@ in
         shellcheck
         sqlfluff
         taplo
-        # herdr's system notifications use it when present, so clicking one focuses the terminal
-        terminal-notifier
         tmux
         tree
         typescript-language-server
@@ -554,7 +547,7 @@ in
 
       # By default Codex runs its TUIs' sessions in one shared background server, which
       # keeps the environment of the TUI that started it and runs every session's hooks
-      # in it, so the hooks herdr and Rex use to tie a session to its pane see the wrong
+      # in it, so the hooks Rex uses to tie a session to its pane see the wrong
       # pane. This stops TUIs starting that server, but they still use one that's already
       # running, until `codex app-server daemon stop`. After linkGeneration, which creates
       # ~/.codex on a new machine.
@@ -591,7 +584,7 @@ in
       };
 
       # Adds the agent-resume hook (see herdr-core/agent-resume) to Codex's hooks.json, which
-      # herdr and Rex also write to. Codex asks once to approve it. After linkGeneration,
+      # Rex also writes to. Codex asks once to approve it. After linkGeneration,
       # which creates ~/.codex on a new machine.
       setCodexHooks = mergeJsonSettings {
         target = "${config.home.homeDirectory}/.codex/hooks.json";
@@ -599,7 +592,6 @@ in
         jqFilter = "-f ${../claude/merge-settings.jq}";
         after = [
           "linkGeneration"
-          "updateHerdrIntegrations"
           "setupRexForAgents"
         ];
       };
@@ -621,19 +613,6 @@ in
         cratePath = "scooter";
         bin = "scooter";
         after = [ "cloneScooter" ];
-      };
-
-      cloneHerdr = cloneRepo {
-        repo = "herdr";
-        pull = true;
-      };
-
-      installHerdr = cargoInstallFromRepo {
-        repo = "herdr";
-        cratePath = ".";
-        bin = "herdr";
-        after = [ "cloneHerdr" ];
-        preBuild = exportZigForHerdr "installHerdr";
       };
 
       cloneHerdrCore = cloneRepo {
@@ -743,7 +722,6 @@ in
           [
             "installHelix"
             "installScooter"
-            "installHerdr"
             "installHerdrCore"
             "installCargoSteelLib"
           ]
@@ -793,32 +771,6 @@ in
       installRacketFmt = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if ! $DRY_RUN_CMD /opt/homebrew/bin/raco fmt --help &>/dev/null; then
           $DRY_RUN_CMD /opt/homebrew/bin/raco pkg install --auto fmt
-        fi
-      '';
-
-      # herdr snapshots the manifest and resolved store path when linking, so
-      # relink on every switch to pick up changes before old paths are GC'd.
-      linkHerdrCaffeinatePlugin = lib.hm.dag.entryAfter [ "installHerdr" ] ''
-        $DRY_RUN_CMD "${cargoBin}/herdr" plugin link \
-          ${../herdr/plugins/caffeinate} >/dev/null
-      '';
-
-      # herdr's agent hooks only change when they're installed again, so a newer herdr
-      # would otherwise keep running old ones. After setClaudeSettings, whose merge keeps
-      # the hooks herdr adds to Claude Code's settings. Codex asks once to approve its
-      # updated hooks.
-      updateHerdrIntegrations = lib.hm.dag.entryAfter [ "installHerdr" "setClaudeSettings" ] ''
-        if ! herdr_integrations=$("${cargoBin}/herdr" integration status); then
-          echo "Couldn't read herdr's integration status, so its agent hooks may be out of date" >&2
-        elif unrecognised=$(printf '%s\n' "$herdr_integrations" \
-          | grep -Ev '^[a-z-]+( \(experimental\))?: (not installed|current|outdated)'); then
-          echo "herdr's integration status has lines setup doesn't recognise, so it updated none:" >&2
-          printf '%s\n' "$unrecognised" >&2
-        else
-          for integration in $(printf '%s\n' "$herdr_integrations" | sed -n 's/^\([a-z-]*\)\( (experimental)\)\{0,1\}: outdated.*/\1/p'); do
-            $DRY_RUN_CMD "${cargoBin}/herdr" integration install "$integration" >/dev/null \
-              || echo "Updating herdr's $integration integration failed (above)" >&2
-          done
         fi
       '';
     }

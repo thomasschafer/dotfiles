@@ -39,7 +39,6 @@ alias z=zed
 alias y=yazi
 alias s=scooter
 alias lg=lazygit
-alias h=herdr
 
 # Only on machines managed by nix-darwin, as setup.sh would otherwise install Nix
 if command -v darwin-rebuild &>/dev/null; then
@@ -60,8 +59,8 @@ alias NIX_ORPHANS="sudo nix store gc && sudo nix store optimise"
 alias NIX_WIPE="sudo nix profile wipe-history"
 alias NIX_SYSTEM_CLEAN="NIX_CLEAN && NIX_ORPHANS && NIX_WIPE"
 
-# herdr vendors a Zig build that requires an exact toolchain version (see
-# crates/ghostty-vt/build.rs in herdr); brew's versioned zig is kept off PATH
+# herdr-core vendors a Zig build that requires an exact toolchain version (see
+# crates/ghostty-vt/build.rs in herdr-core); brew's versioned zig is kept off PATH
 # so it doesn't shadow the newer default `zig`, so point ZIG at it directly.
 # Machines without it use the release unpacked into ~/.local/share/zig.
 if [[ -x /opt/homebrew/opt/zig@0.16/bin/zig ]]; then
