@@ -13,6 +13,7 @@
 * Use sub-agents where it makes sense, such as in a long context chat where we need to make a targeted change and validate it by running tests and so on. Unless I've specified, use the same model as yourself. However, don't use them where the overhead cost would outweigh any benefit: for instance, if you've been asked to review a PR in a fresh chat, it will likely be better to do the review directly.
 * I use the Herdr desktop app for local development. When creating new branches, default to worktrees unless I've requested otherwise or if there is a clear reason not to. Worktrees go in `~/.herdr/worktrees/<repo>/<branch>`, with any `/` in the branch name replaced by `-`. If the repo has submodules, run `git submodule update --init --recursive` in the new worktree, as `git worktree add` doesn't.
 * Never start, restart or update the herdr-core server (`herdr-core server start|restart`, `hc update`, etc.) from your own shell: the core passes its environment to every terminal, so your variables would leak into all my panes. A new terminal in the Herdr app doesn't help, as it inherits the same environment. Run it in a fresh Terminal.app window instead, with `osascript -e 'tell application "Terminal" to do script "~/.cargo/bin/herdr-core server restart; exit"'`, then check it restarted with `herdr-core server status`.
+* Search with `rg` rather than `grep`, including when filtering command output.
 
 ## Code
 
