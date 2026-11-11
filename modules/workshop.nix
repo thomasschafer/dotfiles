@@ -15,6 +15,60 @@ let
   home = config.home.homeDirectory;
   inherit (config.deploy.apps.workshop) current;
   port = 7878;
+  # The Helix keys from ../helix/config.template.toml that Workshop's editor can run, which it
+  # takes for both normal and select mode, as that file's normal-and-select does. Buffer, split
+  # and shell commands are left out, as Workshop edits one file and never runs shell commands.
+  helixKeys = mode: ''
+    [editor.helix.keys.${mode}]
+    C-s = ":w"
+    A-r = ":rla"
+    X = "extend_line_above"
+    A-x = "extend_to_line_bounds"
+    A-X = "shrink_to_line_bounds"
+    p = "paste_clipboard_after"
+    P = "paste_clipboard_before"
+    y = "yank_to_clipboard"
+    R = "replace_selections_with_clipboard"
+    F8 = "goto_next_diag"
+    A-F8 = "goto_prev_diag"
+    A-j = "page_down"
+    A-k = "page_up"
+    A-w = ":toggle-option soft-wrap.enable"
+    A-up = [
+      "ensure_selections_forward",
+      "extend_to_line_bounds",
+      "extend_char_right",
+      "extend_char_left",
+      "delete_selection",
+      "move_line_up",
+      "add_newline_above",
+      "move_line_up",
+      "replace_with_yanked",
+    ]
+    A-down = [
+      "ensure_selections_forward",
+      "extend_to_line_bounds",
+      "extend_char_right",
+      "extend_char_left",
+      "delete_selection",
+      "add_newline_below",
+      "move_line_down",
+      "replace_with_yanked",
+    ]
+
+    [editor.helix.keys.${mode}.ret]
+    j = "save_selection"
+
+    [editor.helix.keys.${mode}.space]
+    p = "paste_after"
+    P = "paste_before"
+    y = "yank"
+    R = "replace_with_yanked"
+    x = ["yank_to_clipboard", "delete_selection"]
+
+    [editor.helix.keys.${mode}.backspace]
+    k = "hover"
+  '';
   workshop = pkgs.writeShellScriptBin "workshop" ''
     if [ ! -x ${lib.escapeShellArg "${current}/workshop"} ]; then
       echo "workshop isn't deployed yet; run: deploy workshop" >&2
@@ -58,6 +112,18 @@ in
       # Some older solutions take a few minutes.
       [run]
       timeout_secs = 300
+
+      # Helix's keybindings, as in ../helix; a device can turn them off in the app.
+      [editor]
+      keybindings = "helix"
+
+      [editor.helix]
+      line-number = "relative"
+      color-modes = true
+      smart-tab.enable = false
+
+      ${helixKeys "normal"}
+      ${helixKeys "select"}
     '';
     # The server reads its config at startup, so restart it to pick up a change. Before the
     # agent is first loaded, there's nothing to restart.
