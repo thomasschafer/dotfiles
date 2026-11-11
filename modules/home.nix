@@ -679,7 +679,7 @@ in
       # The Herdr app's kiosk mod, linked from the checkout, runs its release build.
       buildKiosk = buildFromRepo {
         repo = "kiosk";
-        name = "herdr-app-kiosk";
+        name = "kiosk";
         installedPath = "${devDir}/kiosk/target/release/herdr-app-kiosk";
         after = [ "cloneKiosk" ];
         build = ''
