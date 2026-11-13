@@ -28,6 +28,7 @@
 * When creating PRs:
     * Do not add a line indicating the AI tool used, such as "Generated with Claude Code".
     * Write the description for a human reviewer who hasn't seen the code, and lead with what changes from the user's (or the API consumer's) perspective rather than how it was built. Also include the *why* behind the change, not just the *what*. Keep it short enough to read in under a minute; only use headings if it's long enough to genuinely need them. Also don't over-use bullet points: a few is fine, but the PR description should not be entirely bullets.
+    * In general, ensure that the description length is proportional to the size and complexity of the change: a small change generally only needs a brief description, unless there is a lot of complexity or context that the reviewer will not be able to work out from the diff.
     * Feel free to include diagrams, where it will aid with understanding.
     * In general, leave implementation detail to the diff. Don't list internal function, component or test names, describe refactor mechanics, or report test counts and lint/type-check results, unless there is a clear reason to include such information.
     * Do include what a reviewer can't get from the diff: dependencies on other PRs, merge or deploy ordering, intentional behaviour changes that could look like bugs, and anything a consumer could easily get wrong.
