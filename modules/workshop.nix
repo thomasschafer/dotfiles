@@ -113,6 +113,15 @@ in
       [run]
       timeout_secs = 300
 
+      # A private pack of things to learn, which the author tops up once a week, overnight.
+      [learning]
+      packs = ["${home}/Development/Personal/learning-pack"]
+
+      [author]
+      every = "7d"
+      after = "02:00"
+      max_items = 10
+
       # Helix's keybindings, as in ../helix; a device can turn them off in the app.
       [editor]
       keybindings = "helix"
