@@ -116,6 +116,8 @@ in
       # A private pack of things to learn, which the author tops up once a week, overnight.
       [learning]
       packs = ["${home}/Development/Personal/learning-pack"]
+      # Workshop's own sample items too, alongside the pack's.
+      sample_pack = true
 
       [author]
       every = "7d"
