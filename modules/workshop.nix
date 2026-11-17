@@ -120,6 +120,9 @@ in
       sample_pack = true
 
       [author]
+      # Claude for both; the reviewer still solves each item blind, in a separate run with no tools.
+      writer = { provider = "claude", model = "opus" }
+      reviewer = { provider = "claude", model = "opus" }
       every = "7d"
       after = "02:00"
       max_items = 10
