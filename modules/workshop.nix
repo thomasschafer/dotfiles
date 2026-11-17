@@ -113,9 +113,9 @@ in
       [run]
       timeout_secs = 300
 
-      # A private pack of things to learn, which the author tops up once a week, overnight.
+      # Private packs of things to learn, which the author tops up once a week, overnight.
       [learning]
-      packs = ["${home}/Development/Personal/learning-pack"]
+      packs = ["${home}/Development/Personal/learning-pack", "${home}/Development/Personal/haskell-pack"]
       # Workshop's own sample items too, alongside the pack's.
       sample_pack = true
 
