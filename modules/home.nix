@@ -177,6 +177,24 @@ let
       fi
     '';
 
+  # Runs a vendor's install script, which installs a binary into ~/.local/bin, if it isn't
+  # installed yet. Later updates are left to the tool's own updater.
+  scriptInstall =
+    {
+      bin,
+      url,
+      args ? [ ],
+    }:
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -x "${config.home.homeDirectory}/.local/bin/${bin}" ]; then
+        export PATH="${pkgs.curl}/bin:${pkgs.perl}/bin:$PATH"
+        install_script=$(${pkgs.coreutils}/bin/mktemp)
+        ${pkgs.curl}/bin/curl -fsSL ${lib.escapeShellArg url} -o "$install_script"
+        $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script" ${lib.escapeShellArgs args}
+        ${pkgs.coreutils}/bin/rm -f "$install_script"
+      fi
+    '';
+
   codexConfig = import ./codex-config.nix { inherit pkgs; };
 
   # Merges overrides into a JSON settings file rather than owning the whole file, so the
@@ -282,6 +300,10 @@ let
     ".codex/skills/review-loop".source = ../skills/review-loop;
     ".claude/skills/explain-diff".source = ../skills/explain-diff;
     ".codex/skills/explain-diff".source = ../skills/explain-diff;
+    # Read by both the Antigravity CLI and the desktop app.
+    ".gemini/AGENTS.md".source = ../agents/shared.md;
+    ".gemini/config/skills/review-loop".source = ../skills/review-loop;
+    ".gemini/config/skills/explain-diff".source = ../skills/explain-diff;
     ".claude/keybindings.json".source = ../claude/keybindings.json;
 
     # Atuin
@@ -565,15 +587,21 @@ in
         fi
       '';
 
-      installClaudeCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -x "${config.home.homeDirectory}/.local/bin/claude" ]; then
-          export PATH="${pkgs.curl}/bin:${pkgs.perl}/bin:$PATH"
-          install_script=$(${pkgs.coreutils}/bin/mktemp)
-          ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh -o "$install_script"
-          $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
-          ${pkgs.coreutils}/bin/rm -f "$install_script"
-        fi
-      '';
+      installClaudeCode = scriptInstall {
+        bin = "claude";
+        url = "https://claude.ai/install.sh";
+      };
+
+      # Its installer would otherwise add ~/.local/bin to PATH and alias commands in the
+      # shell profile, which zsh/.zshrc owns.
+      installAntigravityCli = scriptInstall {
+        bin = "agy";
+        url = "https://antigravity.google/cli/install.sh";
+        args = [
+          "--skip-path"
+          "--skip-aliases"
+        ];
+      };
 
       # The desired keys live in claude/settings-overrides.json, and
       # claude/merge-settings.jq says how they combine.
