@@ -180,17 +180,20 @@ let
   # Runs a vendor's install script, which installs a binary into ~/.local/bin, if it isn't
   # installed yet. Later updates are left to the tool's own updater.
   scriptInstall =
-    {
-      bin,
-      url,
-      args ? [ ],
-    }:
+    { bin, url }:
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -x "${config.home.homeDirectory}/.local/bin/${bin}" ]; then
-        export PATH="${pkgs.curl}/bin:${pkgs.perl}/bin:$PATH"
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.curl
+            pkgs.perl
+            pkgs.gnutar
+            pkgs.gzip
+          ]
+        }:$PATH"
         install_script=$(${pkgs.coreutils}/bin/mktemp)
         ${pkgs.curl}/bin/curl -fsSL ${lib.escapeShellArg url} -o "$install_script"
-        $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script" ${lib.escapeShellArgs args}
+        $DRY_RUN_CMD ${pkgs.bash}/bin/bash "$install_script"
         ${pkgs.coreutils}/bin/rm -f "$install_script"
       fi
     '';
@@ -592,15 +595,12 @@ in
         url = "https://claude.ai/install.sh";
       };
 
-      # Its installer would otherwise add ~/.local/bin to PATH and alias commands in the
-      # shell profile, which zsh/.zshrc owns.
+      # Its docs list --skip-path and --skip-aliases, but install.sh rejects any flag other
+      # than --dir, so its `agy install` step may add a redundant ~/.local/bin PATH line to
+      # an unmanaged profile such as ~/.zprofile.
       installAntigravityCli = scriptInstall {
         bin = "agy";
         url = "https://antigravity.google/cli/install.sh";
-        args = [
-          "--skip-path"
-          "--skip-aliases"
-        ];
       };
 
       # The desired keys live in claude/settings-overrides.json, and
