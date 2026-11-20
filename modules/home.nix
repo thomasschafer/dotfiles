@@ -611,6 +611,20 @@ in
         jqFilter = "-f ${../claude/merge-settings.jq}";
       };
 
+      # Starts Antigravity in Auto mode: the CLI's `Agent Mode` and the desktop app's
+      # permission preset. Both files also hold state the tools write themselves.
+      setAntigravityCliSettings = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.gemini/antigravity-cli/settings.json";
+        overrides = ../antigravity/cli-settings-overrides.json;
+        jqFilter = "-f ${../claude/merge-settings.jq}";
+      };
+
+      setAntigravityAppConfig = mergeJsonSettings {
+        target = "${config.home.homeDirectory}/.gemini/config/config.json";
+        overrides = ../antigravity/app-config-overrides.json;
+        jqFilter = "-f ${../claude/merge-settings.jq}";
+      };
+
       # Adds the agent-resume hook (see herdr-core/agent-resume) to Codex's hooks.json, which
       # Rex also writes to. Codex asks once to approve it. After linkGeneration,
       # which creates ~/.codex on a new machine.
