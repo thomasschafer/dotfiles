@@ -116,13 +116,16 @@ in
       # Private packs of things to learn, which the author tops up once a week, overnight.
       [learning]
       packs = ["${home}/Development/Personal/learning-pack", "${home}/Development/Personal/haskell-pack"]
-      # Workshop's own sample items too, alongside the pack's.
-      sample_pack = true
+      # About three hours a week, with reviews capped so they leave room for the rest.
+      weekly_minutes = 180
+      daily_reviews = 15
+      daily_new = 5
 
       [author]
-      # Claude for both; the reviewer still solves each item blind, in a separate run with no tools.
+      # The reviewer solves each item blind, in a separate run with no tools; a model from another
+      # provider catches mistakes the writer's would share.
       writer = { provider = "claude", model = "opus" }
-      reviewer = { provider = "claude", model = "opus" }
+      reviewer = { provider = "antigravity", model = "gemini-4-neon-high" }
       every = "7d"
       after = "02:00"
       max_items = 10
