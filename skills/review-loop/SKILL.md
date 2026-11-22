@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: Run an iterative code review with a fresh Claude Code or Codex CLI reviewer, implement agreed fixes, and re-review until consensus. Use when asked for another agent to review local changes and iterate on findings.
+description: Run an iterative code review with a fresh Claude Code, Codex or Antigravity CLI reviewer, implement agreed fixes, and re-review until consensus. Use when asked for another agent to review local changes and iterate on findings.
 ---
 
 # Review loop
@@ -9,12 +9,12 @@ You are the author. Drive a separate fresh-context reviewer through headless CLI
 
 ## Choose the reviewer
 
-- Claude models (`opus`, `sonnet`, `haiku`, `fable`, or `claude-*`) use `claude`; GPT/Codex models use `codex`.
+- Claude models (`opus`, `sonnet`, `haiku`, `fable`, or `claude-*`) use `claude`; GPT/Codex models use `codex`; Gemini models (`gemini-*`) use Antigravity's `agy`, whose effort is part of the model name (`agy models` lists them, such as `gemini-4-neon-high`).
 - If no model is specified, use the latest Claude Opus model, unless you are a Claude model yourself in which case you should use the latest GPT Sol model.
 - Set the reasoning/effort to medium, unless the user has explicitly asked otherwise.
 - Pass the requested model directly. If the CLI rejects it, report that and ask the user to choose another rather than probing caches or making test calls.
 - Run every turn from the same directory, append `< /dev/null`, and allow at least 10 minutes.
-- Claude uses `--permission-mode auto` on every turn. Codex uses `--ask-for-approval on-request` on every turn, unless it is configured to bypass permissions (in which case you'll get an error like `error: the argument '--dangerously-bypass-approvals-and-sandbox' cannot be used with '--ask-for-approval <APPROVAL_POLICY>'`). Do not set tool allowlists or sandbox modes.
+- Claude uses `--permission-mode auto` on every turn. Antigravity needs no permission flags to read files and run commands such as `git diff` (see [Antigravity](#antigravity) for what it can't do headless). Codex uses `--ask-for-approval on-request` on every turn, unless it is configured to bypass permissions (in which case you'll get an error like `error: the argument '--dangerously-bypass-approvals-and-sandbox' cannot be used with '--ask-for-approval <APPROVAL_POLICY>'`). Do not set tool allowlists or sandbox modes.
 
 ## Define the scope
 
@@ -53,6 +53,17 @@ cat <review-dir>/review-1-full.txt; cat <review-dir>/review-1.txt
 ```
 
 When Codex is not already in yolo mode, start with `codex --ask-for-approval on-request exec ...`. Extract and remember the `session id:` from the full output.
+
+Antigravity, with the prompt on stdin (better than `-p` for long prompts, and it fails at once when logged out, where `-p` waits a minute for a login code):
+
+```bash
+review_dir=$(mktemp -d "${TMPDIR:-/tmp}/review-loop.XXXXXX"); echo "$review_dir"
+printf '%s' "<review prompt>" | agy --model <model> --output-format json \
+  > <review-dir>/review-1.json
+jq -r .conversation_id,.status <review-dir>/review-1.json; jq -r .response <review-dir>/review-1.json
+```
+
+Remember the `conversation_id`. A `status` other than `SUCCESS` is a failed turn; one transient failure ("empty conversation id") succeeded on retry.
 
 Use this prompt, adapted to the task:
 
@@ -96,7 +107,15 @@ codex exec resume <session-id> -m <model> \
 cat <review-dir>/review-N.txt
 ```
 
-When needed, use `codex --ask-for-approval on-request exec resume ...`. Point the reviewer at the current diff; commits are not required.
+When needed, use `codex --ask-for-approval on-request exec resume ...`.
+
+Antigravity:
+
+```bash
+printf '%s' "<author response>" | agy --conversation <conversation-id> --model <model> \
+  --output-format json > <review-dir>/review-N.json
+jq -r .response <review-dir>/review-N.json
+``` Point the reviewer at the current diff; commits are not required.
 
 ## Finish
 
@@ -106,3 +125,14 @@ When needed, use `codex --ask-for-approval on-request exec resume ...`. Point th
 - Never claim consensus was reached if it was not, and never silently drop a finding you did not fix.
 - Remove the temporary output directory.
 - Report the reviewer/model, rounds, accepted fixes, rejected findings, and unresolved disagreements.
+
+## Antigravity
+
+What headless `agy` does on this machine, as of late 2026:
+
+- `--mode auto` isn't available on this account, so it runs in the default mode, where nobody can answer a permission prompt. Reading files and running shell commands go ahead, but writing or editing a file is refused unless allowed, such as with `--settings '{"permissions":{"allow":["write_file(<abs dir>/**)","edit_file(<abs dir>/**)"]}}'`. A rule for a path under `/tmp` didn't match, probably because `/tmp` is a link to `/private/tmp`.
+- Deny rules don't stop its shell tool, and its terminal sandbox can't start the Nix zsh here, so commands it runs fall back to running unsandboxed without asking. Never rely on its settings to keep it read-only. To turn every tool off, run it in a directory with `.agents/hooks.json` containing a `PreToolUse` hook with matcher `*` whose command prints `{"decision":"deny","reason":"..."}`.
+- It reads `~/.gemini/AGENTS.md` (these instructions) and the `AGENTS.md` in its working directory, and, inside a git repo, those up to the repo's root. A `.git` file containing `gitdir: /nonexistent` in its working directory stops that walk.
+- Its web search returns `vertexaisearch.cloud.google.com` redirect links, so ask for the real destination URL when it cites sources.
+- Never pass `--remote-agent`, which runs conversations in the cloud.
+

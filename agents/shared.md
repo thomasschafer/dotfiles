@@ -14,6 +14,7 @@
 * I use the Herdr desktop app for local development. When creating new branches, default to worktrees unless I've requested otherwise or if there is a clear reason not to. Worktrees go in `~/.herdr/worktrees/<repo>/<branch>`, with any `/` in the branch name replaced by `-`. If the repo has submodules, run `git submodule update --init --recursive` in the new worktree, as `git worktree add` doesn't.
 * Never start, restart or update the herdr-core server (`herdr-core server start|restart`, `hc update`, etc.) from your own shell: the core passes its environment to every terminal, so your variables would leak into all my panes. A new terminal in the Herdr app doesn't help, as it inherits the same environment. Run it in a fresh Terminal.app window instead, with `osascript -e 'tell application "Terminal" to do script "~/.cargo/bin/herdr-core server restart; exit"'`, then check it restarted with `herdr-core server status`.
 * Search with `rg` rather than `grep`, including when filtering command output.
+* To run Gemini as a second agent, use the Antigravity CLI (`agy`) headless, as the review-loop skill describes; read its Antigravity section first, as permissions and sandboxing behave unexpectedly.
 
 ## Code
 
