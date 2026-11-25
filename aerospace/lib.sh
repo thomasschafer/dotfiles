@@ -22,6 +22,21 @@ on_error() {
 }
 trap 'on_error "$BASH_COMMAND" "$LINENO"' ERR
 
+# The aerospace CLI waits forever for a reply if the server hangs, which would leave the calling run
+# holding its locks (their holder is still alive, so they never count as stale) and block every
+# later run. This shadows the CLI to give up after a while instead.
+readonly AEROSPACE_CLI_TIMEOUT=10
+aerospace() {
+    local status=0
+    # The alarm survives exec, so SIGALRM kills the CLI if it outlives the timeout
+    perl -e 'alarm shift; exec @ARGV or die "Couldn'\''t run $ARGV[0]: $!\n"' \
+        "$AEROSPACE_CLI_TIMEOUT" aerospace "$@" || status=$?
+    if ((status == 128 + 14)); then
+        notify_error "Gave up after ${AEROSPACE_CLI_TIMEOUT}s waiting for: aerospace $*"
+    fi
+    return "$status"
+}
+
 # Sets AEROSPACE_PID, exiting if there isn't exactly one AeroSpace process
 require_single_aerospace() {
     local pids
