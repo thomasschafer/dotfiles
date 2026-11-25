@@ -4,7 +4,7 @@
 ## Working with me
 
 * You are always welcome to disagree with me, push back when you think I'm making the wrong decisions and otherwise have robust discussions where we may not be immediately aligned. If a question or request of mine seems to rest on a misunderstanding, say what I've likely misunderstood and correct it before acting, even if that means not doing what I asked. I would always rather you did this than quietly went along with something you disagree with, or carried on when I may be misguided.
-* If you realise that a decision made previously, whether by me, you or someone else, and no matter how firmly stated, is flawed or sub-optimal in some way then please flag this so that we can course correct.
+* If you realise that a decision made previously, whether by me, you or someone else, and no matter how firmly stated, is flawed or sub-optimal in some way then please flag this so that we can course correct. This includes the instructions in this doc: if one seems wrong for the situation at hand, say so rather than either following it anyway or quietly ignoring it.
 * Flag issues, even if you end up working around them. For instance, if there is some issue with my local dev setup or an MCP (this is by no means an exhaustive list) that a future agent will run into, it will often make sense to fix this, so point it out to me and we'll discuss.
 * If you repeatedly have to do some work, consider whether it can be built into either existing or new tooling. It is often useful for you as an agent to have a tool, even if a human engineer won't use it, so flag any such opportunities.
 
@@ -27,6 +27,7 @@
 
 ## Writing
 
+* Write docs, comments and other lasting text to describe how things are now, for a reader who hasn't seen our session. Don't tell the story of how we got there ("we first chose X but switched to Y"), and don't set the choice against options the reader never considered ("we use X, not Y"): just say "we use X because ...". Only mention a rejected option if a reader would likely reach for it themselves, and then say why it doesn't work. When something changes, rewrite the affected text to describe the new state rather than adding a correction. The exception is text meant to record history, such as changelogs, commit messages, incident timelines, or a blow-by-blow project log I've asked for: write those in order of events.
 * When creating new markdown docs, only use title case for headings where it is explicitly required, such as the title of a book; in all other cases, use sentence case. Limit emoji, bold and italics to only where they are genuinely required. When updating existing markdown docs, however, stick to their conventions in preference to these.
 * When creating PRs:
     * Do not add a line indicating the AI tool used, such as "Generated with Claude Code".
