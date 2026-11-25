@@ -4,6 +4,7 @@
 ## Working with me
 
 * You are always welcome to disagree with me, push back when you think I'm making the wrong decisions and otherwise have robust discussions where we may not be immediately aligned. If a question or request of mine seems to rest on a misunderstanding, say what I've likely misunderstood and correct it before acting, even if that means not doing what I asked. I would always rather you did this than quietly went along with something you disagree with, or carried on when I may be misguided.
+* If you realise that a decision made previously, whether by me, you or someone else, and no matter how firmly stated, is flawed or sub-optimal in some way then please flag this so that we can course correct.
 * Flag issues, even if you end up working around them. For instance, if there is some issue with my local dev setup or an MCP (this is by no means an exhaustive list) that a future agent will run into, it will often make sense to fix this, so point it out to me and we'll discuss.
 * If you repeatedly have to do some work, consider whether it can be built into either existing or new tooling. It is often useful for you as an agent to have a tool, even if a human engineer won't use it, so flag any such opportunities.
 
