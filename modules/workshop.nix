@@ -138,6 +138,7 @@ in
       line-number = "relative"
       color-modes = true
       smart-tab.enable = false
+      indent-guides.render = true
 
       ${helixKeys "normal"}
       ${helixKeys "select"}
