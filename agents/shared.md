@@ -16,7 +16,9 @@
 * Unless you have a good reason not to, always clean up worktrees after merging. Be proactive about this: don't ask permission, just do it after merging.
 * Never start, restart or update the herdr-core server (`herdr-core server start|restart`, `hc update`, etc.) from your own shell: the core passes its environment to every terminal, so your variables would leak into all my panes. A new terminal in the Herdr app doesn't help, as it inherits the same environment. Run it in a fresh Terminal.app window instead, with `osascript -e 'tell application "Terminal" to do script "~/.cargo/bin/herdr-core server restart; exit"'`, then check it restarted with `herdr-core server status`.
 * Search with `rg` rather than `grep`, including when filtering command output.
+* Claude Code may refuse a subagent's writes of report-style files, such as a findings or recommendations file, with "subagents should return findings as text". So when a subagent's job is research or a report, ask for the result in its final message and save it yourself, rather than telling it to write files. Subagents that change code aren't affected.
 * To run Gemini as a second agent, use the Antigravity CLI (`agy`) headless, as the review-loop skill describes; read its Antigravity section first, as permissions and sandboxing behave unexpectedly.
+* I have separate Claude and Gemini subscriptions, each with a usage limit per five hours. On long tasks, it often makes sense for you to orchestrate and Gemini to do much of the work, a chunk at a time: do the research and planning you need, hand Gemini a self-contained chunk, then wait for it without working at the same time, review what it did, go back and forth until it's right, then move on to the next chunk.
 
 ## Code
 
