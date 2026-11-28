@@ -395,8 +395,10 @@ let
     # Ghostty
     ".config/ghostty/config".source = ghosttyConfig;
 
-    # Karabiner Elements
-    ".config/karabiner/karabiner.json".source = ../karabiner-elements/karabiner.json;
+    # Karabiner Elements. Linked as a directory from the checkout: Karabiner won't save through
+    # a symlinked karabiner.json, and changes made in its GUI are written back here.
+    ".config/karabiner".source =
+      config.lib.file.mkOutOfStoreSymlink "${devDir}/dotfiles/karabiner-elements";
 
     # VSCode
     "${configHome}/Code/User/keybindings.json".source = ../vscode/keybindings.json;

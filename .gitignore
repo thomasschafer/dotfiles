@@ -1,2 +1,6 @@
 # Left by `nix build` and `darwin-rebuild build`.
 /result
+
+# Written by Karabiner-Elements, which is linked to karabiner-elements/.
+/karabiner-elements/automatic_backups/
+/karabiner-elements/assets/
